@@ -1,0 +1,147 @@
+// docs:check — the site says what the reference says, and nothing else.
+//
+//   1. Every named piece of the reference still resolves: importing the pages throws
+//      with the name of the piece that is gone.
+//   2. Every YAML block the site shows is a file `team`'s own validator accepts — the
+//      validator built from the same ref (content/team/src/file/validate.ts), not npm.
+//   3. Every block on a page is a fenced block of the reference, text for text: a
+//      command page shows exactly the console and YAML fences of its own page, and a
+//      page built from pieces only ever shows a whole fence.
+//   4. No private material anywhere in the site's own sources: no user paths, no
+//      internal ids, no mention of the private docs.
+//   5. Every page has a description of one line, at most 160 characters.
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { relative, resolve } from 'node:path';
+import { decodeEntities, fences, type Fence } from '../src/server/markdown';
+import { commandNames, commandPage, README } from '../src/server/reference';
+import { homeSamples, installLine, pages, descriptionFor } from '../src/server/pages';
+import { read } from '../src/server/team';
+// The ref's own validator, from the same content/team checkout the pages are built from.
+import { validateTeamFile } from '../content/team/src/file/validate.ts';
+
+const root = resolve(import.meta.dir, '..');
+const problems: string[] = [];
+const check = (condition: boolean, message: string) => { if (!condition) problems.push(message); };
+
+/** The text of an HTML fragment: the tags out, the entities decoded, the spaces kept. */
+function text(html: string): string {
+  return decodeEntities(html.replace(/<[^>]+>/g, '')).replace(/\n$/, '');
+}
+
+/** Every block a rendered page shows, in order: its terminals, then its code blocks. */
+function blocks(html: string): string[] {
+  return [...html.matchAll(/<pre class="(?:example__code|term)"[^>]*>([\s\S]*?)<\/pre>/g)].map(match => text(match[1]!));
+}
+
+const normalise = (markdown: string) => markdown.replace(/\n$/, '').replace(/\r\n/g, '\n');
+
+// ── 2. the YAML the site shows, through the ref's own validator ────────────────
+
+const yamlSources: { where: string; page: string; paragraph: string; yaml: string }[] = [];
+const sources = new Map<string, Fence[]>([['README.md', fences(README)], ['examples/team.yaml', []]]);
+for (const name of commandNames()) {
+  const markdown = commandPage(name);
+  sources.set(`docs/commands/${name}.md`, fences(markdown));
+  for (const fence of fences(markdown)) {
+    if (fence.lang !== 'yaml') continue;
+    // The last paragraph above the fence, for a fence that is a file that does not parse.
+    const above = markdown.slice(0, fence.start).split(/\n\s*\n/).filter(part => part.trim()).at(-1) ?? '';
+    yamlSources.push({ where: `docs/commands/${name}.md:${fence.line}`, page: name, paragraph: above, yaml: fence.text });
+  }
+}
+yamlSources.push({ where: 'examples/team.yaml', page: 'the example', paragraph: '', yaml: read('examples/team.yaml') });
+/**
+ * A fence is allowed not to parse only where the reference says so in the sentence
+ * above it: both pages that carry one broken say what the command does with it. The
+ * example file and every other fence must be a file `team` accepts.
+ */
+const SAYS_BROKEN = /\b(broken|no longer validates|does not parse)\b/i;
+for (const { where, paragraph, yaml } of yamlSources) {
+  const result = validateTeamFile(yaml);
+  if (result.ok) continue;
+  const reason = `line ${result.errors[0]?.line} ${result.errors[0]?.message}`;
+  check(SAYS_BROKEN.test(paragraph), `${where}: team's own validator refuses this YAML (${reason}), and the page does not say it is broken`);
+}
+
+// ── 3. every block a page shows is a fence of the reference ────────────────────
+
+const referenceFences = [...sources.values()].flat().filter(fence => fence.lang !== 'fixture');
+const fenceTexts = new Map<string, string[]>(referenceFences.map(fence => [normalise(fence.text), []]));
+for (const [file, list] of sources) for (const fence of list) if (fence.lang !== 'fixture') fenceTexts.get(normalise(fence.text))?.push(file);
+
+/** A block may be shown more than once, never invented. */
+function notInvented(where: string, shown: string[]) {
+  for (const block of shown) {
+    const from = fenceTexts.get(block);
+    check(Boolean(from?.length), `${where}: a block is not a fence of the reference: ${JSON.stringify(block.slice(0, 60))}…`);
+  }
+}
+
+/** A run of whole lines of a reference fence, or of the example file: how /docs/file/
+ *  shows the file section by section, and the README shows one part of its format. */
+function partOfFence(block: string): boolean {
+  const lines = block.split('\n');
+  const sourcesToSearch = [...referenceFences.map(fence => normalise(fence.text)), read('examples/team.yaml').replace(/\n$/, '')];
+  return sourcesToSearch.some(source => {
+    const sourceLines = source.split('\n');
+    return sourceLines.some((_, start) => lines.every((line, offset) => sourceLines[start + offset] === line));
+  });
+}
+
+for (const name of commandNames()) {
+  const page = pages().find(entry => entry.path === `/docs/commands/${name}/`)!;
+  // A command page is its own reference page: what it shows is what that page fences.
+  const expected = (sources.get(`docs/commands/${name}.md`) ?? []).filter(fence => fence.lang !== 'fixture').map(fence => normalise(fence.text));
+  const shown = blocks(page.html);
+  check(shown.join('\u0000') === expected.join('\u0000'), `/docs/commands/${name}/: the page and the reference page's fences differ (${shown.length} shown, ${expected.length} fenced)`);
+}
+// /docs/file/ shows the example file section by section: every block is whole lines
+// of a fence, so a section can be short but never invented.
+const file = pages().find(entry => entry.path === '/docs/file/')!;
+for (const block of blocks(file.html)) check(partOfFence(block), `/docs/file/: a block is not whole lines of a reference fence: ${JSON.stringify(block.slice(0, 60))}…`);
+for (const page of pages().filter(entry => !entry.path.startsWith('/docs/commands/') && entry.path !== '/docs/file/')) notInvented(page.path, blocks(page.html));
+// The home page shows three whole fences, and the install line — the README's own
+// install command, the same line from the same fence.
+notInvented('/', homeSamples().map(sample => normalise(sample.fence.text)));
+check(referenceFences.some(fence => normalise(fence.text).split('\n').some(line => line.trim().split('#')[0]!.trim() === installLine())), 'the install line is not a line of any reference fence');
+
+// ── 4. no private material in the site's own sources ──────────────────────────
+
+// Built from pieces, so that this file can name the things it refuses without holding
+// them: a scan that spells its own patterns would flag itself.
+const PRIVATE: [RegExp, string][] = [
+  [new RegExp('/' + 'Users/'), 'an absolute user path'],
+  [new RegExp('/' + 'home/[a-z]'), 'an absolute home path'],
+  [new RegExp('FLO' + '-\\d'), 'an internal id'],
+  [new RegExp('Claude' + '-Session'), 'a session id'],
+  [new RegExp('Co-' + '[Aa]uthored-[Bb]y'), 'a co-author line'],
+  [new RegExp('floor' + '/docs'), 'a private repository'],
+];
+const walk = (directory: string): string[] => readdirSync(directory).flatMap(name => {
+  if (['node_modules', 'dist', 'content', '.git'].includes(name)) return [];
+  const path = resolve(directory, name);
+  return statSync(path).isDirectory() ? walk(path) : [path];
+});
+for (const file of walk(root)) {
+  if (/\.(png|ico|jpg|woff2?)$/.test(file)) continue;
+  const body = readFileSync(file, 'utf8');
+  for (const [pattern, what] of PRIVATE) {
+    const found = pattern.exec(body);
+    check(!found, `${relative(root, file)} holds ${what}: ${JSON.stringify(body.slice(Math.max(0, found?.index ?? 0), (found?.index ?? 0) + 60))}`);
+  }
+}
+
+// ── 5. one line per description ───────────────────────────────────────────────
+
+for (const path of ['/', '/privacy/', ...pages().map(page => page.path)]) {
+  const description = descriptionFor(path);
+  check(description.length <= 160, `${path}: the description is ${description.length} characters, over 160`);
+  check(!description.includes('\n'), `${path}: the description is more than one line`);
+}
+
+if (problems.length) {
+  console.error(`docs:check — ${problems.length} problem${problems.length === 1 ? '' : 's'}:`);
+  for (const problem of problems) console.error(`  ${problem}`);
+  process.exit(1);
+}
+console.log(`docs:check passed: ${pages().length} pages, ${referenceFences.length} reference fences, ${yamlSources.length} YAML blocks through team's validator.`);
