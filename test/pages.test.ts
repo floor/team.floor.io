@@ -56,6 +56,15 @@ describe('the home page, from the reference', () => {
     }
   });
 
+  test('what team writes, and what a launch of a CLI still writes, travel together', () => {
+    const point = homePoints().find(entry => entry.title === 'Safe by design')!;
+    expect(point.text).toContain('vendor config');
+    expect(point.text).toContain('project record');
+    const safety = pages().find(page => page.path === '/docs/safety/')!.html;
+    expect(safety).toContain('vendor config');
+    expect(safety).toContain('project record');
+  });
+
   test('three samples: the file, the plan and the reading, each a whole block of a tested page', () => {
     const samples = homeSamples();
     expect(samples.map(sample => sample.label)).toEqual(['The file', 'The plan', 'The reading']);
@@ -63,6 +72,16 @@ describe('the home page, from the reference', () => {
     expect(samples[1]!.fence.lang).toBe('console');
     expect(samples[2]!.fence.lang).toBe('console');
     expect(samples[0]!.fence.text).toContain('project:');
+  });
+});
+
+describe('the safety page, from the reference', () => {
+  test('the who-may-run-what table gives each command its own rule', () => {
+    const safety = pages().find(page => page.path === '/docs/safety/')!.html;
+    const row = (name: string) => new RegExp(`<td><code>team ${name}</code></td><td>([\\s\\S]*?)</td>`).exec(safety)?.[1] ?? '';
+    expect(row('up')).toBe('the owner');
+    expect(row('down')).toContain('the coordinator');
+    expect(row('up')).not.toBe(row('down'));
   });
 });
 

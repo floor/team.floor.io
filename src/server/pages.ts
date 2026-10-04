@@ -129,7 +129,7 @@ export function homePoints(): { title: string; text: string }[] {
   const capitalised = watch.summary.charAt(0).toUpperCase() + watch.summary.slice(1);
   return [
     { title: 'One file declares the team', text: sentence(README, 'A project declares its team in') },
-    { title: 'Safe by design', text: `${sentence(README, 'The owner is a terminal outside herdr')} ${sentence(README, 'Nothing writes a vendor config')}` },
+    { title: 'Safe by design', text: `${sentence(README, 'The owner is a terminal outside herdr')} ${sentence(README, 'Nothing writes a vendor config')} ${sentence(README, 'Launching a Cursor seat')}` },
     { title: 'The watch tells you', text: `${capitalised.split(';')[0]}.` },
   ];
 }
@@ -201,7 +201,14 @@ export function commandPageContent(name: string): Rendered {
 
 // ---------------------------------------------------------------- safety and CLIs
 
-/** /docs/safety/ — the safety model in plain words, each claim a piece of the reference. */
+/**
+ * /docs/safety/ — the safety model in plain words, each claim a piece of the reference.
+ *
+ * "Nothing writes a vendor config or an `AGENTS.md`" is the reference's sentence about
+ * what team does, and its Cursor paragraph is the one that says what a launch still
+ * writes: Cursor's own project record. The claim and that sentence travel together here,
+ * as docs:check holds them to, so the page never promises more than the reference does.
+ */
 export function safety(): Rendered {
   const up = commandPage('up');
   const never = [
@@ -221,6 +228,7 @@ export function safety(): Rendered {
     .md(paragraph(up, 'The lobby is a folder no CLI has seen before'))
     .heading('What team never does')
     .md(never.map(text => `- ${text}`).join('\n'))
+    .note(inline(sentence(README, 'Launching a Cursor seat')))
     .heading('Who may run what')
     .table('Who may run each command', ['Command', 'Who may run it'], commandTable().map(row => [`<code>team ${row.name}</code>`, inline(row.who)]))
     .heading('What this version builds')

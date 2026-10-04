@@ -10,11 +10,16 @@
 //   4. No private material anywhere in the site's own sources: no user paths, no
 //      internal ids, no mention of the private docs.
 //   5. Every page has a description of one line, at most 160 characters.
+//   6. A "who may run it" cell speaks for one command: the reference's shorthand for a
+//      row that names two ("`up`: the owner; `down`: …") never reaches a page whole.
+//   7. A page that says no vendor config is written says what a launch still writes.
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
+import { handleRequest } from '../server';
 import { decodeEntities, fences, type Fence } from '../src/server/markdown';
 import { commandNames, commandPage, README } from '../src/server/reference';
 import { homeSamples, installLine, pages, descriptionFor } from '../src/server/pages';
+import { SITE, sitemapPages } from '../src/server/seo';
 import { read } from '../src/server/team';
 // The ref's own validator, from the same content/team checkout the pages are built from.
 import { validateTeamFile } from '../content/team/src/file/validate.ts';
@@ -143,6 +148,36 @@ for (const path of ['/', '/privacy/', ...pages().map(page => page.path)]) {
   const description = descriptionFor(path);
   check(description.length <= 160, `${path}: the description is ${description.length} characters, over 160`);
   check(!description.includes('\n'), `${path}: the description is more than one line`);
+}
+
+// ── 6. a "who may run it" cell speaks for one command ─────────────────────────
+//
+// The reference spells a row that names two commands as one cell — "`up`: the owner;
+// `down`: the owner, the coordinator or the operator seat" — which is its own shorthand
+// for two rules. Shown whole, the row for `team up` hands its reader who may run
+// `team down`; a label that reached a page means a cell was shown unresolved.
+const WHO_CELL = /<td><code>team [a-z]+<\/code><\/td><td>([\s\S]*?)<\/td>|<span class="doc-entry__who">([\s\S]*?)<\/span>/g;
+for (const path of ['/docs/safety/', '/docs/commands/']) {
+  const page = pages().find(entry => entry.path === path)!;
+  const cells = [...page.html.matchAll(WHO_CELL)].map(match => text(match[1] ?? match[2] ?? ''));
+  // A page that stopped showing them would take this rule with it.
+  check(cells.length === commandNames().length, `${path}: ${cells.length} who cells for ${commandNames().length} commands`);
+  for (const cell of cells) {
+    check(!/^[a-z][a-z-]*: /.test(cell), `${path}: a who cell reads ${JSON.stringify(cell.slice(0, 60))}: a rule labelled for another command reached the page`);
+  }
+}
+
+// ── 7. a claim about what a launch writes carries what a launch still writes ───
+//
+// "Nothing writes a vendor config or an `AGENTS.md`" is the reference's sentence about
+// the Codex and the Antigravity profiles, and its Cursor paragraph is the one that says
+// a launch does write Cursor's own project record. A page that repeats the claim for
+// every CLI has to say that too, or it promises more than the reference does.
+for (const { path } of sitemapPages()) {
+  const response = await handleRequest(new Request(`${SITE}${path}`));
+  check(response.status === 200, `${path}: the server answered ${response.status}`);
+  const page = text(await response.text());
+  check(!/vendor config/i.test(page) || /project record/i.test(page), `${path}: says nothing writes a vendor config, and does not say what a CLI launch still writes`);
 }
 
 if (problems.length) {
