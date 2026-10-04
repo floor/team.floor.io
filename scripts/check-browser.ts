@@ -7,10 +7,12 @@
 //	   client to exist, and the home page least of all.
 //	3. What needs the client, on the page that carries it: the dialog (⌘K, a query, a
 //	   result, Escape), the theme toggle, what it remembers, and the copy button.
-//	4. The home page's hero at 390, 375 and 1440: the block and each of its children within
-//	   2px of the viewport's centre (measured at 0px; the check keeps it so), and both pills —
-//	   the reset zeroes every padding, so the hero's scoped rule is what carries theirs —
-//	   40px tall, one line each, no overflow, centred, equal padding left and right.
+//	4. The home page's hero at 390, 375 and 1440: the block, each child's own content and the
+//	   two pills' combined bounds within 2px of the viewport's centre — measured on what the
+//	   reader sees, not on the full-width flex row, whose own box sits on the centre whatever
+//	   it does with its buttons — and both pills — the reset zeroes every padding, so the
+//	   hero's scoped rule is what carries theirs — 40px tall, one line each, no overflow,
+//	   centred, equal padding left and right.
 //	5. Prose links: the site's link colour in both themes, on the home page and a docs page,
 //	   underlined at rest with a quiet decoration that turns full-strength on hover and on
 //	   keyboard focus (with the global outline), the --accent token itself held to resolving
@@ -174,24 +176,39 @@ try {
 
   // ── 4. the hero: its centring, and its buttons, at phone and desktop width ──
   // The hero sits on the viewport's centre to the pixel; a screenshot's crop once read as a
-  // 65px offset, so the measurement is held here. The buttons: the reset (shell.css, unlayered)
-  // zeroes every padding, so the hero's own scoped rule (.hero__actions .mtrl-button) is what
-  // keeps the labels off the pills' edges — held at 40px, padded, one line, on the centre.
+  // 65px offset, so the measurement is held here — and held on what the reader sees. The
+  // content's bounds stand for the boxes: `.hero__actions` is a full-width flex row, so its
+  // own box sits on the centre whatever `justify-content` does with the pills; the two
+  // pills' combined bounds are the claim (under `flex-start` they land 314.8px left at 1440
+  // while the row's box stays centred). The buttons: the reset (shell.css, unlayered) zeroes
+  // every padding, so the hero's own scoped rule (.hero__actions .mtrl-button) is what keeps
+  // the labels off the pills' edges — held at 40px, padded, one line, on the centre.
   for (const width of [390, 375, 1440]) {
     const context = await browser.newContext({ viewport: { width, height: 900 } });
     const page = await context.newPage();
     await page.goto(`${origin}/`, { waitUntil: 'load' });
     const hero = await page.evaluate(() => {
       const centre = document.documentElement.clientWidth / 2;
-      const offset = (selector: string) => {
+      const round = (value: number) => Math.round(value * 10) / 10;
+      const boxOffset = (selector: string) => {
         const rect = document.querySelector<HTMLElement>(selector)!.getBoundingClientRect();
-        return Math.round((rect.left + rect.width / 2 - centre) * 10) / 10;
+        return round(rect.left + rect.width / 2 - centre);
       };
+      const contentOffset = (selector: string) => {
+        const range = document.createRange();
+        range.selectNodeContents(document.querySelector<HTMLElement>(selector)!);
+        const rect = range.getBoundingClientRect();
+        return round(rect.left + rect.width / 2 - centre);
+      };
+      const pills = [...document.querySelectorAll<HTMLElement>('.hero__actions .mtrl-button')].map(button => button.getBoundingClientRect());
+      const left = Math.min(...pills.map(rect => rect.left));
+      const right = Math.max(...pills.map(rect => rect.right));
       return {
-        block: offset('.hero'),
+        block: boxOffset('.hero'),
         textAlign: getComputedStyle(document.querySelector('.hero')!).textAlign,
-        children: ['.eyebrow', '#hero-title', '.hero__tagline', '.hero__actions', '.hero__install', '.hero__notes']
-          .map(selector => ({ selector, offset: offset(selector) })),
+        children: ['.eyebrow', '#hero-title', '.hero__tagline', '.hero__install', '.hero__notes']
+          .map(selector => ({ selector, offset: contentOffset(selector) })),
+        buttons: { offset: round((left + right) / 2 - centre), span: round(right - left) },
       };
     });
     const buttons = await page.evaluate(() => [...document.querySelectorAll<HTMLElement>('.hero__actions .mtrl-button')].map(button => {
@@ -222,12 +239,14 @@ try {
       check(Math.abs(button.offCentre) <= 2, `${where}: "${button.text}" sits ${button.offCentre}px off the pill's centre`);
     }
     check(buttons.length !== 2 || buttons[0]!.height === buttons[1]!.height, `${where}: the pills are ${buttons[0]!.height}px and ${buttons[1]!.height}px tall`);
-    // The design centres the hero's text; the block and every child ride the viewport's centre.
+    // The design centres the hero's text; the block, every child's content and the two
+    // pills' combined bounds ride the viewport's centre.
     check(Math.abs(hero.block) <= 2, `${where}: the hero's centre is ${hero.block}px off the viewport's centre`);
     check(hero.textAlign === 'center', `${where}: the hero's text is ${hero.textAlign}, not centred`);
     for (const child of hero.children) {
-      check(Math.abs(child.offset) <= 2, `${where}: ${child.selector} sits ${child.offset}px off the viewport's centre`);
+      check(Math.abs(child.offset) <= 2, `${where}: ${child.selector}'s content sits ${child.offset}px off the viewport's centre`);
     }
+    check(Math.abs(hero.buttons.offset) <= 2, `${where}: the two buttons' combined bounds sit ${hero.buttons.offset}px off the viewport's centre (${hero.buttons.span}px together)`);
     await context.close();
   }
 
@@ -457,4 +476,4 @@ if (problems.length) {
   for (const problem of [...new Set(problems)]) console.error(`  ${problem}`);
   process.exit(1);
 }
-console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer, the prose links wearing the link token and underlined at rest in both themes, the code blocks chip-free inside, scrolling their long lines, and bare where the styles de-chip a name, the home transcripts rendering the reference line for line, and the header on every sitemap page wearing a section only where there is one.');
+console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero\'s content centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer, the prose links wearing the link token and underlined at rest in both themes, the code blocks chip-free inside, scrolling their long lines, and bare where the styles de-chip a name, the home transcripts rendering the reference line for line, and the header on every sitemap page wearing a section only where there is one.');
