@@ -114,9 +114,11 @@
    underline is quiet — the accent mixed toward transparent, one hairline, offset 3px — and
    turns full-strength on hover and on keyboard focus (the outline itself comes from the
    global :focus-visible rule). Only running text reads it: the toolbar, the pager and the
-   cards around the text keep their own treatment. The landing's sentence under the
-   transcripts is prose too — a link in prose must never fall back to the browser's default
-   blue, which cannot be read on the dark background. */
+   cards around the text keep their own treatment, and `.text-link` — the 404 page's action,
+   which sits in a paragraph of its own — is named out of the rule below rather than left to
+   the cascade, where the prose selector out-specifies its own `text-decoration: none`. The
+   landing's sentence under the transcripts is prose too — a link in prose must never fall
+   back to the browser's default blue, which cannot be read on the dark background. */
 .md a,
 .samples__foot a {
     color: var(--accent);
@@ -124,7 +126,7 @@
     text-underline-offset: 3px;
 }
 
-.md :where(p, li, blockquote, td, th) a,
+.md :where(p, li, blockquote, td, th) a:not(.text-link),
 .md .note a,
 .samples__foot a {
     text-decoration-line: underline;
