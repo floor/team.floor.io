@@ -13,13 +13,19 @@
 //	   it does with its buttons — and both pills — the reset zeroes every padding, so the
 //	   hero's scoped rule is what carries theirs — 40px tall, one line each, no overflow,
 //	   centred, equal padding left and right.
-//	5. Prose links: the site's link colour in both themes, on the home page and a docs page,
-//	   underlined at rest with a quiet decoration that turns full-strength on hover and on
-//	   keyboard focus (with the global outline), the --accent token itself held to resolving
-//	   and to differing from the body's own text, and no anchor on either page in the
-//	   browser's default blue (the landing's sentence under the transcripts once was,
-//	   unreadable on the dark background — and its replacement colour alone did not carry
-//	   a link's cue either).
+//	5. Prose links: the site's link colour in both themes — the --accent token itself held
+//	   to resolving and to differing from the body's own text, and no anchor on the pages in
+//	   the browser's default blue (the landing's sentence under the transcripts once was,
+//	   unreadable on the dark background — and its replacement colour alone did not carry a
+//	   link's cue either) — and every family the prose rule names underlined at rest: a
+//	   paragraph, a list item, a blockquote, a table cell, a table header, a note, the
+//	   privacy article and the samples foot, each on a real link where the site carries one
+//	   and otherwise on a probe in a real container, held to the hairline 1px, the 3px
+//	   offset, the full-strength turn of hover and of keyboard focus (with the global
+//	   outline), and a computed 3:1 contrast of the rest decoration over the ground it is
+//	   drawn on, the page's background and a note's tint alike. The anchors that are not
+//	   prose — the docs toolbar, the table of contents, the pager, the cards, the navigation
+//	   and the 404 page's action — wear no underline at rest.
 //	6. The code blocks: the code inside a pre wears no inline-code chip (one once painted a
 //	   background and a border around every line there), the chip applies only outside — and
 //	   still loses to the site's own de-chip rules for the places that are names, a card title
@@ -48,12 +54,38 @@ function rgb(colour: string): [number, number, number] {
   return [r, g, b];
 }
 const brightness = (colour: string) => rgb(colour).reduce((sum, channel) => sum + channel, 0);
-/** A computed colour's alpha: rgba()'s fourth number, or `color(srgb … / 0.7)`'s. */
-const alpha = (colour: string) => {
-  const slash = colour.match(/\/\s*([\d.]+)\s*\)$/);
-  if (slash) return Number(slash[1]);
-  const numbers = [...colour.matchAll(/[\d.]+/g)].map(match => Number(match[0]));
-  return numbers.length > 3 ? numbers[3]! : 1;
+
+/** A computed colour as channels 0-255 plus alpha: rgba()'s four numbers, or `color(srgb …)`'s. */
+const channels = (colour: string): [number, number, number, number] => {
+  const srgb = /^color\(srgb ([\d.]+) ([\d.]+) ([\d.]+)(?: \/ ([\d.]+))?\)$/.exec(colour);
+  if (srgb) return [Number(srgb[1]) * 255, Number(srgb[2]) * 255, Number(srgb[3]) * 255, srgb[4] === undefined ? 1 : Number(srgb[4])];
+  const [r = 0, g = 0, b = 0, a = 1] = (colour.match(/[\d.]+/g) ?? []).map(Number);
+  return [r, g, b, a];
+};
+/** A colour laid over an opaque one. */
+const over = (source: [number, number, number, number], backdrop: number[]): [number, number, number] =>
+  [0, 1, 2].map(channel => source[channel]! * source[3] + backdrop[channel]! * (1 - source[3])) as [number, number, number];
+/** The opaque colour a mark drawn on the element lands on: the element's ancestors' own
+    backgrounds, composited — a note's tint over the page over the body. */
+const backdrop = (backgrounds: string[]): [number, number, number] => {
+  const layers = backgrounds.map(channels);
+  let base: [number, number, number] = [255, 255, 255];
+  let opaque = -1;
+  for (let index = layers.length - 1; index >= 0; index--) {
+    if (layers[index]![3] === 1) { base = layers[index]!.slice(0, 3) as [number, number, number]; opaque = index; break; }
+  }
+  for (let index = opaque - 1; index >= 0; index--) base = over(layers[index]!, base);
+  return base;
+};
+/** A colour's relative luminance, WCAG 2.1. */
+const luminance = (colour: number[]) => {
+  const channel = (value: number) => { const s = value / 255; return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4; };
+  return 0.2126 * channel(colour[0]!) + 0.7152 * channel(colour[1]!) + 0.0722 * channel(colour[2]!);
+};
+/** The contrast two colours stand in, WCAG's (lighter + 0.05) / (darker + 0.05). */
+const contrast = (one: number[], other: number[]) => {
+  const [lighter, darker] = [luminance(one), luminance(other)].sort((a, b) => b - a);
+  return (lighter! + 0.05) / (darker! + 0.05);
 };
 
 const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: handleRequest });
@@ -250,7 +282,7 @@ try {
     await context.close();
   }
 
-  // ── 5. prose links: the link colour, and the underline that carries the cue ──────────
+  // ── 5. prose links: the site's link colour, and the underline the prose rule carries ───
   // The landing's sentence under the transcripts sits outside the markdown body, so no
   // prose-link rule reached it and its links fell to the browser's default blue, unreadable
   // on the dark background. The colour is compared with the --accent token itself, read
@@ -258,82 +290,142 @@ try {
   // resolving at all (a sentinel colour is assigned first, so a missing --accent leaves the
   // sentinel) and to differing from the body's own text, so a token that went missing
   // cannot let the comparison pass on two inherited colours. Colour is not the whole cue:
-  // the link is underlined at rest, a quiet translucent decoration that turns full-strength
-  // on hover and on keyboard focus, where the global rule also draws its outline. Hover is
-  // the mouse, focus a real Tab from the page's top; the state is read from the computed
-  // style, so a rule that only renames things cannot pass.
+  // every family the prose rule names is underlined at rest — on its real link where a page
+  // carries one, and otherwise on a probe placed in that container on a real page, so a
+  // family dropped from the rule has nothing left to pass on. The decoration must also be
+  // readable as a mark: blended over the ground the link is drawn on — the page's own
+  // background, a note's tint, a table header's — it is held to 3:1, the contrast a cue
+  // drawn in colour has to clear. Hover is the mouse and focus a real Tab from the page's
+  // top, both turning the mark full-strength, the focus drawing the global outline; every
+  // state is read from the computed style, so a rule that only renames things cannot pass.
+  // The anchors around the prose — the docs toolbar, the table of contents, the pager, a
+  // card, the navigation in its two places and the 404 page's action — carry no underline
+  // at rest, so the widened rule cannot have quietly swallowed them.
+  // The families, and where each is exercised.
+  const PROSE: { id: string; what: string; path: string; selector?: string; container?: string; box?: string }[] = [
+    { id: 'paragraph', what: 'a paragraph of the reference', path: '/docs/', selector: '.md p a' },
+    { id: 'privacy', what: 'the privacy article', path: '/privacy/', selector: '.md p a' },
+    { id: 'cell', what: 'a table cell', path: '/docs/commands/up/', selector: '.md td a' },
+    { id: 'foot', what: 'the samples foot', path: '/', selector: '.samples__foot a' },
+    { id: 'list', what: 'a list-item probe', path: '/docs/safety/', container: '.md ul li' },
+    { id: 'quote', what: 'a blockquote probe', path: '/docs/safety/', container: '.md', box: 'blockquote' },
+    { id: 'head', what: 'a table-header probe', path: '/docs/safety/', container: '.md th' },
+    { id: 'note', what: 'a note probe', path: '/docs/safety/', container: '.md .note' },
+  ];
   for (const mode of ['light', 'dark'] as const) {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: mode });
     const page = await context.newPage();
-    for (const [path, selector, where] of [
-      ['/', '.samples__foot a', 'home'],
-      ['/docs/', '.md p a', 'docs'],
-    ] as const) {
-      await page.goto(`${origin}${path}`, { waitUntil: 'load' });
-      const rest = await page.evaluate((selector) => {
-        const link = document.querySelector<HTMLElement>(selector);
-        const probe = document.createElement('span');
-        probe.style.color = 'rgb(1, 2, 3)';
-        probe.style.color = 'var(--accent)';
-        document.body.append(probe);
-        const token = getComputedStyle(probe).color;
-        probe.remove();
-        const defaultBlue = [...document.querySelectorAll<HTMLAnchorElement>('a[href]')]
-          .filter(anchor => getComputedStyle(anchor).color === 'rgb(0, 0, 238)').length;
-        const css = link ? getComputedStyle(link) : null;
+    for (const item of PROSE) {
+      const link = item.selector ?? `[data-probe="${item.id}"]`;
+      const where = `${item.what} ${mode}`;
+      await page.goto(`${origin}${item.path}`, { waitUntil: 'load' });
+      if (item.container) {
+        const placed = await page.evaluate(spec => {
+          const host = document.querySelector<HTMLElement>(spec.container);
+          if (!host) return false;
+          const anchor = document.createElement('a');
+          anchor.href = '/docs/';
+          anchor.textContent = 'underline probe';
+          anchor.dataset.probe = spec.id;
+          // A blockquote is the one container that is not already there: the probe goes
+          // inside a fresh block at the article's head, on screen without hunting for it.
+          const holder = spec.box ? host.insertBefore(document.createElement(spec.box), host.firstChild) : host;
+          holder.append(anchor);
+          return true;
+        }, { id: item.id, container: item.container, box: item.box });
+        check(placed, `${where}: ${item.path} carries no ${item.container} to hold the probe`);
+      }
+      const facts = await page.evaluate((link) => {
+        const sentinel = document.createElement('span');
+        sentinel.style.color = 'rgb(1, 2, 3)';
+        sentinel.style.color = 'var(--accent)';
+        document.body.append(sentinel);
+        const token = getComputedStyle(sentinel).color;
+        sentinel.remove();
+        const anchor = document.querySelector<HTMLElement>(link);
+        const backgrounds: string[] = [];
+        for (let node: Element | null = anchor; node; node = node.parentElement) backgrounds.push(getComputedStyle(node).backgroundColor);
+        const css = anchor ? getComputedStyle(anchor) : null;
         return {
-          link: css ? { colour: css.color, line: css.textDecorationLine, decoration: css.textDecorationColor, thickness: css.textDecorationThickness, offset: css.textUnderlineOffset } : null,
           token,
           body: getComputedStyle(document.body).color,
-          defaultBlue,
+          defaultBlue: [...document.querySelectorAll<HTMLAnchorElement>('a[href]')].filter(element => getComputedStyle(element).color === 'rgb(0, 0, 238)').length,
+          link: css ? { colour: css.color, line: css.textDecorationLine, decoration: css.textDecorationColor, thickness: css.textDecorationThickness, offset: css.textUnderlineOffset, backgrounds } : null,
         };
-      }, selector);
-      const at = rest.link;
-      check(at !== null, `${where} ${mode}: no link matches ${selector}`);
-      check(rest.token !== 'rgb(1, 2, 3)' && /^(rgb|rgba|color)\(/.test(rest.token), `${where} ${mode}: --accent does not resolve to a colour (the sentinel probe computed ${rest.token})`);
-      check(rest.token !== rest.body, `${where} ${mode}: --accent resolves to the body text colour (${rest.token})`);
-      check(at !== null && at.colour === rest.token, `${where} ${mode}: the prose link is ${at?.colour}, the --accent token resolves to ${rest.token}`);
-      check(rest.defaultBlue === 0, `${where} ${mode}: ${rest.defaultBlue} links are the browser's default blue`);
+      }, link);
+      const at = facts.link;
+      check(at !== null, `${where}: ${item.selector ? `no link on ${item.path} matches ${item.selector}` : `the probe did not land on ${item.path}`}`);
+      check(facts.token !== 'rgb(1, 2, 3)' && /^(rgb|rgba|color)\(/.test(facts.token), `${where}: --accent does not resolve to a colour (the sentinel probe computed ${facts.token})`);
+      check(facts.token !== facts.body, `${where}: --accent resolves to the body text colour (${facts.token})`);
+      check(facts.defaultBlue === 0, `${where}: ${facts.defaultBlue} links on ${item.path} are the browser's default blue`);
       if (at) {
-        check(at.line === 'underline', `${where} ${mode}: the prose link carries no underline at rest (text-decoration-line: ${at.line})`);
-        check(at.thickness === '1px', `${where} ${mode}: the rest underline is ${at.thickness} thick, not the hairline 1px`);
-        check(at.offset === '3px', `${where} ${mode}: the rest underline sits ${at.offset} off the text, not 3px`);
-        check(at.decoration !== at.colour, `${where} ${mode}: the rest underline is the link's own colour (${at.decoration}), not quieter than it`);
-        const quiet = alpha(at.decoration);
-        check(quiet > 0 && quiet < 1, `${where} ${mode}: the rest underline's alpha is ${quiet}, so it is ${quiet === 0 ? 'invisible' : 'not softer than the text'}`);
+        check(at.colour === facts.token, `${where}: the link is ${at.colour}, the --accent token resolves to ${facts.token}`);
+        check(at.line === 'underline', `${where}: the link carries no underline at rest (text-decoration-line: ${at.line})`);
+        check(at.thickness === '1px', `${where}: the rest underline is ${at.thickness} thick, not the hairline 1px`);
+        check(at.offset === '3px', `${where}: the rest underline sits ${at.offset} off the text, not 3px`);
+        check(at.decoration !== at.colour, `${where}: the rest underline is the link's own colour (${at.decoration}), not quieter than it`);
+        const ground = backdrop(at.backgrounds);
+        const ratio = contrast(over(channels(at.decoration), ground), ground);
+        check(ratio >= 3, `${where}: the rest underline stands ${ratio.toFixed(2)}:1 over rgb(${ground.map(channel => Math.round(channel)).join(', ')}), under the 3:1 a colour cue has to clear`);
 
-        await page.hover(selector);
-        const hover = await page.evaluate((selector) => {
-          const css = getComputedStyle(document.querySelector<HTMLElement>(selector)!);
+        await page.hover(link);
+        const hover = await page.evaluate((link) => {
+          const css = getComputedStyle(document.querySelector<HTMLElement>(link)!);
           return { line: css.textDecorationLine, decoration: css.textDecorationColor };
-        }, selector);
-        check(hover.line === 'underline', `${where} ${mode}: the underline leaves the link on hover (text-decoration-line: ${hover.line})`);
-        check(hover.decoration === at.colour, `${where} ${mode}: the hover underline is ${hover.decoration}, not the full-strength ${at.colour}`);
+        }, link);
+        check(hover.line === 'underline', `${where}: the underline leaves the link on hover (text-decoration-line: ${hover.line})`);
+        check(hover.decoration === at.colour, `${where}: the hover underline is ${hover.decoration}, not the full-strength ${at.colour}`);
 
         // The keyboard's own path to the link, so the state read is the keyboard's.
         await page.mouse.move(0, 0);
         let reached = false;
         for (let step = 0; step < 400 && !reached; step++) {
           await page.keyboard.press('Tab');
-          reached = await page.evaluate(selector => document.activeElement === document.querySelector(selector), selector);
+          reached = await page.evaluate(link => document.activeElement === document.querySelector(link), link);
         }
-        check(reached, `${where} ${mode}: Tab never reached the prose link`);
+        check(reached, `${where}: Tab never reached the link`);
         if (reached) {
-          const focus = await page.evaluate((selector) => {
-            const link = document.querySelector<HTMLElement>(selector)!;
-            const css = getComputedStyle(link);
+          const focus = await page.evaluate((link) => {
+            const element = document.querySelector<HTMLElement>(link)!;
+            const css = getComputedStyle(element);
             return {
-              visible: link.matches(':focus-visible'),
+              visible: element.matches(':focus-visible'),
               line: css.textDecorationLine, decoration: css.textDecorationColor,
               outline: `${css.outlineStyle} ${css.outlineWidth} ${css.outlineColor}`,
             };
-          }, selector);
-          check(focus.visible, `${where} ${mode}: the link was focused without :focus-visible`);
-          check(focus.line === 'underline', `${where} ${mode}: the underline leaves the link on keyboard focus (text-decoration-line: ${focus.line})`);
-          check(focus.decoration === at.colour, `${where} ${mode}: the focus underline is ${focus.decoration}, not the full-strength ${at.colour}`);
-          check(focus.outline === `solid 2px ${at.colour}`, `${where} ${mode}: the focus outline is ${focus.outline}`);
+          }, link);
+          check(focus.visible, `${where}: the link was focused without :focus-visible`);
+          check(focus.line === 'underline', `${where}: the underline leaves the link on keyboard focus (text-decoration-line: ${focus.line})`);
+          check(focus.decoration === at.colour, `${where}: the focus underline is ${focus.decoration}, not the full-strength ${at.colour}`);
+          check(focus.outline === `solid 2px ${at.colour}`, `${where}: the focus outline is ${focus.outline}`);
         }
       }
+    }
+    await context.close();
+  }
+
+  // The anchors around the prose keep their own treatment: the widened rule must not have
+  // swallowed the toolbar, the table of contents, the pager, a card, the navigation in its
+  // two places or the 404 page's action — none wears an underline at rest.
+  const NEGATIVE = [
+    { what: 'the documentation toolbar link', path: '/docs/', selector: '.doc-toolbar a' },
+    { what: 'the table-of-contents link', path: '/docs/', selector: '.doc-toc a' },
+    { what: 'the pager link', path: '/docs/file/', selector: '.page-nav a' },
+    { what: 'the card link', path: '/docs/commands/', selector: '.doc-entry' },
+    { what: 'the header navigation link', path: '/docs/', selector: '.header__nav a' },
+    { what: 'the sidebar navigation link', path: '/docs/', selector: '.sidebar__link' },
+    { what: 'the 404 page action', path: '/nope/', selector: '.text-link' },
+  ];
+  for (const mode of ['light', 'dark'] as const) {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: mode });
+    const page = await context.newPage();
+    for (const item of NEGATIVE) {
+      const where = `${item.what} ${mode}`;
+      await page.goto(`${origin}${item.path}`, { waitUntil: 'load' });
+      const lines = await page.evaluate(selector => [...document.querySelectorAll<HTMLElement>(selector)].map(element => getComputedStyle(element).textDecorationLine), item.selector);
+      check(lines.length > 0, `${where}: ${item.path} carries no ${item.selector}, so its rest state is untested`);
+      const underlined = lines.filter(line => line !== 'none');
+      check(underlined.length === 0, `${where}: ${underlined.length} of ${lines.length} wear an underline at rest (text-decoration-line: ${underlined[0]})`);
     }
     await context.close();
   }
@@ -476,4 +568,4 @@ if (problems.length) {
   for (const problem of [...new Set(problems)]) console.error(`  ${problem}`);
   process.exit(1);
 }
-console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero\'s content centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer, the prose links wearing the link token and underlined at rest in both themes, the code blocks chip-free inside, scrolling their long lines, and bare where the styles de-chip a name, the home transcripts rendering the reference line for line, and the header on every sitemap page wearing a section only where there is one.');
+console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero\'s content centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer, every prose-link family wearing the link token and a 3:1 mark at rest, turning full-strength on hover and on the keyboard while the anchors around them stay bare, the code blocks chip-free inside, scrolling their long lines, and bare where the styles de-chip a name, the home transcripts rendering the reference line for line, and the header on every sitemap page wearing a section only where there is one.');
