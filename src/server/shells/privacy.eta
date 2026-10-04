@@ -1,0 +1,16 @@
+<article class="md">
+  <h1 id="privacy">Privacy</h1>
+  <h2 id="how-the-site-reaches-you">How the site reaches you</h2>
+  <p>team.floor.io is served through Cloudflare. To deliver the pages, Cloudflare processes information about your request, including your IP address. Cloudflare describes this in its <a href="https://www.cloudflare.com/privacypolicy/">privacy policy</a>.</p>
+  <p>Cloudflare's responses also ask your browser to report failed requests: if a request to team.floor.io fails, a browser that supports this may send a report of the failure to Cloudflare, at <code>a.nel.cloudflare.com</code>.</p>
+  <h2 id="counting-visits">Counting visits</h2>
+  <p>Visits are counted with Cloudflare Web Analytics. If your visit reaches Cloudflare through one of its data centers in the EU, the EEA, Switzerland or the UK, the analytics script isn't loaded (<a href="https://developers.cloudflare.com/speed/observatory/rum-beacon/">Cloudflare's description</a>, read on 4 October 2026). Otherwise, your browser loads the script from <code>static.cloudflareinsights.com</code> and reports to <code>cloudflareinsights.com</code>.</p>
+  <p>Cloudflare says that Web Analytics "does not use any client-side state, such as cookies or localStorage, to collect usage metrics", and that it doesn't "fingerprint" individuals through their IP address, User Agent string, or any other data to display analytics. Source: <a href="https://www.cloudflare.com/web-analytics/">Cloudflare Web Analytics</a>, read on 4 October 2026.</p>
+  <h2 id="cookies-and-other-sites">Cookies and other sites</h2>
+  <p>The site sets no cookies. Apart from Cloudflare's analytics script, where it is loaded, pages load nothing from other sites: scripts, styles and images come from team.floor.io itself, and the type you read is the one your system already has.</p>
+  <h2 id="what-stays-in-your-browser">What stays in your browser</h2>
+  <p>The site keeps one choice in your browser's local storage, and only once you make it: whether you read the site in light or dark mode. It never leaves your browser — the site sends it nowhere. To remove it, clear the site data for team.floor.io in your browser's settings.</p>
+  <h2 id="contact">Contact</h2>
+  <p>Questions about this page: open an issue on <a href="https://github.com/floor/team/issues">GitHub</a>.</p>
+  <p>Last updated 4 October 2026.</p>
+</article>

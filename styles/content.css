@@ -1,0 +1,405 @@
+/* =================================================================
+   content.css — what a documentation page says: its prose, its tables,
+   its table of contents, the pager under it, and the cards the command
+   index is built from.
+   ================================================================= */
+
+/* ─── The page's own frame ───────────────────────────────────────── */
+
+.document-layout {
+    display: grid;
+    grid-template-columns: minmax(0, var(--content-max-width)) minmax(0, var(--toc-width));
+    gap: 56px;
+    align-items: start;
+    max-width: calc(var(--content-max-width) + var(--toc-width) + 56px);
+}
+
+.page-wrap {
+    max-width: var(--content-max-width);
+}
+
+.page-heading {
+    margin-bottom: 28px;
+}
+
+.page-heading p {
+    color: var(--text-muted);
+    font-size: var(--fs-lg);
+}
+
+.eyebrow {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--accent);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.ui-title {
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.doc-toolbar {
+    margin-bottom: 20px;
+}
+
+.doc-toolbar a {
+    color: var(--text-muted);
+    font-size: var(--fs-ui);
+    text-decoration: none;
+}
+
+.doc-toolbar a:hover {
+    color: var(--accent);
+}
+
+/* ─── Prose ──────────────────────────────────────────────────────── */
+
+.md {
+    color: var(--text);
+}
+
+.md > * + * {
+    margin-top: 18px;
+}
+
+.md h1 {
+    margin-bottom: 22px;
+    font-size: var(--fs-3xl);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+}
+
+.md h2 {
+    margin-top: 48px;
+    padding-top: 22px;
+    border-top: 1px solid var(--border);
+    font-size: var(--fs-2xl);
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+}
+
+.md h3 {
+    margin-top: 32px;
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.md h4 {
+    margin-top: 24px;
+    font-size: var(--fs-md);
+    font-weight: 700;
+}
+
+.md p,
+.md li {
+    max-width: 68ch;
+}
+
+.md strong {
+    font-weight: 700;
+}
+
+.md a {
+    color: var(--accent);
+    text-decoration: none;
+    text-underline-offset: 3px;
+}
+
+.md a:hover {
+    text-decoration: underline;
+}
+
+.md ul,
+.md ol {
+    padding-left: 22px;
+}
+
+.md li + li {
+    margin-top: 6px;
+}
+
+.md li::marker {
+    color: var(--text-muted);
+}
+
+.md hr {
+    margin: 32px 0;
+    border: 0;
+    border-top: 1px solid var(--border);
+}
+
+.md blockquote {
+    padding: 2px 0 2px 16px;
+    border-left: 2px solid var(--accent);
+    color: var(--text-muted);
+}
+
+/* Inline code, and the code of a heading, which is a name and not a block. */
+.md code,
+.text-link code,
+.doc-entry code,
+.sample__caption code {
+    padding: 1px 5px;
+    background: var(--bg-inline-code);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+}
+
+.md h2 code,
+.md h3 code {
+    padding: 0;
+    background: none;
+    border: 0;
+}
+
+/* ─── Tables ─────────────────────────────────────────────────────── */
+
+.table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.md table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--fs-ui);
+}
+
+.md th,
+.md td {
+    padding: 10px 14px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.md thead th {
+    background: var(--bg-raised);
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.md tbody tr + tr td {
+    border-top: 1px solid var(--border);
+}
+
+/* The first column of a command table is a name, not prose. */
+.md td:first-child code {
+    white-space: nowrap;
+}
+
+/* ─── The site's own notes between pieces of the reference ───────── */
+
+.note {
+    padding: 12px 16px;
+    background: var(--accent-glow);
+    border-left: 2px solid var(--accent);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    color: var(--text-muted);
+    font-size: var(--fs-ui);
+}
+
+.text-link {
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.text-link:hover {
+    text-decoration: underline;
+}
+
+/* ─── The table of contents beside a page ────────────────────────── */
+
+.doc-toc {
+    position: sticky;
+    top: calc(var(--header-height) + 36px);
+    max-height: calc(100vh - var(--header-height) - 60px);
+    overflow-y: auto;
+}
+
+.doc-toc .ui-title {
+    margin-bottom: 12px;
+    color: var(--text-muted);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.doc-toc nav {
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid var(--border);
+}
+
+.doc-toc a {
+    padding: 4px 0 4px 12px;
+    color: var(--text-muted);
+    font-size: var(--fs-ui);
+    text-decoration: none;
+    transition: color var(--transition), border-color var(--transition);
+}
+
+.doc-toc a:hover {
+    border-left: 2px solid var(--accent);
+    margin-left: -1.5px;
+    padding-left: 11.5px;
+    color: var(--text);
+}
+
+/* ─── The pager under a reference page ───────────────────────────── */
+
+.page-nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+}
+
+.page-nav__link {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    transition: border-color var(--transition), background-color var(--transition);
+}
+
+.page-nav__link:hover {
+    background: var(--bg-raised);
+    border-color: var(--border-strong);
+}
+
+.page-nav__link--next {
+    text-align: right;
+}
+
+.page-nav__label {
+    color: var(--text-muted);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.page-nav__title {
+    color: var(--text);
+    font-size: var(--fs-ui);
+    font-weight: 600;
+}
+
+/* ─── Cards: the command index, the landing's next links ─────────── */
+
+.doc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.doc-entry {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: border-color var(--transition), background-color var(--transition), transform var(--transition);
+}
+
+.doc-entry:hover {
+    background: var(--bg-raised-high);
+    border-color: var(--accent);
+    transform: translateY(-1px);
+}
+
+.doc-entry__name {
+    color: var(--text);
+    font-size: var(--fs-md);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.doc-entry__name code {
+    padding: 0;
+    background: none;
+    border: 0;
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+.doc-entry__summary {
+    color: var(--text-muted);
+    font-size: var(--fs-ui);
+    line-height: 1.55;
+}
+
+.doc-entry__who {
+    margin-top: auto;
+    padding-top: 6px;
+    color: var(--accent);
+    font-size: var(--fs-sm);
+}
+
+/* ─── Narrow windows ─────────────────────────────────────────────── */
+
+@media (max-width: 1080px) {
+    .document-layout {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 32px;
+    }
+
+    .doc-toc {
+        position: static;
+        max-height: none;
+        order: -1;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border);
+    }
+}
+
+@media (max-width: 600px) {
+    .md h1 {
+        font-size: var(--fs-2xl);
+    }
+
+    .md h2 {
+        margin-top: 36px;
+        font-size: var(--fs-xl);
+    }
+
+    .page-nav {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .page-nav__link--next {
+        text-align: left;
+    }
+
+    .doc-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

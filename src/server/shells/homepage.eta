@@ -1,0 +1,24 @@
+<div class="landing">
+  <section class="hero" aria-labelledby="hero-title">
+    <span class="eyebrow">THE TEAM CLI · VERSION <%= it.version %></span>
+    <h1 class="hero__name" id="hero-title">A team of agents,<br><span class="hero__accent">from one file.</span></h1>
+    <p class="hero__tagline"><%~ it.tagline %></p>
+    <div class="hero__actions"><a class="mtrl-button mtrl-button--filled" href="/docs/">Get started <span class="mtrl-button__icon" aria-hidden="true">→</span></a><a class="mtrl-button mtrl-button--tonal" href="/docs/commands/">Command reference</a></div>
+    <div class="hero__install"><%~ it.install %></div>
+    <div class="hero__notes"><span>No runtime dependencies</span><span>Node 22 or later</span><span>MIT</span></div>
+  </section>
+  <div class="landing-points">
+    <% it.points.forEach((point, index) => { %><div><span class="feature-index">0<%= index + 1 %></span><h2><%= point.title %></h2><p><%~ point.html %></p></div><% }); %>
+  </div>
+  <section class="samples" aria-labelledby="samples-title">
+    <h2 class="ui-title" id="samples-title">One file, a plan, and a reading</h2>
+    <p class="samples__lead">Every block below is a tested page of the command reference, shown as it is there.</p>
+    <% it.samples.forEach(sample => { %><div class="sample"><h3 class="sample__label"><%= sample.label %></h3><p class="sample__caption"><%~ sample.caption %></p><%~ sample.html %></div><% }); %>
+    <p class="samples__foot">The two transcripts come from the <a href="/docs/commands/up/">team up</a> and <a href="/docs/commands/status/">team status</a> pages, each of which runs them against its own fixture team; the plan's project holds one more seat, stopped in the file, so the plan skips it.</p>
+  </section>
+  <div class="landing-next">
+    <a class="doc-entry" href="/docs/file/"><span class="doc-entry__name">The team file</span><span class="doc-entry__summary">Every field of <code>.agents/team.yaml</code>, section by section.</span></a>
+    <a class="doc-entry" href="/docs/safety/"><span class="doc-entry__name">Safety</span><span class="doc-entry__summary">The owner, the approved copy, and the prompts team never answers.</span></a>
+    <a class="doc-entry" href="/docs/clis/"><span class="doc-entry__name">Supported CLIs</span><span class="doc-entry__summary">claude-code, codex, cursor and antigravity.</span></a>
+  </div>
+</div>

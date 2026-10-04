@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en" data-theme="ocean">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title><%= it.title %></title>
+  <meta name="description" content="<%= it.description %>" />
+  <link rel="canonical" href="https://team.floor.io<%= it.path %>" />
+  <link rel="icon" href="/favicon.ico" sizes="32x32" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <meta name="theme-color" content="#001e30" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="team.floor.io" />
+  <meta property="og:url" content="https://team.floor.io<%= it.path %>" />
+  <meta property="og:title" content="<%= it.title %>" />
+  <meta property="og:description" content="<%= it.description %>" />
+  <meta property="og:image" content="https://team.floor.io/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="team — set up, change and watch a project's team of AI agents from one file" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content="https://team.floor.io<%= it.path %>" />
+  <meta name="twitter:title" content="<%= it.title %>" />
+  <meta name="twitter:description" content="<%= it.description %>" />
+  <meta name="twitter:image" content="https://team.floor.io/og-image.png" />
+  <% it.jsonLd.forEach(json => { %><script type="application/ld+json"><%~ json %></script>
+  <% }); %>
+  <% it.materialSheets.forEach(sheet => { %><link rel="stylesheet" href="<%= sheet.url %>" />
+  <% }); %><link rel="stylesheet" href="/dist/css/<%= it.css %>.css" />
+  <script>
+    (() => { let mode; try { mode = localStorage.getItem('team-site-mode'); } catch {} document.documentElement.dataset.themeMode = mode === 'light' || mode === 'dark' ? mode : matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; })();
+  </script>
+  <script type="module" src="/dist/site.js"></script>
+</head>
+<body class="<%= it.isHome ? 'home' : '' %>">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="header"><div class="header__inner">
+    <a class="header__logo" href="/"><span class="header__mark" aria-hidden="true">&gt;_</span>team<span class="brand-dot">.</span>floor.io</a>
+    <span class="header__sep" aria-hidden="true">/</span><span class="header__section"><%= it.section %></span>
+    <nav class="header__nav" aria-label="Main navigation">
+      <a href="/docs/" class="<%= it.section === 'Documentation' ? 'active' : '' %>">Documentation</a>
+      <a href="/docs/commands/" class="<%= it.path === '/docs/commands/' ? 'active' : '' %>">Commands</a>
+      <a href="https://github.com/floor/team" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+    </nav>
+    <button type="button" class="header__search" id="search-trigger" aria-label="Search (⌘K)" aria-haspopup="dialog" aria-keyshortcuts="Meta+K Control+K">
+      <svg class="header__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span class="header__search-kbd" aria-hidden="true"><kbd>⌘</kbd><kbd>K</kbd></span>
+    </button>
+    <button type="button" class="header__theme" id="theme-toggle" aria-label="Switch between light and dark">
+      <svg class="header__icon header__theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg>
+      <svg class="header__icon header__theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M21 13A9 9 0 0 1 11 3a9 9 0 1 0 10 10Z"/></svg>
+    </button>
+    <button type="button" class="header__hamburger" id="hamburger" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14"/></svg></button>
+  </div></header>
+  <button id="overlay" class="overlay" type="button" aria-label="Close navigation" hidden></button>
+  <div class="layout">
+    <nav class="sidebar" id="sidebar" aria-label="Documentation navigation">
+      <div class="sidebar__group mobile-navigation"><a class="sidebar__link" href="/docs/">Documentation</a><a class="sidebar__link" href="/docs/commands/">Commands</a><a class="sidebar__link" href="https://github.com/floor/team">GitHub ↗</a></div>
+      <% it.nav.forEach(group => { %><div class="sidebar__group"><div class="sidebar__label"><%= group.label %></div><% group.items.forEach(item => { %>
+        <a class="sidebar__link <%= it.path === item.href ? 'sidebar__link--active' : '' %>" href="<%= item.href %>" <% if (it.path === item.href) { %>aria-current="page"<% } %>><%= item.name %></a>
+      <% }); %></div><% }); %>
+      <div class="sidebar__foot">team <%= it.version %> · <a href="https://github.com/floor/team/blob/main/LICENSE">MIT license</a><br>Runs teams in <a href="https://herdr.dev">herdr</a></div>
+    </nav>
+    <main class="content" id="content" tabindex="-1"><%~ it.content %></main>
+  </div>
+  <footer class="site-footer"><span>team · Built by <a href="https://floor.io">Floor IO</a></span><span class="site-footer__links"><a href="https://github.com/floor/team">Source on GitHub ↗</a><a href="https://www.npmjs.com/package/team">npm ↗</a><a href="/privacy/">Privacy</a></span></footer>
+  <%~ include('search') %>
+</body></html>

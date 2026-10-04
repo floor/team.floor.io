@@ -1,0 +1,93 @@
+/* =================================================================
+   tokens.css — the site's own variables, and the few colours material's
+   theme does not name (code and terminal surfaces, syntax accents).
+
+   The colour scheme is material's ocean theme (themes/ocean.css), which
+   defines --mtrl-sys-color-* on [data-theme=ocean] — light — and on
+   [data-theme=ocean][data-theme-mode=dark]. base.eta sets both attributes
+   on <html> before first paint. Every alias below therefore follows the
+   mode on its own; nothing here restates a colour per mode.
+   ================================================================= */
+
+:root {
+    /* material's own typefaces are Roboto; the site copies no fonts and
+       reads in the system's, so the components it uses are told the same. */
+    --mtrl-ref-typeface-brand: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mtrl-ref-typeface-plain: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+    /* Typography */
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --fs-xs: 11.5px;
+    --fs-sm: 12.5px;
+    --fs-ui: 13.5px;
+    --fs-base: 15px;
+    --fs-md: 16px;
+    --fs-lg: 18px;
+    --fs-xl: 21px;
+    --fs-2xl: 26px;
+    --fs-3xl: 34px;
+    --fs-hero: 52px;
+
+    /* Layout */
+    --header-height: 56px;
+    --sidebar-width: 232px;
+    --toc-width: 216px;
+    --layout-max-width: 1280px;
+    --content-max-width: 760px;
+    --gutter: 28px;
+    --radius: var(--mtrl-sys-shape-corner-medium);
+    --radius-sm: var(--mtrl-sys-shape-corner-small);
+    --radius-xs: var(--mtrl-sys-shape-corner-extra-small);
+
+    /* Colour: the page, from material's surface roles */
+    --bg: var(--mtrl-sys-color-surface);
+    --bg-raised: var(--mtrl-sys-color-surface-container);
+    --bg-raised-high: var(--mtrl-sys-color-surface-container-high);
+    --bg-sunken: var(--mtrl-sys-color-surface-container-low);
+    --text: var(--mtrl-sys-color-on-surface);
+    --text-muted: var(--mtrl-sys-color-on-surface-variant);
+    --border: var(--mtrl-sys-color-outline-variant);
+    --border-strong: var(--mtrl-sys-color-outline);
+    --accent: var(--mtrl-sys-color-primary);
+    --accent-dim: color-mix(in srgb, var(--mtrl-sys-color-primary) 12%, transparent);
+    --accent-glow: color-mix(in srgb, var(--mtrl-sys-color-primary) 6%, transparent);
+
+    /* Colour: the chrome, which floats over the page */
+    --header-bg: color-mix(in srgb, var(--mtrl-sys-color-surface) 86%, transparent);
+    --overlay-bg: rgba(0, 0, 0, 0.45);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.18), 0 8px 24px rgba(0, 0, 0, 0.12);
+
+    /* Colour: code and terminal surfaces. Not material roles: a code block is
+       a window, not a card, so it sits below the page in both modes. */
+    --bg-code: #171a1c;
+    --bg-code-bar: rgba(255, 255, 255, 0.03);
+    --bg-inline-code: var(--mtrl-sys-color-surface-container-high);
+    --bg-term: #101315;
+    --term-prompt: #8dcdff;
+    --term-command: #e1e3e4;
+    --term-output: #a9b1b6;
+
+    /* Motion: one duration, and a switch that says no */
+    --transition: 140ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+[data-theme-mode="light"] {
+    --bg-code: #f5f7f9;
+    --bg-code-bar: rgba(0, 0, 0, 0.02);
+    --bg-term: #eef1f4;
+    --term-prompt: #006493;
+    --term-command: #191c1e;
+    --term-output: #41484d;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.07);
+}
+
+/* Window size classes (m3.material.io/foundations/layout): the shell keeps a
+   gutter from large on, so a wide screen is not all margin. */
+@media (min-width: 1600px) {
+    :root {
+        --layout-max-width: 1440px;
+        --sidebar-width: 252px;
+        --toc-width: 232px;
+    }
+}

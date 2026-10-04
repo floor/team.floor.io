@@ -1,0 +1,5 @@
+<div class="document-layout"><article class="md">
+  <div class="doc-toolbar"><a href="/docs/">← Documentation</a></div>
+  <%~ it.html %>
+  <%~ it.pager %>
+</article><% if (it.toc.length) { %><aside class="doc-toc" aria-label="On this page"><h2 class="ui-title">On this page</h2><nav><% it.toc.forEach(item => { %><a href="#<%= item.id %>"><%= item.title %></a><% }); %></nav></aside><% } %></div>

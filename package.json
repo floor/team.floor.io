@@ -1,0 +1,30 @@
+{
+  "name": "team.floor.io",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "content": "bun scripts/content.ts",
+    "dev": "bun scripts/content.ts && bun scripts/dev.ts",
+    "start": "bun server.ts",
+    "build": "bun scripts/content.ts && bun scripts/build.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test test/",
+    "links:check": "bun scripts/check-links.ts",
+    "docs:check": "bun scripts/check-docs.ts",
+    "seo:check": "bun scripts/check-seo.ts",
+    "test:browser": "bun scripts/check-browser.ts"
+  },
+  "dependencies": {
+    "eta": "4.5.1",
+    "highlight.js": "11.11.1",
+    "marked": "17.0.2",
+    "material": "3.0.1",
+    "minisearch": "^7.2.0"
+  },
+  "devDependencies": {
+    "@types/bun": "1.3.10",
+    "playwright": "1.63.0",
+    "typescript": "^5.8.2"
+  }
+}
