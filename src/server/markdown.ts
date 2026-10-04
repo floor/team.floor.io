@@ -147,6 +147,18 @@ export function renderMarkdown(markdown: string, options: { skip?: (fence: Fence
       code: (token: Tokens.Code) => token.codeBlockStyle === 'indented'
         ? indentBlock(token.text)
         : fenceHtml({ ...header(token.lang ?? ''), text: token.text, line: 0, start: 0, end: 0 }),
+      /**
+       * A table of the reference's prose. It gets the wrapper the site's own tables get,
+       * so a wide one scrolls inside the page instead of widening it, and its first row
+       * is a row of column headings for a reader who cannot see it.
+       */
+      table(this: { parser: { parseInline: (tokens: Tokens.Generic[]) => string } }, token: Tokens.Table) {
+        const cell = (item: Tokens.TableCell, name: 'th' | 'td') =>
+          `<${name}${name === 'th' ? ' scope="col"' : ''}${item.align ? ` style="text-align: ${item.align}"` : ''}>${this.parser.parseInline(item.tokens as Tokens.Generic[])}</${name}>`;
+        const head = token.header.map(item => cell(item, 'th')).join('');
+        const body = token.rows.map(row => `<tr>${row.map(item => cell(item, 'td')).join('')}</tr>`).join('');
+        return `<div class="table-wrap"><table><thead><tr>${head}</tr></thead>${body ? `<tbody>${body}</tbody>` : ''}</table></div>\n`;
+      },
       link(this: { parser: { parseInline: (tokens: Tokens.Generic[]) => string } }, token: Tokens.Link) {
         const label = this.parser.parseInline(token.tokens);
         const href = localHref(token.href);
