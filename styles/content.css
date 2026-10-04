@@ -152,10 +152,12 @@
 }
 
 /* Inline code, and the code of a heading, which is a name and not a block. Code inside a
-   `pre` is a block's body, not inline code: `:not(pre)` keeps this chip off it — there it
+   `pre` is a block's body, not inline code: the `:where()` keeps this chip off it — there it
    painted a background and a border around every line, and its padding sat on the lines'
-   ends. */
-.md :not(pre) > code,
+   ends — while holding this selector's weight at 0-1-1, exactly what bare `.md code` weighed.
+   A bare `:not(pre)` would weight 0-1-2 and outrank the site's own de-chip rules for specific
+   places (`.doc-entry__name code`, the headings), chipping a card title or a heading name. */
+.md :where(:not(pre)) > code,
 .text-link code,
 .doc-entry code,
 .sample__caption code {

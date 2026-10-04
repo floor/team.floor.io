@@ -15,8 +15,9 @@
 //	   docs page, and no anchor on either page falls to the browser's default blue (the
 //	   landing's sentence under the transcripts once did, unreadable on the dark background).
 //	6. The code blocks: the code inside a pre wears no inline-code chip (one once painted a
-//	   background and a border around every line there), the chip applies only outside, and a
-//	   block wider than its box scrolls inside it — in light and in dark.
+//	   background and a border around every line there), the chip applies only outside — and
+//	   still loses to the site's own de-chip rules for the places that are names, a card title
+//	   among them — and a block wider than its box scrolls inside it, in light and in dark.
 //
 // The server is the site's own request handler on a free port, so this opens no
 // process of its own; the browser opens once and is closed in the end.
@@ -246,6 +247,10 @@ try {
   // every line, padding on the lines' ends. It belongs to inline code alone, and a block wider
   // than its box has to scroll inside it — the file page carries the team.yaml example and a
   // comment line longer than the column.
+  // The chip rule must also keep its old weight where it applies: a card title and a heading
+  // are names, and the styles de-chip them with a rule of their own that the chip has to lose
+  // to — which it only does at 0-1-1 (`.md :where(:not(pre)) > code`). The commands index's
+  // card titles are the place that caught it when the exclusion was a bare `:not(pre)`.
   for (const mode of ['light', 'dark'] as const) {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: mode });
     const page = await context.newPage();
@@ -284,6 +289,19 @@ try {
       check(facts.inline.background !== 'rgba(0, 0, 0, 0)', `${where}: the inline code wears no chip (${facts.inline.background})`);
       check(facts.inline.padding !== '0px', `${where}: the inline code wears no chip padding (${facts.inline.padding})`);
     }
+    await page.goto(`${origin}/docs/commands/`, { waitUntil: 'load' });
+    const title = await page.evaluate(() => {
+      const element = document.querySelector<HTMLElement>('.doc-entry__name code');
+      if (!element) return null;
+      const css = getComputedStyle(element);
+      return { background: css.backgroundColor, border: css.borderTopWidth, padding: css.padding };
+    });
+    check(title !== null, `${where}: the commands index shows no card title`);
+    if (title) {
+      check(title.background === 'rgba(0, 0, 0, 0)', `${where}: the card title wears a chip background (${title.background})`);
+      check(title.border === '0px', `${where}: the card title wears a ${title.border} chip border`);
+      check(title.padding === '0px', `${where}: the card title wears ${title.padding} chip padding`);
+    }
     await context.close();
   }
 } finally {
@@ -296,4 +314,4 @@ if (problems.length) {
   for (const problem of [...new Set(problems)]) console.error(`  ${problem}`);
   process.exit(1);
 }
-console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer, the prose links wearing the link token in both themes, and the code blocks chip-free inside and scrolling their long lines.');
+console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer, the prose links wearing the link token in both themes, and the code blocks chip-free inside, scrolling their long lines, and bare where the styles de-chip a name.');
