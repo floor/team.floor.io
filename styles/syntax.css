@@ -94,23 +94,27 @@
     tab-size: 2;
 }
 
+/* The block names the mono font; the code inside would keep the browser's own `monospace`
+   — the UA sheet styles `code`, and that beats inheritance — and the two fonts' metrics
+   stand every line box a fraction taller than the line-height the block declares. */
+.term code {
+    font-family: inherit;
+}
+
 .term:focus-visible {
     outline-offset: -2px;
 }
 
+/* One line, as a span of the pre's own text: the newline between the spans is the
+   line break, so the lines are inline — a block-level span would add a break of its
+   own and every line would be followed by an empty one. */
 .term__line {
-    display: block;
     color: var(--term-output);
     white-space: pre;
 }
 
 .term__line--command {
-    margin-top: 8px;
     color: var(--term-command);
-}
-
-.term__line--command:first-child {
-    margin-top: 0;
 }
 
 .term__prompt {

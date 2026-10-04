@@ -18,11 +18,16 @@
 //	   background and a border around every line there), the chip applies only outside — and
 //	   still loses to the site's own de-chip rules for the places that are names, a card title
 //	   among them — and a block wider than its box scrolls inside it, in light and in dark.
+//	7. The home page's two transcripts, as the reference records them: the rendered text is
+//	   the fence's own text line for line — while the line spans were block-level every line
+//	   was followed by an empty one — and the block is no taller than one line-height per
+//	   line plus its padding.
 //
 // The server is the site's own request handler on a free port, so this opens no
 // process of its own; the browser opens once and is closed in the end.
 import { chromium, type Browser, type Page } from 'playwright';
 import { handleRequest } from '../server';
+import { homeSamples } from '../src/server/pages';
 
 const problems: string[] = [];
 const check = (condition: boolean, message: string) => { if (!condition) problems.push(message); };
@@ -304,6 +309,45 @@ try {
     }
     await context.close();
   }
+
+  // ── 7. the home transcripts: the reference's lines, and only them ──────────
+  // A transcript's line is a span of the pre's text and the newline between the spans is
+  // the line break; while the spans were block-level, each one added a break of its own
+  // and every line was followed by an empty one. The rendered text is held to the fence
+  // itself, line for line, and the block to one line-height per line plus its padding.
+  const transcriptSources = homeSamples()
+    .filter(sample => sample.fence.lang === 'console')
+    .map(sample => sample.fence.text.replace(/\n$/, ''));
+  for (const mode of ['light', 'dark'] as const) {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: mode });
+    const page = await context.newPage();
+    await page.goto(`${origin}/`, { waitUntil: 'load' });
+    const facts = await page.evaluate(() => [...document.querySelectorAll<HTMLElement>('#content pre.term')].map(pre => {
+      const code = pre.querySelector('code')!;
+      const css = getComputedStyle(pre);
+      return {
+        rendered: code.innerText.replace(/\n$/, ''),
+        height: pre.getBoundingClientRect().height,
+        lineHeight: parseFloat(css.lineHeight),
+        padding: parseFloat(css.paddingTop) + parseFloat(css.paddingBottom),
+      };
+    }));
+    check(facts.length === transcriptSources.length, `home ${mode}: ${facts.length} transcripts, the home page's samples carry ${transcriptSources.length}`);
+    transcriptSources.forEach((source, index) => {
+      const fact = facts[index];
+      if (!fact) return;
+      const expected = source.split('\n');
+      const rendered = fact.rendered.split('\n');
+      const wrong = rendered.length !== expected.length ? `the fence has ${expected.length}` : (() => {
+        const line = rendered.findIndex((text, at) => text !== expected[at]);
+        return line < 0 ? '' : `line ${line + 1} reads ${JSON.stringify(rendered[line])}, the fence has ${JSON.stringify(expected[line])}`;
+      })();
+      check(wrong === '', `home ${mode}: transcript ${index + 1} renders ${rendered.length} lines, ${wrong}`);
+      const bound = expected.length * fact.lineHeight + fact.padding;
+      check(fact.height <= bound + 0.5, `home ${mode}: transcript ${index + 1} is ${fact.height.toFixed(2)}px tall, ${expected.length} lines × ${fact.lineHeight} + ${fact.padding} is ${bound.toFixed(2)}`);
+    });
+    await context.close();
+  }
 } finally {
   await browser.close();
   await server.stop(true);
@@ -314,4 +358,4 @@ if (problems.length) {
   for (const problem of [...new Set(problems)]) console.error(`  ${problem}`);
   process.exit(1);
 }
-console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer, the prose links wearing the link token in both themes, and the code blocks chip-free inside, scrolling their long lines, and bare where the styles de-chip a name.');
+console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer, the prose links wearing the link token in both themes, the code blocks chip-free inside, scrolling their long lines, and bare where the styles de-chip a name, and the home transcripts rendering the reference line for line.');
