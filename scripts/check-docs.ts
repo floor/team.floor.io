@@ -60,7 +60,7 @@ yamlSources.push({ where: 'examples/team.yaml', page: 'the example', paragraph: 
  * above it: both pages that carry one broken say what the command does with it. The
  * example file and every other fence must be a file `team` accepts.
  */
-const SAYS_BROKEN = /\b(broken|no longer validates|does not parse)\b/i;
+const SAYS_BROKEN = /\b(broken|no longer validates|does not parse|refused?|refuses)\b/i;
 for (const { where, paragraph, yaml } of yamlSources) {
   const result = validateTeamFile(yaml);
   if (result.ok) continue;

@@ -192,7 +192,7 @@ export function localHref(href: string): string {
   if (/^(?:javascript|data|vbscript):/i.test(href)) return '';
   const command = /^(?:\.\/)?([a-z-]+)\.md(#[\w-]+)?$/.exec(href);
   if (command) return `/docs/commands/${command[1]}/${command[2] ?? ''}`;
-  if (href === 'docs/commands/' || href === 'docs/commands') return '/docs/commands/';
+  if (href === 'docs/commands/' || href === 'docs/commands' || /^https:\/\/github\.com\/floor\/team\/tree\/main\/docs\/commands\/?$/.test(href)) return '/docs/commands/';
   if (href === '../README.md') return '/docs/';
   return href;
 }

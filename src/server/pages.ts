@@ -169,17 +169,40 @@ function examplePart(yaml: string, keys: string[]): string {
   return (next < 0 ? rest : rest.slice(0, next + 1)).join('\n').trimEnd();
 }
 
+/** One top-level part of the watch example fence: from watch: to the line before the next top-level key. */
+function watchPart(markdown: string): string {
+  const fence = fenceWith(markdown, 'yaml', 'memory: off');
+  const lines = fence.text.split('\n');
+  const start = lines.findIndex(line => line.startsWith('watch:'));
+  if (start < 0) throw new ReferenceError('the watch example fence no longer has a "watch:" section');
+  const rest = lines.slice(start);
+  const next = rest.slice(1).findIndex(line => /^[a-z_]+:/.test(line));
+  return (next < 0 ? rest : rest.slice(0, next + 1)).join('\n').trimEnd();
+}
+
 /** /docs/file/ — the team file, section by section. */
 export function teamFile(): Rendered {
   const format = section(README, "The file's format");
   const example = read('examples/team.yaml');
+  const watch = commandPage('watch');
   const doc = new Doc().h1('The team file').md(paragraph(README, 'A documented subset of YAML')).block(fenceWith(format, 'yaml', 'format: 1'));
   for (const part of FILE_PARTS) {
     doc.heading(part.title);
     doc.block({ lang: 'yaml', info: 'file=examples/team.yaml', text: `${examplePart(example, part.keys)}\n`, line: 0, start: 0, end: 0 });
     for (const startsWith of part.bullets) doc.md(bullet(format, startsWith));
   }
-  return doc.heading('More fields').md(paragraph(README, 'More fields exist')).render();
+  return doc
+    .heading('watch')
+    .md(paragraph(watch, "The watch's own timings"))
+    .md(paragraph(watch, "A check the team doesn't want"))
+    .block({ lang: 'yaml', info: 'file=.agents/team.yaml', text: `${watchPart(watch)}\n`, line: 0, start: 0, end: 0 })
+    .heading('budgets')
+    .md(paragraph(README, '`budgets` is the owner\'s'))
+    .md(paragraph(README, '`examples/checks/codex-quota` is a check'))
+    .block(fenceWith(format, 'yaml', 'openai:'))
+    .heading('More fields')
+    .md(paragraph(README, 'More fields exist'))
+    .render();
 }
 
 /** /docs/commands/ — the command reference's index: the README's table, as cards. */
@@ -211,6 +234,7 @@ export function commandPageContent(name: string): Rendered {
  */
 export function safety(): Rendered {
   const up = commandPage('up');
+  const approve = commandPage('approve');
   const never = [
     sentence(README, 'Nothing writes a vendor config'),
     sentence(README, 'It never answers prompts'),
@@ -224,6 +248,9 @@ export function safety(): Rendered {
     .md(section(up, 'Who may run it'))
     .heading('The approved copy')
     .md(section(README, 'The file is private to each clone'))
+    .heading('What an approval covers')
+    .md(sentence(approve, 'What needs a'))
+    .md(sentence(approve, 'Until an edit is'))
     .heading('Trust is left to the owner')
     .md(paragraph(up, 'The lobby is a folder no CLI has seen before'))
     .heading('What team never does')
@@ -331,7 +358,7 @@ const SITE_PAGES: Record<string, string> = {
   '/': 'A project declares its team in one file: the seats, the models, the rules and the folders each one may touch. Set it up, change it and watch it run.',
   '/privacy/': 'How team.floor.io reaches you, and what stays in your browser.',
   '/docs/': 'Your first team in five minutes: install team, write .agents/team.yaml, approve it, and start the session.',
-  '/docs/file/': 'Every part of .agents/team.yaml, section by section: the head, identity, workspace, machine and the seats, from the README and the example.',
+  '/docs/file/': 'Every part of .agents/team.yaml, section by section: the head, identity, workspace, machine, seats, watch and budgets, from the README and the example.',
   '/docs/commands/': 'The eleven commands of team: what each reads and writes, who may run it, its refusals, its exit codes and its examples.',
   '/docs/safety/': 'Why team is safe to run: the owner outside herdr, the approved copy, trust left to the owner, and the prompts team never answers.',
   '/docs/clis/': 'What team knows of claude-code, codex, cursor and antigravity: the launch profile, the sign-in check, and what it never writes.',

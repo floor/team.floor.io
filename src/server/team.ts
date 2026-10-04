@@ -12,7 +12,7 @@ export const root = resolve(import.meta.dir, '../..');
 /** The clone the content is extracted from. Override with TEAM_REPO. */
 export const TEAM_REPO = process.env.TEAM_REPO ?? resolve(root, '../team');
 /** The ref every page is built against. Override with TEAM_REF. */
-export const TEAM_REF = process.env.TEAM_REF ?? '69f90a86477a37968f4df7e3c2fe67fb8e1af3c8';
+export const TEAM_REF = process.env.TEAM_REF ?? 'v0.1.0';
 export const contentDir = resolve(root, 'content/team');
 
 export const contentReady = (): boolean => existsSync(resolve(contentDir, 'README.md'));
