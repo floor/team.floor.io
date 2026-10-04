@@ -194,7 +194,7 @@ export function teamFile(): Rendered {
   return doc
     .heading('watch')
     .md(paragraph(watch, "The watch's own timings"))
-    .md(paragraph(watch, "A check the team doesn't want"))
+    .md(sentence(watch, "A check the team doesn't want"))
     .block({ lang: 'yaml', info: 'file=.agents/team.yaml', text: `${watchPart(watch)}\n`, line: 0, start: 0, end: 0 })
     .heading('budgets')
     .md(paragraph(README, '`budgets` is the owner\'s'))
@@ -358,7 +358,7 @@ const SITE_PAGES: Record<string, string> = {
   '/': 'A project declares its team in one file: the seats, the models, the rules and the folders each one may touch. Set it up, change it and watch it run.',
   '/privacy/': 'How team.floor.io reaches you, and what stays in your browser.',
   '/docs/': 'Your first team in five minutes: install team, write .agents/team.yaml, approve it, and start the session.',
-  '/docs/file/': 'Every part of .agents/team.yaml, section by section: the head, identity, workspace, machine, seats, watch and budgets, from the README and the example.',
+  '/docs/file/': 'Every part of .agents/team.yaml: the head, identity, workspace, machine, seats, watch and budgets, from the README, the example and the watch command page.',
   '/docs/commands/': 'The eleven commands of team: what each reads and writes, who may run it, its refusals, its exit codes and its examples.',
   '/docs/safety/': 'Why team is safe to run: the owner outside herdr, the approved copy, trust left to the owner, and the prompts team never answers.',
   '/docs/clis/': 'What team knows of claude-code, codex, cursor and antigravity: the launch profile, the sign-in check, and what it never writes.',
