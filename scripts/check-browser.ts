@@ -11,6 +11,9 @@
 //	   2px of the viewport's centre (measured at 0px; the check keeps it so), and both pills'
 //	   own inline padding (a layered reset once left their labels flush against the edges),
 //	   one line each, no overflow, centred, one height.
+//	5. Prose links wear the site's link colour, in light and in dark, on the home page and a
+//	   docs page, and no anchor on either page falls to the browser's default blue (the
+//	   landing's sentence under the transcripts once did, unreadable on the dark background).
 //
 // The server is the site's own request handler on a free port, so this opens no
 // process of its own; the browser opens once and is closed in the end.
@@ -202,6 +205,37 @@ try {
     }
     await context.close();
   }
+
+  // ── 5. prose links wear the site's link colour, in both themes ──────────────
+  // The landing's sentence under the transcripts sits outside the markdown body, so no
+  // prose-link rule reached it and its links fell to the browser's default blue, unreadable
+  // on the dark background. The colour is compared with the --accent token itself, read
+  // live, so the rule and the token can only move together.
+  for (const mode of ['light', 'dark'] as const) {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: mode });
+    const page = await context.newPage();
+    for (const [path, selector, where] of [
+      ['/', '.samples__foot a', 'home'],
+      ['/docs/', '.md p a', 'docs'],
+    ] as const) {
+      await page.goto(`${origin}${path}`, { waitUntil: 'load' });
+      const facts = await page.evaluate((selector) => {
+        const link = document.querySelector<HTMLElement>(selector);
+        const probe = document.createElement('span');
+        probe.style.color = 'var(--accent)';
+        document.body.append(probe);
+        const token = getComputedStyle(probe).color;
+        probe.remove();
+        const defaultBlue = [...document.querySelectorAll<HTMLAnchorElement>('a[href]')]
+          .filter(anchor => getComputedStyle(anchor).color === 'rgb(0, 0, 238)').length;
+        return { link: link ? getComputedStyle(link).color : null, token, defaultBlue };
+      }, selector);
+      check(facts.link !== null, `${where} ${mode}: no link matches ${selector}`);
+      check(facts.link === facts.token, `${where} ${mode}: the prose link is ${facts.link}, the --accent token resolves to ${facts.token}`);
+      check(facts.defaultBlue === 0, `${where} ${mode}: ${facts.defaultBlue} links are the browser's default blue`);
+    }
+    await context.close();
+  }
 } finally {
   await browser.close();
   await server.stop(true);
@@ -212,4 +246,4 @@ if (problems.length) {
   for (const problem of [...new Set(problems)]) console.error(`  ${problem}`);
   process.exit(1);
 }
-console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer.');
+console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer, and the prose links wearing the link token in both themes.');

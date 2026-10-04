@@ -107,13 +107,22 @@
     font-weight: 700;
 }
 
-.md a {
+/* Prose links: the site's link colour in both themes, underlined on hover and on keyboard
+   focus (the outline itself comes from the global :focus-visible rule). The landing's
+   sentence under the transcripts is prose too, so it reads this same rule with the markdown
+   body — a link in prose must never fall back to the browser's default blue, which cannot
+   be read on the dark background. */
+.md a,
+.samples__foot a {
     color: var(--accent);
     text-decoration: none;
     text-underline-offset: 3px;
 }
 
-.md a:hover {
+.md a:hover,
+.md a:focus-visible,
+.samples__foot a:hover,
+.samples__foot a:focus-visible {
     text-decoration: underline;
 }
 
@@ -345,6 +354,9 @@
     background: var(--bg-raised);
     border: 1px solid var(--border);
     border-radius: var(--radius);
+    /* The card is an anchor; without its own colour a bare text node in it would inherit
+       the browser's default blue. The spans inside set their own colours over this. */
+    color: var(--text);
     text-decoration: none;
     transition: border-color var(--transition), background-color var(--transition), transform var(--transition);
 }
