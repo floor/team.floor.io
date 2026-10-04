@@ -37,7 +37,7 @@
 <body class="<%= it.isHome ? 'home' : '' %>">
   <a class="skip-link" href="#content">Skip to content</a>
   <header class="header"><div class="header__inner">
-    <a class="header__logo" href="/"><span class="header__mark" aria-hidden="true">&gt;_</span>team<span class="brand-dot">.</span>floor.io</a>
+    <a class="header__logo" href="/"><span class="header__mark" aria-hidden="true">&gt;_</span>team</a>
     <span class="header__sep" aria-hidden="true">/</span><span class="header__section"><%= it.section %></span>
     <nav class="header__nav" aria-label="Main navigation">
       <a href="/docs/" class="<%= it.section === 'Documentation' ? 'active' : '' %>">Documentation</a>

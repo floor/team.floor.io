@@ -127,8 +127,7 @@ video {
     white-space: nowrap;
 }
 
-.header__mark,
-.brand-dot {
+.header__mark {
     color: var(--accent);
 }
 
