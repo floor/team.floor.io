@@ -15,7 +15,7 @@ export interface SearchDocument { id: string; title: string; headings: string; t
 /** Every page of the site as a search document: the home page and Privacy included. */
 export function searchDocuments(): SearchDocument[] {
   const home = {
-    id: '/', title: 'team — a project\'s AI team, from one file', headings: 'team', kind: 'Home',
+    id: '/', title: 'team — a project\'s AI team, any vendor, one crew', headings: 'team', kind: 'Home',
     description: descriptionFor('/'),
     text: plainText(homePoints().map(point => `${point.title}. ${point.text}`).join(' ')),
   };

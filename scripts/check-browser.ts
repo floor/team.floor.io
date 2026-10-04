@@ -7,6 +7,9 @@
 //	   client to exist, and the home page least of all.
 //	3. What needs the client, on the page that carries it: the dialog (⌘K, a query, a
 //	   result, Escape), the theme toggle, what it remembers, and the copy button.
+//	4. The home page's hero buttons at 375 and 1440: each pill's own inline padding (a
+//	   layered reset once left both labels flush against the edges), one line each,
+//	   centred, no overflow, and the two of one height.
 //
 // The server is the site's own request handler on a free port, so this opens no
 // process of its own; the browser opens once and is closed in the end.
@@ -140,6 +143,43 @@ try {
     check(await page.locator('.sidebar--open').count() === 0, 'the overlay did not close the drawer');
     await context.close();
   }
+
+  // ── 4. the hero's buttons, at phone and desktop width ───────────────────────
+  // The site's reset is layered first (base.eta, shell.css) so a material button's own box
+  // rules stand; unlayered, the reset flattened the pills and the labels sat on the edges.
+  for (const width of [375, 1440]) {
+    const context = await browser.newContext({ viewport: { width, height: 900 } });
+    const page = await context.newPage();
+    await page.goto(`${origin}/`, { waitUntil: 'load' });
+    const buttons = await page.evaluate(() => [...document.querySelectorAll<HTMLElement>('.hero__actions .mtrl-button')].map(button => {
+      const css = getComputedStyle(button);
+      const rect = button.getBoundingClientRect();
+      const label = [...button.childNodes].find(node => node.nodeType === 3)!;
+      const range = document.createRange();
+      range.selectNodeContents(label);
+      const labelRect = range.getBoundingClientRect();
+      return {
+        text: button.textContent!.trim(),
+        start: parseFloat(css.paddingInlineStart),
+        end: parseFloat(css.paddingInlineEnd),
+        height: Math.round(rect.height),
+        lines: range.getClientRects().length,
+        overflow: button.scrollWidth - button.clientWidth,
+        offCentre: Math.round((labelRect.top + labelRect.height / 2) - (rect.top + rect.height / 2)),
+      };
+    }));
+    const where = `home ${width}px`;
+    check(buttons.length === 2, `${where}: ${buttons.length} hero buttons, not 2`);
+    for (const button of buttons) {
+      check(button.start > 0 && button.end > 0, `${where}: "${button.text}" has inline padding ${button.start}/${button.end}`);
+      check(button.start === button.end, `${where}: "${button.text}" is padded ${button.start} left, ${button.end} right`);
+      check(button.lines === 1, `${where}: "${button.text}" wraps to ${button.lines} lines`);
+      check(button.overflow <= 1, `${where}: "${button.text}" overflows its pill by ${button.overflow}px`);
+      check(Math.abs(button.offCentre) <= 2, `${where}: "${button.text}" sits ${button.offCentre}px off the pill's centre`);
+    }
+    check(buttons.length !== 2 || buttons[0]!.height === buttons[1]!.height, `${where}: the pills are ${buttons[0]!.height}px and ${buttons[1]!.height}px tall`);
+    await context.close();
+  }
 } finally {
   await browser.close();
   await server.stop(true);
@@ -150,4 +190,4 @@ if (problems.length) {
   for (const problem of [...new Set(problems)]) console.error(`  ${problem}`);
   process.exit(1);
 }
-console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the dialog, the theme and the drawer.');
+console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero buttons at 375 and 1440, the dialog, the theme and the drawer.');
