@@ -22,12 +22,16 @@
 //	   the fence's own text line for line — while the line spans were block-level every line
 //	   was followed by an empty one — and the block is no taller than one line-height per
 //	   line plus its padding.
+//	8. The header on every page of the sitemap: the logo, and a section only where there is
+//	   one — the home page and privacy carry no section, so they carry neither the separator
+//	   nor an empty span ("&gt;_ team /" with nothing after it).
 //
 // The server is the site's own request handler on a free port, so this opens no
 // process of its own; the browser opens once and is closed in the end.
 import { chromium, type Browser, type Page } from 'playwright';
 import { handleRequest } from '../server';
 import { homeSamples } from '../src/server/pages';
+import { sitemapPages } from '../src/server/seo';
 
 const problems: string[] = [];
 const check = (condition: boolean, message: string) => { if (!condition) problems.push(message); };
@@ -348,6 +352,33 @@ try {
     });
     await context.close();
   }
+
+  // ── 8. the header on every page: a section, or neither of its parts ─────────
+  // A page with no section (the home page, privacy) rendered the separator anyway and an
+  // empty span after it: ">_ team /" with nothing following. The separator and the section
+  // travel together — a page that has one keeps ">_ team / Documentation".
+  {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const page = await context.newPage();
+    for (const { path } of sitemapPages()) {
+      await page.goto(`${origin}${path}`, { waitUntil: 'load' });
+      const facts = await page.evaluate(() => ({
+        logo: document.querySelector('.header__logo')?.textContent?.trim() ?? '',
+        sep: document.querySelector('.header__sep')?.textContent ?? null,
+        section: document.querySelector('.header__section')?.textContent ?? null,
+      }));
+      const where = `header ${path}`;
+      check(facts.logo === '>_team', `${where}: the logo reads ${JSON.stringify(facts.logo)}`);
+      check(facts.section === null || facts.section.trim() !== '', `${where}: the section span is empty`);
+      check((facts.sep === null) === (facts.section === null), `${where}: the separator ${facts.sep === null ? 'is missing beside' : 'stands with no'} section`);
+      if (path.startsWith('/docs/')) {
+        check(facts.sep === '/' && facts.section === 'Documentation', `${where}: the header reads ${JSON.stringify([facts.logo, facts.sep, facts.section])}`);
+      } else {
+        check(facts.sep === null, `${where}: a page without a section still shows the separator ${JSON.stringify(facts.sep)}`);
+      }
+    }
+    await context.close();
+  }
 } finally {
   await browser.close();
   await server.stop(true);
@@ -358,4 +389,4 @@ if (problems.length) {
   for (const problem of [...new Set(problems)]) console.error(`  ${problem}`);
   process.exit(1);
 }
-console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer, the prose links wearing the link token in both themes, the code blocks chip-free inside, scrolling their long lines, and bare where the styles de-chip a name, and the home transcripts rendering the reference line for line.');
+console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer, the prose links wearing the link token in both themes, the code blocks chip-free inside, scrolling their long lines, and bare where the styles de-chip a name, the home transcripts rendering the reference line for line, and the header on every sitemap page wearing a section only where there is one.');
