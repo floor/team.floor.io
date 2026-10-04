@@ -11,9 +11,13 @@
 //	   2px of the viewport's centre (measured at 0px; the check keeps it so), and both pills —
 //	   the reset zeroes every padding, so the hero's scoped rule is what carries theirs —
 //	   40px tall, one line each, no overflow, centred, equal padding left and right.
-//	5. Prose links wear the site's link colour, in light and in dark, on the home page and a
-//	   docs page, and no anchor on either page falls to the browser's default blue (the
-//	   landing's sentence under the transcripts once did, unreadable on the dark background).
+//	5. Prose links: the site's link colour in both themes, on the home page and a docs page,
+//	   underlined at rest with a quiet decoration that turns full-strength on hover and on
+//	   keyboard focus (with the global outline), the --accent token itself held to resolving
+//	   and to differing from the body's own text, and no anchor on either page in the
+//	   browser's default blue (the landing's sentence under the transcripts once was,
+//	   unreadable on the dark background — and its replacement colour alone did not carry
+//	   a link's cue either).
 //	6. The code blocks: the code inside a pre wears no inline-code chip (one once painted a
 //	   background and a border around every line there), the chip applies only outside — and
 //	   still loses to the site's own de-chip rules for the places that are names, a card title
@@ -42,6 +46,13 @@ function rgb(colour: string): [number, number, number] {
   return [r, g, b];
 }
 const brightness = (colour: string) => rgb(colour).reduce((sum, channel) => sum + channel, 0);
+/** A computed colour's alpha: rgba()'s fourth number, or `color(srgb … / 0.7)`'s. */
+const alpha = (colour: string) => {
+  const slash = colour.match(/\/\s*([\d.]+)\s*\)$/);
+  if (slash) return Number(slash[1]);
+  const numbers = [...colour.matchAll(/[\d.]+/g)].map(match => Number(match[0]));
+  return numbers.length > 3 ? numbers[3]! : 1;
+};
 
 const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: handleRequest });
 const origin = `http://127.0.0.1:${server.port}`;
@@ -220,11 +231,18 @@ try {
     await context.close();
   }
 
-  // ── 5. prose links wear the site's link colour, in both themes ──────────────
+  // ── 5. prose links: the link colour, and the underline that carries the cue ──────────
   // The landing's sentence under the transcripts sits outside the markdown body, so no
   // prose-link rule reached it and its links fell to the browser's default blue, unreadable
   // on the dark background. The colour is compared with the --accent token itself, read
-  // live, so the rule and the token can only move together.
+  // live, so the rule and the token can only move together — and the token is held to
+  // resolving at all (a sentinel colour is assigned first, so a missing --accent leaves the
+  // sentinel) and to differing from the body's own text, so a token that went missing
+  // cannot let the comparison pass on two inherited colours. Colour is not the whole cue:
+  // the link is underlined at rest, a quiet translucent decoration that turns full-strength
+  // on hover and on keyboard focus, where the global rule also draws its outline. Hover is
+  // the mouse, focus a real Tab from the page's top; the state is read from the computed
+  // style, so a rule that only renames things cannot pass.
   for (const mode of ['light', 'dark'] as const) {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: mode });
     const page = await context.newPage();
@@ -233,20 +251,70 @@ try {
       ['/docs/', '.md p a', 'docs'],
     ] as const) {
       await page.goto(`${origin}${path}`, { waitUntil: 'load' });
-      const facts = await page.evaluate((selector) => {
+      const rest = await page.evaluate((selector) => {
         const link = document.querySelector<HTMLElement>(selector);
         const probe = document.createElement('span');
+        probe.style.color = 'rgb(1, 2, 3)';
         probe.style.color = 'var(--accent)';
         document.body.append(probe);
         const token = getComputedStyle(probe).color;
         probe.remove();
         const defaultBlue = [...document.querySelectorAll<HTMLAnchorElement>('a[href]')]
           .filter(anchor => getComputedStyle(anchor).color === 'rgb(0, 0, 238)').length;
-        return { link: link ? getComputedStyle(link).color : null, token, defaultBlue };
+        const css = link ? getComputedStyle(link) : null;
+        return {
+          link: css ? { colour: css.color, line: css.textDecorationLine, decoration: css.textDecorationColor, thickness: css.textDecorationThickness, offset: css.textUnderlineOffset } : null,
+          token,
+          body: getComputedStyle(document.body).color,
+          defaultBlue,
+        };
       }, selector);
-      check(facts.link !== null, `${where} ${mode}: no link matches ${selector}`);
-      check(facts.link === facts.token, `${where} ${mode}: the prose link is ${facts.link}, the --accent token resolves to ${facts.token}`);
-      check(facts.defaultBlue === 0, `${where} ${mode}: ${facts.defaultBlue} links are the browser's default blue`);
+      const at = rest.link;
+      check(at !== null, `${where} ${mode}: no link matches ${selector}`);
+      check(rest.token !== 'rgb(1, 2, 3)' && /^(rgb|rgba|color)\(/.test(rest.token), `${where} ${mode}: --accent does not resolve to a colour (the sentinel probe computed ${rest.token})`);
+      check(rest.token !== rest.body, `${where} ${mode}: --accent resolves to the body text colour (${rest.token})`);
+      check(at !== null && at.colour === rest.token, `${where} ${mode}: the prose link is ${at?.colour}, the --accent token resolves to ${rest.token}`);
+      check(rest.defaultBlue === 0, `${where} ${mode}: ${rest.defaultBlue} links are the browser's default blue`);
+      if (at) {
+        check(at.line === 'underline', `${where} ${mode}: the prose link carries no underline at rest (text-decoration-line: ${at.line})`);
+        check(at.thickness === '1px', `${where} ${mode}: the rest underline is ${at.thickness} thick, not the hairline 1px`);
+        check(at.offset === '3px', `${where} ${mode}: the rest underline sits ${at.offset} off the text, not 3px`);
+        check(at.decoration !== at.colour, `${where} ${mode}: the rest underline is the link's own colour (${at.decoration}), not quieter than it`);
+        const quiet = alpha(at.decoration);
+        check(quiet > 0 && quiet < 1, `${where} ${mode}: the rest underline's alpha is ${quiet}, so it is ${quiet === 0 ? 'invisible' : 'not softer than the text'}`);
+
+        await page.hover(selector);
+        const hover = await page.evaluate((selector) => {
+          const css = getComputedStyle(document.querySelector<HTMLElement>(selector)!);
+          return { line: css.textDecorationLine, decoration: css.textDecorationColor };
+        }, selector);
+        check(hover.line === 'underline', `${where} ${mode}: the underline leaves the link on hover (text-decoration-line: ${hover.line})`);
+        check(hover.decoration === at.colour, `${where} ${mode}: the hover underline is ${hover.decoration}, not the full-strength ${at.colour}`);
+
+        // The keyboard's own path to the link, so the state read is the keyboard's.
+        await page.mouse.move(0, 0);
+        let reached = false;
+        for (let step = 0; step < 400 && !reached; step++) {
+          await page.keyboard.press('Tab');
+          reached = await page.evaluate(selector => document.activeElement === document.querySelector(selector), selector);
+        }
+        check(reached, `${where} ${mode}: Tab never reached the prose link`);
+        if (reached) {
+          const focus = await page.evaluate((selector) => {
+            const link = document.querySelector<HTMLElement>(selector)!;
+            const css = getComputedStyle(link);
+            return {
+              visible: link.matches(':focus-visible'),
+              line: css.textDecorationLine, decoration: css.textDecorationColor,
+              outline: `${css.outlineStyle} ${css.outlineWidth} ${css.outlineColor}`,
+            };
+          }, selector);
+          check(focus.visible, `${where} ${mode}: the link was focused without :focus-visible`);
+          check(focus.line === 'underline', `${where} ${mode}: the underline leaves the link on keyboard focus (text-decoration-line: ${focus.line})`);
+          check(focus.decoration === at.colour, `${where} ${mode}: the focus underline is ${focus.decoration}, not the full-strength ${at.colour}`);
+          check(focus.outline === `solid 2px ${at.colour}`, `${where} ${mode}: the focus outline is ${focus.outline}`);
+        }
+      }
     }
     await context.close();
   }
@@ -389,4 +457,4 @@ if (problems.length) {
   for (const problem of [...new Set(problems)]) console.error(`  ${problem}`);
   process.exit(1);
 }
-console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer, the prose links wearing the link token in both themes, the code blocks chip-free inside, scrolling their long lines, and bare where the styles de-chip a name, the home transcripts rendering the reference line for line, and the header on every sitemap page wearing a section only where there is one.');
+console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer, the prose links wearing the link token and underlined at rest in both themes, the code blocks chip-free inside, scrolling their long lines, and bare where the styles de-chip a name, the home transcripts rendering the reference line for line, and the header on every sitemap page wearing a section only where there is one.');
