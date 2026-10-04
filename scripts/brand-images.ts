@@ -5,11 +5,12 @@
 //   - favicon.svg: the mark, light and dark by the reader's own setting.
 //   - favicon.ico: the same mark at 16 and 32 px (PNG payloads in an ICO).
 //   - apple-touch-icon.png: 180 px, the mark on the dark scheme, square: iOS rounds it.
-//   - og-image.png: the 1200×630 link preview, every word of it from the reference.
+//   - og-image.png: the 1200×630 link preview, every word of it from the reference — the
+//     eyebrow without the version, so the card does not go stale at each release.
 import { chromium } from 'playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { homePoints, homeSamples, info, installLine } from '../src/server/pages';
+import { homePoints, homeSamples, installLine } from '../src/server/pages';
 import { commandNames, README } from '../src/server/reference';
 import { escapeHtml } from '../src/server/markdown';
 
@@ -87,7 +88,6 @@ const card = `<!doctype html><html><head><meta charset="utf-8"><style>
     border: 2px solid rgba(141,205,255,.28); display: flex; align-items: center; justify-content: center; }
   .tile svg { width: 54px; height: 54px; }
   .wordmark span { font-size: 74px; font-weight: 700; letter-spacing: -2.5px; white-space: nowrap; }
-  .wordmark .dot { color: ${DARK.primary}; }
   .tagline { font-size: 29px; line-height: 1.4; color: ${DARK.muted}; }
   .pills { display: flex; gap: 10px; margin-top: 34px; }
   .pill { font-size: 18px; padding: 9px 16px; border-radius: 999px; border: 1.5px solid ${DARK.outline};
@@ -102,8 +102,8 @@ const card = `<!doctype html><html><head><meta charset="utf-8"><style>
   pre .command::before { content: "$ "; color: ${DARK.primary}; }
 </style></head><body>
   <div class="text">
-    <div class="eyebrow">THE TEAM CLI · ${info.version}</div>
-    <div class="wordmark"><span class="tile">${markSvg('dark').replace('<rect width="32" height="32" rx="7" fill="#191c1e"/>', '').replace(/width="32" height="32"/, '').replace('role="img" aria-label="team"', 'aria-hidden="true"')}</span><span>team<span class="dot">.</span>floor.io</span></div>
+    <div class="eyebrow">THE TEAM CLI</div>
+    <div class="wordmark"><span class="tile">${markSvg('dark').replace('<rect width="32" height="32" rx="7" fill="#191c1e"/>', '').replace(/width="32" height="32"/, '').replace('role="img" aria-label="team"', 'aria-hidden="true"')}</span><span>team</span></div>
     <div class="tagline">${point.text.replace(/`/g, '')}</div>
     <div class="pills">${pills.map(pill => `<span class="pill">${pill}</span>`).join('')}</div>
   </div>

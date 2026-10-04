@@ -79,6 +79,10 @@ function codeBlock(text: string, language: string, label: string): string {
  * A transcript: `$ ` opens what was run, the lines under it are its output, exactly
  * as the reference page records them — `; echo "exit $?"` included, since that is
  * how the page makes the exit code part of the run.
+ *
+ * A line is one span and the newlines between the spans are the transcript's own
+ * line breaks, so the spans stay inline: a block-level line would add a break of
+ * its own and every line would be followed by an empty one.
  */
 function terminal(fence: Fence): string {
   const lines = fence.text.replace(/\n$/, '').split('\n').map(line => {

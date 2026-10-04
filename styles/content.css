@@ -107,14 +107,37 @@
     font-weight: 700;
 }
 
-.md a {
+/* Prose links: the site's link colour in both themes, and an underline that is there at
+   rest. The colour alone is not a cue: against the text around it the accent stands 1.44:1
+   on the landing's sentence (1.01:1 in dark) and 2.65:1 in the docs body (1.32:1 in dark),
+   under the 3:1 colour needs when colour is the only thing telling a link apart. The
+   underline is quiet — the accent mixed toward transparent, one hairline, offset 3px — and
+   turns full-strength on hover and on keyboard focus (the outline itself comes from the
+   global :focus-visible rule). Only running text reads it: the toolbar, the pager and the
+   cards around the text keep their own treatment. The landing's sentence under the
+   transcripts is prose too — a link in prose must never fall back to the browser's default
+   blue, which cannot be read on the dark background. */
+.md a,
+.samples__foot a {
     color: var(--accent);
     text-decoration: none;
     text-underline-offset: 3px;
 }
 
-.md a:hover {
-    text-decoration: underline;
+.md :where(p, li, blockquote, td, th) a,
+.md .note a,
+.samples__foot a {
+    text-decoration-line: underline;
+    text-decoration-color: color-mix(in srgb, var(--accent) 70%, transparent);
+    text-decoration-thickness: 1px;
+}
+
+.md a:hover,
+.md a:focus-visible,
+.samples__foot a:hover,
+.samples__foot a:focus-visible {
+    text-decoration-line: underline;
+    text-decoration-color: var(--accent);
 }
 
 .md ul,
@@ -142,8 +165,13 @@
     color: var(--text-muted);
 }
 
-/* Inline code, and the code of a heading, which is a name and not a block. */
-.md code,
+/* Inline code, and the code of a heading, which is a name and not a block. Code inside a
+   `pre` is a block's body, not inline code: the `:where()` keeps this chip off it — there it
+   painted a background and a border around every line, and its padding sat on the lines'
+   ends — while holding this selector's weight at 0-1-1, exactly what bare `.md code` weighed.
+   A bare `:not(pre)` would weight 0-1-2 and outrank the site's own de-chip rules for specific
+   places (`.doc-entry__name code`, the headings), chipping a card title or a heading name. */
+.md :where(:not(pre)) > code,
 .text-link code,
 .doc-entry code,
 .sample__caption code {
@@ -345,6 +373,9 @@
     background: var(--bg-raised);
     border: 1px solid var(--border);
     border-radius: var(--radius);
+    /* The card is an anchor; without its own colour a bare text node in it would inherit
+       the browser's default blue. The spans inside set their own colours over this. */
+    color: var(--text);
     text-decoration: none;
     transition: border-color var(--transition), background-color var(--transition), transform var(--transition);
 }

@@ -19,7 +19,7 @@
   <meta property="og:image" content="https://team.floor.io/og-image.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="team — set up, change and watch a project's team of AI agents from one file" />
+  <meta property="og:image:alt" content="team — a team of agents, <%= it.crewWords %>" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:url" content="https://team.floor.io<%= it.path %>" />
   <meta name="twitter:title" content="<%= it.title %>" />
@@ -27,10 +27,6 @@
   <meta name="twitter:image" content="https://team.floor.io/og-image.png" />
   <% it.jsonLd.forEach(json => { %><script type="application/ld+json"><%~ json %></script>
   <% }); %>
-  <style>/* The site's reset (shell.css) is put in a layer of its own, declared before material's
-     sheets: a layer takes its order from where it is first declared, and unlayered CSS beats
-     every layer — unlayered, the reset flattened the padding of the components it links. */
-  @layer site.reset;</style>
   <% it.materialSheets.forEach(sheet => { %><link rel="stylesheet" href="<%= sheet.url %>" />
   <% }); %><link rel="stylesheet" href="/dist/css/<%= it.css %>.css" />
   <script>
@@ -41,8 +37,8 @@
 <body class="<%= it.isHome ? 'home' : '' %>">
   <a class="skip-link" href="#content">Skip to content</a>
   <header class="header"><div class="header__inner">
-    <a class="header__logo" href="/"><span class="header__mark" aria-hidden="true">&gt;_</span>team<span class="brand-dot">.</span>floor.io</a>
-    <span class="header__sep" aria-hidden="true">/</span><span class="header__section"><%= it.section %></span>
+    <a class="header__logo" href="/"><span class="header__mark" aria-hidden="true">&gt;_</span>team</a>
+    <% if (it.section) { %><span class="header__sep" aria-hidden="true">/</span><span class="header__section"><%= it.section %></span><% } %>
     <nav class="header__nav" aria-label="Main navigation">
       <a href="/docs/" class="<%= it.section === 'Documentation' ? 'active' : '' %>">Documentation</a>
       <a href="/docs/commands/" class="<%= it.path === '/docs/commands/' ? 'active' : '' %>">Commands</a>
