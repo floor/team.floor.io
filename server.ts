@@ -121,7 +121,7 @@ export async function handleRequest(request: Request): Promise<Response> {
 
   let response: Response;
   if (path === '/') {
-    response = plainPage('/', 'team — a project\'s AI team, from one file', descriptionFor('/'), 'homepage', {
+    response = plainPage('/', 'team — a project\'s AI team, any vendor, one crew', descriptionFor('/'), 'homepage', {
       version: info.version,
       tagline: inline(homePoints()[0]!.text),
       install: installBlock(),

@@ -235,6 +235,7 @@ export function commandPageContent(name: string): Rendered {
 export function safety(): Rendered {
   const up = commandPage('up');
   const approve = commandPage('approve');
+  const watch = commandPage('watch');
   const never = [
     sentence(README, 'Nothing writes a vendor config'),
     sentence(README, 'It never answers prompts'),
@@ -256,6 +257,10 @@ export function safety(): Rendered {
     .heading('What team never does')
     .md(never.map(text => `- ${text}`).join('\n'))
     .note(inline(sentence(README, 'Launching a Cursor seat')))
+    // The hatch paragraph: the reference's escape-hatch and guarantee sentences are
+    // extracted from `team watch`; the module's place and the caution line are the
+    // page's words, which the reference's own prose doesn't carry.
+    .note(`team's screen hatch is a code module a CLI profile may name — inside the package's own profiles folder, nowhere else. ${sentence(watch, 'A screen hatch is an escape hatch')} A hatch can only add caution, never remove it, and no shipped profile uses one. ${sentence(watch, 'The guarantees cover what a hatch returns')}`)
     .heading('Who may run what')
     .table('Who may run each command', ['Command', 'Who may run it'], commandTable().map(row => [`<code>team ${row.name}</code>`, inline(row.who)]))
     .heading('What this version builds')

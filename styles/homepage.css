@@ -55,6 +55,12 @@
     margin-top: 28px;
 }
 
+/* The hero's calls to action: the site's own inline padding, wider than a material button's
+   16px, so the label sits well inside the pill. The label keeps the button's own centring. */
+.hero__actions .mtrl-button {
+    padding-inline: 1.4em;
+}
+
 .hero__install {
     display: flex;
     justify-content: center;
