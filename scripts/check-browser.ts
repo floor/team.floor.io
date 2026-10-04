@@ -17,15 +17,19 @@
 //	   to resolving and to differing from the body's own text, and no anchor on the pages in
 //	   the browser's default blue (the landing's sentence under the transcripts once was,
 //	   unreadable on the dark background — and its replacement colour alone did not carry a
-//	   link's cue either) — and every family the prose rule names underlined at rest: a
-//	   paragraph, a list item, a blockquote, a table cell, a table header, a note, the
-//	   privacy article and the samples foot, each on a real link where the site carries one
-//	   and otherwise on a probe in a real container, held to the hairline 1px, the 3px
-//	   offset, the full-strength turn of hover and of keyboard focus (with the global
-//	   outline), and a computed 3:1 contrast of the rest decoration over the ground it is
-//	   drawn on, the page's background and a note's tint alike. The anchors that are not
-//	   prose — the docs toolbar, the table of contents, the pager, the cards, the navigation
-//	   and the 404 page's action — wear no underline at rest.
+//	   link's cue either) — and every name the prose rule carries underlined at rest: a
+//	   paragraph, a list item, a blockquote, a table cell, a table header, the note class
+//	   (on a `div.note`, the one structure only that name reaches — the notes the renderer
+//	   emits are `<p class="note">`, which the paragraph's name already covers), the privacy
+//	   article and the samples foot, each on a real link where the site carries one and
+//	   otherwise on a probe in a real container, held to the hairline 1px, the 3px offset,
+//	   the full-strength turn of hover and of keyboard focus (with the global outline), and a
+//	   computed 3:1 contrast of the rest decoration over the ground it is drawn on, the
+//	   page's background and a note's tint alike. The anchors that are not prose — the docs
+//	   toolbar, the table of contents, the pager, the cards, the navigation and the 404
+//	   page's action — wear no underline at rest, and a `.text-link` probe placed in a note
+//	   and in the samples foot, two containers the rest-underline rule owns, stays bare there
+//	   while hover and focus still underline it.
 //	6. The code blocks: the code inside a pre wears no inline-code chip (one once painted a
 //	   background and a border around every line there), the chip applies only outside — and
 //	   still loses to the site's own de-chip rules for the places that are names, a card title
@@ -292,7 +296,11 @@ try {
   // cannot let the comparison pass on two inherited colours. Colour is not the whole cue:
   // every family the prose rule names is underlined at rest — on its real link where a page
   // carries one, and otherwise on a probe placed in that container on a real page, so a
-  // family dropped from the rule has nothing left to pass on. The decoration must also be
+  // family dropped from the rule has nothing left to pass on. Every name is asserted on its
+  // own: the note's probe is a `div.note`, the one structure only the note name reaches —
+  // the notes the renderer emits are `<p class="note">`, which the paragraph's name already
+  // covers — so removing the note name from the rule cannot pass on the paragraph's back.
+  // The decoration must also be
   // readable as a mark: blended over the ground the link is drawn on — the page's own
   // background, a note's tint, a table header's — it is held to 3:1, the contrast a cue
   // drawn in colour has to clear. Hover is the mouse and focus a real Tab from the page's
@@ -300,9 +308,12 @@ try {
   // state is read from the computed style, so a rule that only renames things cannot pass.
   // The anchors around the prose — the docs toolbar, the table of contents, the pager, a
   // card, the navigation in its two places and the 404 page's action — carry no underline
-  // at rest, so the widened rule cannot have quietly swallowed them.
+  // at rest, so the widened rule cannot have quietly swallowed them. The 404 page's actions
+  // are the site's only real `.text-link` and sit in containers of their own, so the class's
+  // guarantee is probed where it was once at risk: a `.text-link` placed in a note and in
+  // the samples foot stays bare at rest, and hover and focus still underline it there.
   // The families, and where each is exercised.
-  const PROSE: { id: string; what: string; path: string; selector?: string; container?: string; box?: string }[] = [
+  const PROSE: { id: string; what: string; path: string; selector?: string; container?: string; box?: string; boxClass?: string }[] = [
     { id: 'paragraph', what: 'a paragraph of the reference', path: '/docs/', selector: '.md p a' },
     { id: 'privacy', what: 'the privacy article', path: '/privacy/', selector: '.md p a' },
     { id: 'cell', what: 'a table cell', path: '/docs/commands/up/', selector: '.md td a' },
@@ -310,7 +321,7 @@ try {
     { id: 'list', what: 'a list-item probe', path: '/docs/safety/', container: '.md ul li' },
     { id: 'quote', what: 'a blockquote probe', path: '/docs/safety/', container: '.md', box: 'blockquote' },
     { id: 'head', what: 'a table-header probe', path: '/docs/safety/', container: '.md th' },
-    { id: 'note', what: 'a note probe', path: '/docs/safety/', container: '.md .note' },
+    { id: 'note', what: 'a note probe on a div.note', path: '/docs/safety/', container: '.md', box: 'div', boxClass: 'note' },
   ];
   for (const mode of ['light', 'dark'] as const) {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: mode });
@@ -327,12 +338,14 @@ try {
           anchor.href = '/docs/';
           anchor.textContent = 'underline probe';
           anchor.dataset.probe = spec.id;
-          // A blockquote is the one container that is not already there: the probe goes
-          // inside a fresh block at the article's head, on screen without hunting for it.
+          // Two containers are not already there: the blockquote, and the `div.note` the
+          // note name alone can reach. Either probe goes inside a fresh block at the
+          // article's head, on screen without hunting for it.
           const holder = spec.box ? host.insertBefore(document.createElement(spec.box), host.firstChild) : host;
+          if (spec.boxClass) holder.className = spec.boxClass;
           holder.append(anchor);
           return true;
-        }, { id: item.id, container: item.container, box: item.box });
+        }, { id: item.id, container: item.container, box: item.box, boxClass: item.boxClass });
         check(placed, `${where}: ${item.path} carries no ${item.container} to hold the probe`);
       }
       const facts = await page.evaluate((link) => {
@@ -426,6 +439,60 @@ try {
       check(lines.length > 0, `${where}: ${item.path} carries no ${item.selector}, so its rest state is untested`);
       const underlined = lines.filter(line => line !== 'none');
       check(underlined.length === 0, `${where}: ${underlined.length} of ${lines.length} wear an underline at rest (text-decoration-line: ${underlined[0]})`);
+    }
+    await context.close();
+  }
+
+  // The class's guarantee, on both sides of it. The 404 page's action is the site's one
+  // real `.text-link`, and it sits in a paragraph of its own — a container the prose rule
+  // owns — so a `.text-link` is placed in the two other such containers: a note and the
+  // samples foot. It must stay bare at rest while the hover and the focus rules still
+  // underline it — the exclusion covers every rest-underline branch without disarming
+  // those two states.
+  const ACTION = [
+    { what: 'a text-link probe in a note', path: '/docs/safety/', container: '.md .note' },
+    { what: 'a text-link probe in the samples foot', path: '/', container: '.samples__foot' },
+  ];
+  for (const mode of ['light', 'dark'] as const) {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: mode });
+    const page = await context.newPage();
+    for (const item of ACTION) {
+      const where = `${item.what} ${mode}`;
+      await page.goto(`${origin}${item.path}`, { waitUntil: 'load' });
+      const placed = await page.evaluate(spec => {
+        const host = document.querySelector<HTMLElement>(spec.container);
+        if (!host) return false;
+        const anchor = document.createElement('a');
+        anchor.href = '/docs/';
+        anchor.className = 'text-link';
+        anchor.dataset.probe = 'text-link';
+        anchor.textContent = 'action probe';
+        host.append(anchor);
+        return true;
+      }, { container: item.container });
+      check(placed, `${where}: ${item.path} carries no ${item.container} to hold the probe`);
+      if (!placed) continue;
+      const link = '[data-probe="text-link"]';
+      const rest = await page.evaluate(target => getComputedStyle(document.querySelector<HTMLElement>(target)!).textDecorationLine, link);
+      check(rest === 'none', `${where}: a rest-underline branch reaches the class (text-decoration-line: ${rest})`);
+      await page.hover(link);
+      const hover = await page.evaluate(target => getComputedStyle(document.querySelector<HTMLElement>(target)!).textDecorationLine, link);
+      check(hover === 'underline', `${where}: the hover rule no longer underlines the class (text-decoration-line: ${hover})`);
+      await page.mouse.move(0, 0);
+      let reached = false;
+      for (let step = 0; step < 400 && !reached; step++) {
+        await page.keyboard.press('Tab');
+        reached = await page.evaluate(target => document.activeElement === document.querySelector(target), link);
+      }
+      check(reached, `${where}: Tab never reached the probe`);
+      if (reached) {
+        const focus = await page.evaluate(target => {
+          const element = document.querySelector<HTMLElement>(target)!;
+          return { visible: element.matches(':focus-visible'), line: getComputedStyle(element).textDecorationLine };
+        }, link);
+        check(focus.visible, `${where}: the probe was focused without :focus-visible`);
+        check(focus.line === 'underline', `${where}: the focus rule no longer underlines the class (text-decoration-line: ${focus.line})`);
+      }
     }
     await context.close();
   }
@@ -568,4 +635,4 @@ if (problems.length) {
   for (const problem of [...new Set(problems)]) console.error(`  ${problem}`);
   process.exit(1);
 }
-console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero\'s content centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer, every prose-link family wearing the link token and a 3:1 mark at rest, turning full-strength on hover and on the keyboard while the anchors around them stay bare, the code blocks chip-free inside, scrolling their long lines, and bare where the styles de-chip a name, the home transcripts rendering the reference line for line, and the header on every sitemap page wearing a section only where there is one.');
+console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero\'s content centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer, every name the prose rule carries, the note class on a div.note among them, wearing the link token and a 3:1 mark at rest, turning full-strength on hover and on the keyboard, while the anchors around them, and the action class in a note and in the samples foot, stay bare, the code blocks chip-free inside, scrolling their long lines, and bare where the styles de-chip a name, the home transcripts rendering the reference line for line, and the header on every sitemap page wearing a section only where there is one.');
