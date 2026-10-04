@@ -13,7 +13,8 @@
     "links:check": "bun scripts/check-links.ts",
     "docs:check": "bun scripts/check-docs.ts",
     "seo:check": "bun scripts/check-seo.ts",
-    "test:browser": "bun scripts/check-browser.ts"
+    "test:browser": "bun scripts/check-browser.ts",
+    "brand-images": "bun scripts/brand-images.ts"
   },
   "dependencies": {
     "eta": "4.5.1",
