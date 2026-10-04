@@ -60,19 +60,38 @@ export function sentence(markdown: string, startsWith: string): string {
   return (end ? rest.slice(0, end.index + 1) : rest).replace(/\s+/g, ' ').trim();
 }
 
+/**
+ * A who cell that spells its rule out per command, which the reference does for a row
+ * that names more than one: "`up`: the owner; `down`: the owner, the coordinator or the
+ * operator seat". That spelling is the row's shorthand for two rules, not one rule for
+ * both — shown whole, the row for `team up` hands its reader who may run `team down`.
+ * A cell that labels every command it names is split; any other cell is the row's, whole.
+ */
+function whoPerCommand(who: string, names: string[]): Map<string, string> | undefined {
+  const parts = new Map<string, string>();
+  for (const part of who.split(';').map(text => text.trim())) {
+    const match = /^`([a-z]+)`:\s*(.+)$/.exec(part);
+    if (!match || !names.includes(match[1]!)) return undefined;
+    parts.set(match[1]!, match[2]!);
+  }
+  return names.every(name => parts.has(name)) ? parts : undefined;
+}
+
 export interface CommandRow { name: string; summary: string; who: string }
 /**
  * The commands table of the README: the tool's own list, in its own order. A row may
  * name more than one command (`team up` / `team down`, `team worktree new` / `remove`);
- * each gets its own entry, with the row's summary and who.
+ * each gets its own entry, with the row's summary and its own who.
  */
 export function commandTable(): CommandRow[] {
   const rows = section(README, 'Commands').split('\n').filter(line => line.startsWith('|')).slice(2);
   const commands: CommandRow[] = [];
   for (const line of rows) {
     const [command = '', summary = '', who = ''] = line.split('|').slice(1, -1).map(cell => cell.trim());
-    for (const [, name] of command.matchAll(/`team ([a-z]+)/g)) {
-      if (name && !commands.some(row => row.name === name)) commands.push({ name, summary, who });
+    const names = [...new Set([...command.matchAll(/`team ([a-z]+)/g)].map(match => match[1]!))];
+    const parts = whoPerCommand(who, names);
+    for (const name of names) {
+      if (!commands.some(row => row.name === name)) commands.push({ name, summary, who: parts?.get(name) ?? who });
     }
   }
   return need(commands.length ? commands : undefined, 'its commands table');

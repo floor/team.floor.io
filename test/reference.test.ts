@@ -68,13 +68,22 @@ describe('named pieces of a reference page', () => {
 });
 
 describe('the commands table', () => {
-  test('a row may name two commands, and each gets its own entry', () => {
+  test('a row that spells who per command gives each command its own rule', () => {
     const up = commandTable().find(row => row.name === 'up');
     const down = commandTable().find(row => row.name === 'down');
     expect(up?.summary).toContain('starts');
-    expect(up?.who).toContain('the owner');
     expect(down?.summary).toBe(up?.summary);
-    expect(down?.who).toContain('the operator seat');
+    // The README's cell is "`up`: the owner; `down`: the owner, the coordinator or the
+    // operator seat": each row shows its own half, never the pair.
+    expect(up?.who).toBe('the owner');
+    expect(down?.who).toBe('the owner, the coordinator or the operator seat');
+  });
+
+  test('a cell that is one rule for the row is shown whole, on every row it names', () => {
+    // "anyone; read only" is a sentence, not a label per command: it stays whole.
+    expect(commandTable().find(row => row.name === 'check')?.who).toBe('anyone; read only');
+    // `team worktree new` / `remove` are two commands in one row with one rule.
+    expect(commandTable().find(row => row.name === 'worktree')?.who).toBe('the owner, the coordinator or the operator');
   });
 
   test('the reference\'s own pages are the command pages, and each one is read', () => {
