@@ -13,6 +13,11 @@ if (!contentReady()) throw new Error('content/team is missing: run `bun run cont
 
 export const info = refInfo();
 
+/** The words of the hero's second line, in one place: the landing renders them (the
+    sentence's period is the template's) and the shell ends the preview image's alt text
+    with them, so the two can only be re-worded together. */
+export const crewWords = 'any vendor, one crew';
+
 /** A page built from parts: the headings its table of contents links to, then the text. */
 export class Doc {
   private readonly parts: string[] = [];
