@@ -8,9 +8,9 @@
 //	3. What needs the client, on the page that carries it: the dialog (⌘K, a query, a
 //	   result, Escape), the theme toggle, what it remembers, and the copy button.
 //	4. The home page's hero at 390, 375 and 1440: the block and each of its children within
-//	   2px of the viewport's centre (measured at 0px; the check keeps it so), and both pills'
-//	   own inline padding (a layered reset once left their labels flush against the edges),
-//	   one line each, no overflow, centred, one height.
+//	   2px of the viewport's centre (measured at 0px; the check keeps it so), and both pills —
+//	   the reset zeroes every padding, so the hero's scoped rule is what carries theirs —
+//	   40px tall, one line each, no overflow, centred, equal padding left and right.
 //	5. Prose links wear the site's link colour, in light and in dark, on the home page and a
 //	   docs page, and no anchor on either page falls to the browser's default blue (the
 //	   landing's sentence under the transcripts once did, unreadable on the dark background).
@@ -150,9 +150,9 @@ try {
 
   // ── 4. the hero: its centring, and its buttons, at phone and desktop width ──
   // The hero sits on the viewport's centre to the pixel; a screenshot's crop once read as a
-  // 65px offset, so the measurement is held here. The buttons: the site's reset is layered
-  // first (base.eta, shell.css) so a material button's own box rules stand; unlayered, the
-  // reset flattened the pills and the labels sat on the edges.
+  // 65px offset, so the measurement is held here. The buttons: the reset (shell.css, unlayered)
+  // zeroes every padding, so the hero's own scoped rule (.hero__actions .mtrl-button) is what
+  // keeps the labels off the pills' edges — held at 40px, padded, one line, on the centre.
   for (const width of [390, 375, 1440]) {
     const context = await browser.newContext({ viewport: { width, height: 900 } });
     const page = await context.newPage();
@@ -192,6 +192,7 @@ try {
     for (const button of buttons) {
       check(button.start > 0 && button.end > 0, `${where}: "${button.text}" has inline padding ${button.start}/${button.end}`);
       check(button.start === button.end, `${where}: "${button.text}" is padded ${button.start} left, ${button.end} right`);
+      check(button.height === 40, `${where}: "${button.text}" is ${button.height}px tall, not the design's 40`);
       check(button.lines === 1, `${where}: "${button.text}" wraps to ${button.lines} lines`);
       check(button.overflow <= 1, `${where}: "${button.text}" overflows its pill by ${button.overflow}px`);
       check(Math.abs(button.offCentre) <= 2, `${where}: "${button.text}" sits ${button.offCentre}px off the pill's centre`);

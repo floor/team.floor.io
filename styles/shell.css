@@ -6,20 +6,16 @@
 
 /* ─── Reset ──────────────────────────────────────────────────────── */
 
-/* In `site.reset`, the one layer base.eta declares before material's sheets. A layer is
-   ordered where it is first declared and unlayered CSS beats every layer, so outside a layer
-   this reset outranked the components it must leave alone — `* { padding: 0 }` (specificity
-   0) silenced a material button's own padding. Layered first, it still zeroes the browser's
-   defaults everywhere (an author rule beats the UA sheet at any layer), and only material's
-   own rules — and the site's, all unlayered — may overrule it. */
-@layer site.reset {
-    *,
-    *::before,
-    *::after {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-    }
+/* Unlayered, as it was before `site.reset`: the cascade of every page is the one it had
+   before the layer. It zeroes the browser's defaults everywhere, and any rule more specific
+   than `*` reads over it — the one component that needs padding past the reset carries its
+   own scoped rule (`.hero__actions .mtrl-button`, homepage.css). */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 /* ─── Base ───────────────────────────────────────────────────────── */

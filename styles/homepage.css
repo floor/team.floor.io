@@ -55,8 +55,10 @@
     margin-top: 28px;
 }
 
-/* The hero's calls to action: the site's own inline padding, wider than a material button's
-   16px, so the label sits well inside the pill. The label keeps the button's own centring. */
+/* The hero's calls to action: this scoped rule carries the pills' inline padding on its own.
+   The reset (shell.css) is unlayered and zeroes every padding; this rule is unlayered too,
+   and more specific, so the labels sit well inside the pill. The label keeps the button's
+   own centring. */
 .hero__actions .mtrl-button {
     padding-inline: 1.4em;
 }
