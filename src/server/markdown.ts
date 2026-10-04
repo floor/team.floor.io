@@ -44,6 +44,20 @@ export const yamlFences = (markdown: string): Fence[] => fences(markdown).filter
 const ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' };
 export const escapeHtml = (text: string): string => text.replace(/[&<>"]/g, character => ESCAPES[character]!);
 
+/**
+ * HTML back to the text it came from: the entities Marked, highlight.js and the site's
+ * own escaping leave behind, named ones and numeric ones both. Who reads a page's text
+ * rather than its markup — the search index, docs:check — goes through here.
+ */
+const NAMED_ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+export function decodeEntities(html: string): string {
+  return html.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (entity, code: string) => {
+    if (/^#x/i.test(code)) return String.fromCodePoint(parseInt(code.slice(2), 16));
+    if (code.startsWith('#')) return String.fromCodePoint(parseInt(code.slice(1), 10));
+    return NAMED_ENTITIES[code.toLowerCase()] ?? entity;
+  });
+}
+
 /** highlight.js names: a fence's language under the ref's spelling. */
 const LANGUAGES: Record<string, string> = { sh: 'bash', shell: 'bash', bash: 'bash', zsh: 'bash', yaml: 'yaml', yml: 'yaml', json: 'json', js: 'javascript', ts: 'typescript', md: 'markdown', markdown: 'markdown' };
 const extensionLanguage: Record<string, string> = { '.yaml': 'yaml', '.yml': 'yaml', '.json': 'json', '.md': 'markdown', '.sh': 'bash' };
@@ -91,6 +105,15 @@ export function fenceHtml(fence: Fence): string {
   }
 }
 
+/**
+ * An indented block: the reference's own preformatted text — a synopsis, a listing, a
+ * message it quotes. It is prose, not a block of the site's, so it gets no bar, no
+ * label and no copy button.
+ */
+function indentBlock(text: string): string {
+  return `<pre class="md-pre" tabindex="0"><code>${escapeHtml(text.replace(/\n$/, ''))}</code></pre>\n`;
+}
+
 export interface Rendered { html: string; toc: { title: string; id: string }[] }
 
 /** A heading's id, from its text: the anchor the table of contents links to. */
@@ -121,7 +144,9 @@ export function renderMarkdown(markdown: string, options: { skip?: (fence: Fence
         if (token.depth === 2) toc.push({ title, id });
         return `<h${token.depth} id="${id}">${this.parser.parseInline(token.tokens)}</h${token.depth}>\n`;
       },
-      code: (token: Tokens.Code) => fenceHtml({ ...header(token.lang ?? ''), text: token.text, line: 0, start: 0, end: 0 }),
+      code: (token: Tokens.Code) => token.codeBlockStyle === 'indented'
+        ? indentBlock(token.text)
+        : fenceHtml({ ...header(token.lang ?? ''), text: token.text, line: 0, start: 0, end: 0 }),
       link(this: { parser: { parseInline: (tokens: Tokens.Generic[]) => string } }, token: Tokens.Link) {
         const label = this.parser.parseInline(token.tokens);
         const href = localHref(token.href);

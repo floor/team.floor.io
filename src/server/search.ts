@@ -2,16 +2,12 @@
 // from the same page list the routes serve. /api/search answers the dialog in
 // src/client/search.ts; the index itself never leaves the server.
 import MiniSearch from 'minisearch';
+import { decodeEntities } from './markdown';
 import { descriptionFor, homePoints, info, nav, pages } from './pages';
 
 /** A page's rendered HTML as searchable text: the tags out, the entities decoded. */
 function plainText(html: string): string {
-  return html
-    .replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&(amp|lt|gt|quot|#39|nbsp);/g, (_, name: string) => ({ amp: '&', lt: '<', gt: '>', quot: '"', '#39': "'", nbsp: ' ' })[name]!)
-    .replace(/\s+/g, ' ')
-    .trim();
+  return decodeEntities(html.replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
 }
 
 export interface SearchDocument { id: string; title: string; headings: string; text: string; description: string; kind: string }
