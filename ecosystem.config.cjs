@@ -4,7 +4,7 @@
 // the other restarts the server, and only after a build succeeded. It also fetches the
 // reference it is built against first, so nothing here has to.
 //
-// This file is for a local pm2, and nothing else: production runs ecosystem.production.cjs,
+// This file is for a local pm2, and nothing else: production runs ecosystem.production.config.cjs,
 // and neither is started by hand — scripts/deploy.sh starts or reloads the production one.
 module.exports = {
   apps: [

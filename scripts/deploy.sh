@@ -90,7 +90,7 @@ fi
 if [ "$(pm2 pid team.floor.io)" -gt 0 ] 2>/dev/null; then
   pm2 reload team.floor.io > /dev/null
 else
-  pm2 start ecosystem.production.cjs > /dev/null
+  pm2 start ecosystem.production.config.cjs > /dev/null
 fi
 
 for attempt in $(seq 1 30); do
