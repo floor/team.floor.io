@@ -109,13 +109,17 @@ check(referenceFences.some(fence => normalise(fence.text).split('\n').some(line 
 
 // Built from pieces, so that this file can name the things it refuses without holding
 // them: a scan that spells its own patterns would flag itself.
-const PRIVATE: [RegExp, string][] = [
-  [new RegExp('/' + 'Users/'), 'an absolute user path'],
-  [new RegExp('/' + 'home/[a-z]'), 'an absolute home path'],
-  [new RegExp('FLO' + '-\\d'), 'an internal id'],
-  [new RegExp('Claude' + '-Session'), 'a session id'],
-  [new RegExp('Co-' + '[Aa]uthored-[Bb]y'), 'a co-author line'],
-  [new RegExp('floor' + '/docs'), 'a private repository'],
+//
+// `/home/<name>` is refused except in the deploy script, whose subject is a directory on
+// the server: it is the one file that has to name one, and it names the same deploy user
+// the site's sibling projects are deployed as. A reader's own home is what the rule is for.
+const PRIVATE: { pattern: RegExp; what: string; except?: string }[] = [
+  { pattern: new RegExp('/' + 'Users/'), what: 'an absolute user path' },
+  { pattern: new RegExp('/' + 'home/[a-z]'), what: 'an absolute home path', except: 'scripts/deploy.sh' },
+  { pattern: new RegExp('FLO' + '-\\d'), what: 'an internal id' },
+  { pattern: new RegExp('Claude' + '-Session'), what: 'a session id' },
+  { pattern: new RegExp('Co-' + '[Aa]uthored-[Bb]y'), what: 'a co-author line' },
+  { pattern: new RegExp('floor' + '/docs'), what: 'a private repository' },
 ];
 const walk = (directory: string): string[] => readdirSync(directory).flatMap(name => {
   if (['node_modules', 'dist', 'content', '.git'].includes(name)) return [];
@@ -124,10 +128,12 @@ const walk = (directory: string): string[] => readdirSync(directory).flatMap(nam
 });
 for (const file of walk(root)) {
   if (/\.(png|ico|jpg|woff2?)$/.test(file)) continue;
+  const name = relative(root, file);
   const body = readFileSync(file, 'utf8');
-  for (const [pattern, what] of PRIVATE) {
+  for (const { pattern, what, except } of PRIVATE) {
+    if (except === name) continue;
     const found = pattern.exec(body);
-    check(!found, `${relative(root, file)} holds ${what}: ${JSON.stringify(body.slice(Math.max(0, found?.index ?? 0), (found?.index ?? 0) + 60))}`);
+    check(!found, `${name} holds ${what}: ${JSON.stringify(body.slice(Math.max(0, found?.index ?? 0), (found?.index ?? 0) + 60))}`);
   }
 }
 
