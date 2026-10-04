@@ -256,6 +256,9 @@ export function safety(): Rendered {
     .heading('What team never does')
     .md(never.map(text => `- ${text}`).join('\n'))
     .note(inline(sentence(README, 'Launching a Cursor seat')))
+    // The hatch is not in the reference at this ref, so the paragraph says "the next
+    // release": re-word the first sentences when TEAM_REF moves to a ref that has it.
+    .note('The next release adds a screen hatch: a CLI profile whose screens the data rules cannot express may ship a small code module — inside the package\'s own profiles folder, nowhere else. A hatch can only add caution, and no shipped profile uses one. The guarantees cover what a hatch returns and what load accepts; a hatch is trusted package code, not a sandbox.')
     .heading('Who may run what')
     .table('Who may run each command', ['Command', 'Who may run it'], commandTable().map(row => [`<code>team ${row.name}</code>`, inline(row.who)]))
     .heading('What this version builds')
