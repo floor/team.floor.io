@@ -415,6 +415,18 @@
     transform: translateY(-1px);
 }
 
+/* A card is one link as a whole: hovering it or reaching it by keyboard never
+   underlines its title, description and last line as one long link. The prose rules
+   above underline every `.md` anchor on hover and on focus — the card is named out of
+   that here, at a weight (0-3-1) the prose hover rule (0-2-1) cannot reach. The hover
+   keeps its own reading above (border, background, the lift), and keyboard focus keeps
+   the global :focus-visible outline. The landing's next links wear the same class but
+   sit outside `.md`, so this rule does not touch them. */
+.md a.doc-entry:hover,
+.md a.doc-entry:focus-visible {
+    text-decoration-line: none;
+}
+
 .doc-entry__name {
     color: var(--text);
     font-size: var(--fs-md);
