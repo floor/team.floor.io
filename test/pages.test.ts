@@ -62,6 +62,7 @@ describe('the page list', () => {
     expect(html).toContain(`<h1 class="hero__name" id="hero-title">${headlineLead}<br><span class="hero__accent">${headlineAccent}</span></h1>`);
     expect(html).not.toContain('hero__tagline');
     expect(html).not.toContain('Agents propose. You decide.');
+    expect(html).toContain('name="description" content="Set up and run a team of AI agents for your project. Agents propose, you decide."');
     const own = [headline, headlineLead, headlineAccent, homeTitle, versionLine(), ...['/', '/privacy/', '/docs/', '/docs/file/', '/docs/commands/', '/docs/safety/', '/docs/clis/'].map(descriptionFor)];
     for (const text of own) {
       expect(text.toLowerCase()).not.toContain('vendor');
