@@ -200,7 +200,7 @@
 }
 
 /* A prose chip whose single token cannot fit any line wraps instead of scrolling the
-   page. The release page's refusal list carries the JSON error shape as one 116-character
+   page. The release page's exit-code list carries the JSON error shape as one 56-character
    inline code sample with no break opportunity in it: at 390 it measured 379.5px inside
    the list's column and scrolled the page (scrollWidth 430 > clientWidth 390). Cells keep
    the no-break rule of the tables above — a token that cannot fit widens its column and
