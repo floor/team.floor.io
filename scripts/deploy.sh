@@ -6,9 +6,9 @@
 # The site itself is reset to origin/main and built. pm2 reloads only when the build
 # succeeded, and the process is then asked for a 200 before this reports success.
 #
-# The reference a deploy builds against is the site's own pin (TEAM_REF in
-# src/server/team.ts), not a setting here: what the site says it documents and what the
-# server fetched are then the same commit by construction.
+# The reference a deploy builds against is the published package: scripts/content.ts
+# reads its version and extracts that tag. TEAM_REF overrides it. What the site says
+# it documents and what the server fetched are then the same commit by construction.
 #
 # Override the host with DEPLOY_HOST, the directory with DEPLOY_DIR,
 # the reference clone's URL with TEAM_URL.

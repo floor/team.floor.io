@@ -41,12 +41,14 @@
 //	8. The header on every page of the sitemap: the logo, and a section only where there is
 //	   one — the home page and privacy carry no section, so they carry neither the separator
 //	   nor an empty span ("&gt;_ team /" with nothing after it).
+//	9. The home page's install block: a click and an arrow key each switch the visible
+//	   command, Copy hands over that command, and a reload shows the same tab.
 //
 // The server is the site's own request handler on a free port, so this opens no
 // process of its own; the browser opens once and is closed in the end.
 import { chromium, type Browser, type Page } from 'playwright';
 import { handleRequest } from '../server';
-import { homeSamples } from '../src/server/pages';
+import { homeSamples, installCommands } from '../src/server/pages';
 import { sitemapPages } from '../src/server/seo';
 
 const problems: string[] = [];
@@ -157,12 +159,16 @@ try {
     const facts = await page.evaluate(() => ({
       heading: document.querySelector('#content h1')?.textContent?.trim() ?? '',
       install: document.querySelector('#content')?.textContent?.includes('npm install -g team') ?? false,
+      tablist: document.querySelector('[role="tablist"]') !== null,
+      shown: [...document.querySelectorAll<HTMLElement>('.doc-install__panel')].filter(panel => getComputedStyle(panel).display !== 'none').map(panel => panel.dataset.command ?? ''),
       samples: document.querySelectorAll('#content pre').length,
       background: getComputedStyle(document.body).backgroundColor,
       header: Math.round(document.querySelector('.header')!.getBoundingClientRect().height),
     }));
     check(facts.heading.length > 0, 'no JavaScript: the home page has no heading');
     check(facts.install, 'no JavaScript: the install line is not on the home page');
+    check(facts.tablist, 'no JavaScript: the install block has no tablist');
+    check(facts.shown.length === 1 && facts.shown[0] === installCommands()[0]!.command, `no JavaScript: the visible install command is ${JSON.stringify(facts.shown)}`);
     check(facts.samples >= 3, `no JavaScript: the home page shows ${facts.samples} blocks`);
     check(facts.background !== 'rgba(0, 0, 0, 0)', 'no JavaScript: the stylesheets did not apply');
     // The header is the site's own height (`--header-height`), not the browser's line box.
@@ -242,7 +248,7 @@ try {
       return {
         block: boxOffset('.hero'),
         textAlign: getComputedStyle(document.querySelector('.hero')!).textAlign,
-        children: ['.eyebrow', '#hero-title', '.hero__tagline', '.hero__install', '.hero__notes']
+        children: ['.eyebrow', '#hero-title', '.hero__install', '.hero__notes']
           .map(selector => ({ selector, offset: contentOffset(selector) })),
         buttons: { offset: round((left + right) / 2 - centre), span: round(right - left) },
       };
@@ -625,6 +631,41 @@ try {
     }
     await context.close();
   }
+
+  // ── 9. the install block: click, arrow key, copy, and the remembered tab ──
+  {
+    const commands = installCommands();
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin });
+    const page = await context.newPage();
+    await page.goto(`${origin}/`, { waitUntil: 'load' });
+    const visible = () => page.evaluate(() => {
+      const selected = document.querySelector<HTMLElement>('.doc-install__option[aria-selected="true"]');
+      const shown = [...document.querySelectorAll<HTMLElement>('.doc-install__panel')].filter(panel => getComputedStyle(panel).display !== 'none');
+      return { tab: selected?.dataset.packageManager ?? '', command: shown.map(panel => panel.dataset.command ?? ''), focused: document.activeElement?.getAttribute('data-package-manager') ?? '' };
+    });
+
+    await page.click('.doc-install__option[data-package-manager="pnpm"]');
+    const clicked = await visible();
+    check(clicked.tab === 'pnpm' && clicked.command.length === 1 && clicked.command[0] === commands.find(item => item.id === 'pnpm')!.command, `install: a click left ${JSON.stringify(clicked)}`);
+
+    await page.keyboard.press('ArrowLeft');
+    const arrowed = await visible();
+    check(arrowed.tab === 'npm' && arrowed.focused === 'npm' && arrowed.command.length === 1 && arrowed.command[0] === commands.find(item => item.id === 'npm')!.command, `install: ArrowLeft left ${JSON.stringify(arrowed)}`);
+
+    await page.keyboard.press('ArrowRight');
+    const returned = await visible();
+    check(returned.tab === 'pnpm' && returned.focused === 'pnpm', `install: ArrowRight left ${JSON.stringify(returned)}`);
+
+    await page.click('.doc-install__copy');
+    const clipboard = await page.evaluate(() => navigator.clipboard.readText());
+    check(clipboard === commands.find(item => item.id === 'pnpm')!.command, `install: Copy handed over ${JSON.stringify(clipboard)}`);
+
+    await page.reload({ waitUntil: 'load' });
+    const remembered = await visible();
+    check(remembered.tab === 'pnpm' && remembered.command.length === 1 && remembered.command[0] === commands.find(item => item.id === 'pnpm')!.command, `install: after a reload the tab is ${JSON.stringify(remembered)}`);
+    await context.close();
+  }
 } finally {
   await browser.close();
   await server.stop(true);
@@ -635,4 +676,4 @@ if (problems.length) {
   for (const problem of [...new Set(problems)]) console.error(`  ${problem}`);
   process.exit(1);
 }
-console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero\'s content centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer, every name the prose rule carries, the note class on a div.note among them, wearing the link token and a 3:1 mark at rest, turning full-strength on hover and on the keyboard, while the anchors around them, and the action class in a note and in the samples foot, stay bare, the code blocks chip-free inside, scrolling their long lines, and bare where the styles de-chip a name, the home transcripts rendering the reference line for line, and the header on every sitemap page wearing a section only where there is one.');
+console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero\'s content centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer, every name the prose rule carries, the note class on a div.note among them, wearing the link token and a 3:1 mark at rest, turning full-strength on hover and on the keyboard, while the anchors around them, and the action class in a note and in the samples foot, stay bare, the code blocks chip-free inside, scrolling their long lines, and bare where the styles de-chip a name, the home transcripts rendering the reference line for line, the header on every sitemap page wearing a section only where there is one, and the install block switching by click and by arrow key, copying the visible command, and remembering the tab.');

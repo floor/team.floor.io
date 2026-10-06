@@ -3,8 +3,9 @@
 import { describe, expect, test } from 'bun:test';
 import { bundleCss, materialSheets, tokens } from '../src/server/css';
 import { commandNames } from '../src/server/reference';
-import { contentReady, refInfo } from '../src/server/team';
-import { descriptionFor, homePoints, homeSamples, info, installLine, nav, pages, readingOrder } from '../src/server/pages';
+import { handleRequest } from '../server';
+import { contentReady, read, refInfo } from '../src/server/team';
+import { descriptionFor, headline, headlineAccent, headlineLead, homePoints, homeSamples, homeTitle, info, INSTALL_PACKAGE, installCommands, installLine, installMarkup, nav, packageLead, pages, readingOrder, versionLine } from '../src/server/pages';
 
 describe('the page list', () => {
   test('every page is a place of its own, with a title, a description and content', () => {
@@ -36,14 +37,70 @@ describe('the page list', () => {
   });
 
   test('a description is the site\'s own words, and a page without one is a mistake', () => {
-    expect(descriptionFor('/')).toContain('team');
+    expect(descriptionFor('/')).toBe(packageLead());
+    expect(descriptionFor('/')).toBe('Set up and run a team of AI agents for your project. Agents propose, you decide.');
     expect(() => descriptionFor('/nowhere/')).toThrow(/no description/);
+  });
+
+  test('a page names this site teamcli.io', async () => {
+    for (const path of ['/', '/docs/commands/', '/privacy/', '/robots.txt', '/sitemap.xml']) {
+      const body = await (await handleRequest(new Request(`https://teamcli.io${path}`))).text();
+      expect(body).not.toContain('team.floor.io');
+      expect(body).not.toContain('teamcli.' + 'org');
+      expect(body).not.toContain('@teamcli/cli');
+      if (path === '/robots.txt' || path === '/sitemap.xml' || path === '/') expect(body).toContain('https://teamcli.io');
+    }
+  });
+
+  test('the headline is two lines, and nothing sits under it', async () => {
+    expect(headlineLead).toBe('A team of agents for your project,');
+    expect(headlineAccent).toBe('from one lab or several.');
+    expect(homeTitle).toBe('TeamCLI: a team of agents for your project, from one lab or several');
+    expect(homeTitle.length).toBeLessThanOrEqual(70);
+    const html = await (await handleRequest(new Request('http://localhost/'))).text();
+    expect(html).toContain(`<title>${homeTitle}</title>`);
+    expect(html).toContain(`<h1 class="hero__name" id="hero-title">${headlineLead}<br><span class="hero__accent">${headlineAccent}</span></h1>`);
+    expect(html).not.toContain('hero__tagline');
+    expect(html).not.toContain('Agents propose. You decide.');
+    const own = [headline, headlineLead, headlineAccent, homeTitle, versionLine(), ...['/', '/privacy/', '/docs/', '/docs/file/', '/docs/commands/', '/docs/safety/', '/docs/clis/'].map(descriptionFor)];
+    for (const text of own) {
+      expect(text.toLowerCase()).not.toContain('vendor');
+      expect(text.toLowerCase()).not.toContain('crew');
+      expect(text.toLowerCase()).not.toContain('any lab');
+    }
   });
 });
 
 describe('the home page, from the reference', () => {
   test('the install line is the reference\'s own command', () => {
     expect(installLine()).toBe('npm install -g team');
+  });
+
+  test('the install block is a tablist, and every command installs the one package', async () => {
+    const commands = installCommands();
+    expect(commands.map(item => item.command)).toEqual([
+      `bun add -g ${INSTALL_PACKAGE}`,
+      `npm install -g ${INSTALL_PACKAGE}`,
+      `pnpm add -g ${INSTALL_PACKAGE}`,
+      `yarn global add ${INSTALL_PACKAGE}`,
+    ]);
+    expect(new Set(commands.map(item => item.command.split(' ').at(-1))).size).toBe(1);
+    const html = installMarkup();
+    expect(html).toContain('role="tablist"');
+    expect([...html.matchAll(/role="tab"/g)].length).toBe(commands.length);
+    expect([...html.matchAll(/role="tabpanel"/g)].length).toBe(commands.length);
+    for (const item of commands) {
+      expect(html).toContain(`data-command="${item.command}"`);
+      expect(html).toContain(`aria-controls="install-panel-${item.id}"`);
+      expect(html).toContain(`id="install-panel-${item.id}"`);
+    }
+    expect(html).toContain('class="doc-install__copy');
+    expect(html).not.toContain('@teamcli/cli');
+    const page = await (await handleRequest(new Request('http://localhost/'))).text();
+    expect(page).toContain('["bun","npm","pnpm","yarn"]');
+    expect(page).toContain('data-command="yarn global add team"');
+    expect(html).toContain('aria-selected="true"');
+    expect([...html.matchAll(/aria-selected="true"/g)].length).toBe(1);
   });
 
   test('three points, each one sentence of the reference', () => {
@@ -58,10 +115,12 @@ describe('the home page, from the reference', () => {
 
   test('what team writes, and what a launch of a CLI still writes, travel together', () => {
     const point = homePoints().find(entry => entry.title === 'Safe by design')!;
-    expect(point.text).toContain('vendor config');
+    expect(point.text).toContain('lab\'s config');
     expect(point.text).toContain('project record');
+    expect(point.text.toLowerCase()).not.toContain('vendor');
+    expect(point.text.toLowerCase()).not.toContain('crew');
     const safety = pages().find(page => page.path === '/docs/safety/')!.html;
-    expect(safety).toContain('vendor config');
+    expect(safety).toContain('lab&#39;s config');
     expect(safety).toContain('project record');
   });
 
@@ -93,6 +152,14 @@ describe('the reference the site is built against', () => {
     expect(ref.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(ref.commit).toMatch(/^[0-9a-f]{40}$/);
     expect(info.version).toBe(ref.version);
+  });
+
+  test('the eyebrow is TeamCLI and the version of the extracted package', async () => {
+    const version = (JSON.parse(read('package.json')) as { version: string }).version;
+    expect(versionLine()).toBe(`TeamCLI · VERSION ${version}`);
+    const html = await (await handleRequest(new Request('http://localhost/'))).text();
+    expect(html).toContain(`>${versionLine()}<`);
+    expect(html).not.toContain('THE TEAM CLI');
   });
 });
 

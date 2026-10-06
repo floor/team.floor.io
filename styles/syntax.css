@@ -126,19 +126,99 @@
     font-weight: 600;
 }
 
-/* ─── The install line: one command, a copy button beside it ─────── */
+/* ─── The install block: one tab per package manager ─────────────── */
+/* Which command is shown is decided on :root[data-package-manager], set before paint
+   from the remembered choice (base.eta). With no choice, bun is the one on screen,
+   so a visitor without scripts still has a command. */
 
-.example--install {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding-right: 8px;
+.doc-install {
+    max-width: 100%;
+    overflow: hidden;
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-align: left;
 }
 
-.example--install .example__code {
-    flex: 1;
+.doc-install__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 8px;
+    background: var(--bg-code-bar);
+    border-bottom: 1px solid var(--border);
+}
+
+.doc-install__switch {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
     min-width: 0;
+}
+
+.doc-install__option {
+    border: 0;
+    border-radius: var(--radius-xs);
+    padding: 4px 10px;
+    background: transparent;
+    color: var(--term-output);
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    line-height: 1.4;
+    cursor: pointer;
+}
+
+.doc-install__option:hover {
+    color: var(--term-command);
+}
+
+.doc-install__option:focus-visible,
+.doc-install__copy:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+}
+
+.doc-install__option[data-package-manager="bun"],
+:root[data-package-manager="npm"] .doc-install__option[data-package-manager="npm"],
+:root[data-package-manager="pnpm"] .doc-install__option[data-package-manager="pnpm"],
+:root[data-package-manager="yarn"] .doc-install__option[data-package-manager="yarn"] {
+    background: color-mix(in srgb, var(--term-command) 14%, transparent);
+    color: var(--term-command);
+}
+
+:root[data-package-manager]:not([data-package-manager="bun"]) .doc-install__option[data-package-manager="bun"] {
+    background: transparent;
+    color: var(--term-output);
+}
+
+.doc-install__panel {
+    display: none;
+}
+
+.doc-install__panel[data-package-manager="bun"],
+:root[data-package-manager="npm"] .doc-install__panel[data-package-manager="npm"],
+:root[data-package-manager="pnpm"] .doc-install__panel[data-package-manager="pnpm"],
+:root[data-package-manager="yarn"] .doc-install__panel[data-package-manager="yarn"] {
+    display: block;
+}
+
+:root[data-package-manager]:not([data-package-manager="bun"]) .doc-install__panel[data-package-manager="bun"] {
+    display: none;
+}
+
+.doc-install__command {
+    margin: 0;
     padding: 12px 14px;
+    overflow-x: auto;
+    color: var(--term-command);
+    font-family: var(--font-mono);
+    font-size: var(--fs-ui);
+    line-height: 1.7;
+}
+
+.doc-install__command code {
+    font-family: inherit;
 }
 
 .install__prompt {

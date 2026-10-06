@@ -1,4 +1,4 @@
-// team.floor.io: the site for the `team` command.
+// teamcli.io: the site for the `team` command.
 //
 // Everything a page says comes from the reference at TEAM_REF (src/server/pages.ts), the
 // prose through Marked and the blocks through the site's own renderer (markdown.ts), with
@@ -8,10 +8,10 @@ import { Eta } from 'eta';
 import { extname, resolve, sep } from 'node:path';
 import { IMMUTABLE_CACHE, SHORT_CACHE, isImmutableAsset, loadAssetManifest } from './src/server/assets';
 import { materialSheets, type StylesheetBundle } from './src/server/css';
-import { crewWords, descriptionFor, homePoints, homeSamples, info, inline, installLine, nav, pages } from './src/server/pages';
+import { descriptionFor, headline, headlineAccent, headlineLead, homePoints, homeSamples, homeTitle, info, inline, INSTALL_MANAGERS, installMarkup, nav, pages, versionLine } from './src/server/pages';
 import { fenceHtml } from './src/server/markdown';
 import { searchSite, suggestions } from './src/server/search';
-import { jsonForScript, robotsTxt, sitemapXml, structuredData } from './src/server/seo';
+import { jsonForScript, robotsTxt, SITE, SITE_NAME, sitemapXml, structuredData } from './src/server/seo';
 import { root } from './src/server/team';
 
 const eta = new Eta({ views: resolve(root, 'src/server/shells'), cache: process.env.NODE_ENV === 'production' });
@@ -44,7 +44,9 @@ function pager(path: string): string {
 function shell(body: { path: string; title: string; description: string; content: string; css: StylesheetBundle; section?: string; isHome?: boolean; jsonLd?: string[] }): string {
   return eta.render('base', {
     path: body.path, title: body.title, description: body.description, css: body.css, section: body.section ?? 'Documentation',
-    isHome: Boolean(body.isHome), jsonLd: body.jsonLd ?? [], nav, version: info.version, content: body.content, materialSheets, crewWords,
+    site: SITE, siteName: SITE_NAME,
+    isHome: Boolean(body.isHome), jsonLd: body.jsonLd ?? [], nav, version: info.version, content: body.content, materialSheets, headline,
+    installManagers: INSTALL_MANAGERS.map(manager => manager.id),
   });
 }
 /** A documentation page: the page's own content, wrapped with its table of contents and pager. */
@@ -65,13 +67,6 @@ function plainPage(path: string, title: string, description: string, template: s
     section: '', isHome: template === 'homepage',
     jsonLd: structuredData(path, title.replace(/ — team$/, ''), description).map(jsonForScript),
   }));
-}
-
-/** The home page's install block: the command, and a copy button. */
-function installBlock(): string {
-  const command = installLine();
-  return `<figure class="example example--install"><pre class="example__code" tabindex="0"><code class="hljs language-bash"><span class="install__prompt" aria-hidden="true">$</span> ${escapeHtml(command)}</code></pre>` +
-    `<button type="button" class="example__copy mtrl-button mtrl-button--text mtrl-button--xs" data-copy data-copy-text="${escapeAttr(command)}">Copy</button></figure>\n`;
 }
 
 const mime: Record<string, string> = { '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.woff2': 'font/woff2' };
@@ -121,11 +116,12 @@ export async function handleRequest(request: Request): Promise<Response> {
 
   let response: Response;
   if (path === '/') {
-    response = plainPage('/', `team — a project's AI team, ${crewWords}`, descriptionFor('/'), 'homepage', {
+    response = plainPage('/', homeTitle, descriptionFor('/'), 'homepage', {
       version: info.version,
-      crewWords,
-      tagline: inline(homePoints()[0]!.text),
-      install: installBlock(),
+      versionLine: versionLine(),
+      headlineLead,
+      headlineAccent,
+      install: installMarkup(),
       points: homePoints().map(point => ({ title: point.title, html: inline(point.text) })),
       samples: homeSamples().map(sample => ({ label: sample.label, caption: inline(sample.caption), html: fenceHtml(sample.fence) })),
     });
@@ -142,5 +138,5 @@ export async function handleRequest(request: Request): Promise<Response> {
 
 if (import.meta.main) {
   const server = Bun.serve({ port: Number(process.env.PORT || 4310), hostname: process.env.HOST || '127.0.0.1', fetch: handleRequest });
-  console.log(`team.floor.io ready at ${server.url}`);
+  console.log(`teamcli.io ready at ${server.url}`);
 }

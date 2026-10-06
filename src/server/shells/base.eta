@@ -5,32 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title><%= it.title %></title>
   <meta name="description" content="<%= it.description %>" />
-  <link rel="canonical" href="https://team.floor.io<%= it.path %>" />
+  <link rel="canonical" href="<%= it.site %><%= it.path %>" />
   <link rel="icon" href="/favicon.ico" sizes="32x32" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <meta name="theme-color" content="#001e30" media="(prefers-color-scheme: dark)" />
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
   <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="team.floor.io" />
-  <meta property="og:url" content="https://team.floor.io<%= it.path %>" />
+  <meta property="og:site_name" content="<%= it.siteName %>" />
+  <meta property="og:url" content="<%= it.site %><%= it.path %>" />
   <meta property="og:title" content="<%= it.title %>" />
   <meta property="og:description" content="<%= it.description %>" />
-  <meta property="og:image" content="https://team.floor.io/og-image.png" />
+  <meta property="og:image" content="<%= it.site %>/og-image.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="team — a team of agents, <%= it.crewWords %>" />
+  <meta property="og:image:alt" content="<%= it.headline %>" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:url" content="https://team.floor.io<%= it.path %>" />
+  <meta name="twitter:url" content="<%= it.site %><%= it.path %>" />
   <meta name="twitter:title" content="<%= it.title %>" />
   <meta name="twitter:description" content="<%= it.description %>" />
-  <meta name="twitter:image" content="https://team.floor.io/og-image.png" />
+  <meta name="twitter:image" content="<%= it.site %>/og-image.png" />
   <% it.jsonLd.forEach(json => { %><script type="application/ld+json"><%~ json %></script>
   <% }); %>
   <% it.materialSheets.forEach(sheet => { %><link rel="stylesheet" href="<%= sheet.url %>" />
   <% }); %><link rel="stylesheet" href="/dist/css/<%= it.css %>.css" />
   <script>
     (() => { let mode; try { mode = localStorage.getItem('team-site-mode'); } catch {} document.documentElement.dataset.themeMode = mode === 'light' || mode === 'dark' ? mode : matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; })();
+    (() => { let manager; try { manager = localStorage.getItem('team-package-manager'); } catch {} if (<%~ JSON.stringify(it.installManagers) %>.includes(manager)) document.documentElement.dataset.packageManager = manager; })();
   </script>
   <script type="module" src="/dist/site.js"></script>
 </head>

@@ -12,7 +12,7 @@
 //   5. Every page has a description of one line, at most 160 characters.
 //   6. A "who may run it" cell speaks for one command: the reference's shorthand for a
 //      row that names two ("`up`: the owner; `down`: …") never reaches a page whole.
-//   7. A page that says no vendor config is written says what a launch still writes.
+//   7. A page that says no lab config is written says what a launch still writes.
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import { handleRequest } from '../server';
@@ -169,7 +169,7 @@ for (const path of ['/docs/safety/', '/docs/commands/']) {
 
 // ── 7. a claim about what a launch writes carries what a launch still writes ───
 //
-// "Nothing writes a vendor config or an `AGENTS.md`" is the reference's sentence about
+// "Nothing writes a lab's config or an `AGENTS.md`" is the reference's sentence about
 // the Codex and the Antigravity profiles, and its Cursor paragraph is the one that says
 // a launch does write Cursor's own project record. A page that repeats the claim for
 // every CLI has to say that too, or it promises more than the reference does.
@@ -177,7 +177,7 @@ for (const { path } of sitemapPages()) {
   const response = await handleRequest(new Request(`${SITE}${path}`));
   check(response.status === 200, `${path}: the server answered ${response.status}`);
   const page = text(await response.text());
-  check(!/vendor config/i.test(page) || /project record/i.test(page), `${path}: says nothing writes a vendor config, and does not say what a CLI launch still writes`);
+  check(!/lab's config/i.test(page) || /project record/i.test(page), `${path}: says nothing writes a lab's config, and does not say what a CLI launch still writes`);
 }
 
 if (problems.length) {
