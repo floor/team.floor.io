@@ -70,6 +70,29 @@ describe('the page list', () => {
       expect(text.toLowerCase()).not.toContain('any lab');
     }
   });
+
+  test('a missing page counts the commands the site lists', async () => {
+    const html = await (await handleRequest(new Request('http://localhost/no-such-page/'))).text();
+    expect(html).toContain(`All ${commandNames().length} commands →`);
+    expect(commandNames().length).toBe(13);
+    expect(html).not.toContain('eleven');
+    expect(descriptionFor('/docs/commands/add/')).toBe('Starts one declared seat, or a temporary one beside the team with --temporary --like <seat> --until <result:path|merged:branch>.');
+    expect(descriptionFor('/docs/commands/release/')).toBe('Checks a release on npm and GitHub. When the file has the pairs: Linear milestone, qualifying status update, and the release marker in the public activity file.');
+    expect(descriptionFor('/docs/commands/release/').length).toBeLessThanOrEqual(160);
+    expect(descriptionFor('/docs/safety/')).toBe('Why team is safe to run: the owner outside herdr, the approved copy, and dialogs.trust: owner sends no key, coordinator may press it from its own seat.');
+    const safety = pages().find(page => page.path === '/docs/safety/')!.html;
+    expect(safety).toContain('dialogs.trust: owner or coordinator');
+    expect(safety).not.toContain('Trust is left to the owner');
+    const home = await (await handleRequest(new Request('http://localhost/'))).text();
+    expect(home).toContain('dialogs.trust: owner sends no key, or the coordinator may.');
+    expect(home).not.toContain('prompts team never answers');
+    expect(home).toContain('Seven sections of <code>.agents/team.yaml</code>, then the other fields.');
+    expect(home).not.toContain('Every field of');
+    expect(descriptionFor('/docs/file/')).toBe('Seven sections of .agents/team.yaml — the head, identity, workspace, machine, seats, watch and budgets — then the other fields the README names.');
+    expect(descriptionFor('/docs/commands/up/')).toBe('Starts the session, a workspace and each seat the file has not stopped, plus the watch; a stopped seat waits for team add. --dry-run prints the plan.');
+    expect(descriptionFor('/docs/file/').length).toBeLessThanOrEqual(160);
+    expect(descriptionFor('/docs/commands/up/').length).toBeLessThanOrEqual(160);
+  });
 });
 
 describe('the home page, from the reference', () => {
