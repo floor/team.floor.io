@@ -9,6 +9,7 @@ import { extname, resolve, sep } from 'node:path';
 import { IMMUTABLE_CACHE, SHORT_CACHE, isImmutableAsset, loadAssetManifest } from './src/server/assets';
 import { materialSheets, type StylesheetBundle } from './src/server/css';
 import { descriptionFor, headline, headlineAccent, headlineLead, homePoints, homeSamples, homeTitle, info, inline, INSTALL_MANAGERS, installMarkup, nav, pages, versionLine } from './src/server/pages';
+import { commandNames } from './src/server/reference';
 import { fenceHtml } from './src/server/markdown';
 import { searchSite, suggestions } from './src/server/search';
 import { jsonForScript, robotsTxt, SITE, SITE_NAME, sitemapXml, structuredData } from './src/server/seo';
@@ -131,7 +132,7 @@ export async function handleRequest(request: Request): Promise<Response> {
     const found = pages().find(entry => entry.path === path);
     response = found
       ? docPage(found.path, found.title, found.description, found, { section: found.section })
-      : docPage(path, 'Page not found — team', 'That page isn\'t here.', { html: eta.render('not-found', {}), toc: [] }, { status: 404 });
+      : docPage(path, 'Page not found — team', 'That page isn\'t here.', { html: eta.render('not-found', { commands: commandNames().length }), toc: [] }, { status: 404 });
   }
   return request.method === 'HEAD' ? new Response(null, { status: response.status, headers: response.headers }) : response;
 }

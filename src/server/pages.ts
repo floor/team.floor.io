@@ -415,11 +415,11 @@ const DESCRIPTIONS: Record<string, string> = {
   up: 'Starts the session, a workspace and a seat for every seat the file declares, and the watch; --dry-run prints the plan.',
   down: 'Stops the team: asks every free seat to exit, closes its workspace, stops the watch, and stops the session.',
   watch: 'Watches a running team: reports idle seats and nudges the operator, in one fixed line, into an empty idle prompt only.',
-  add: 'Starts one declared seat, or a temporary one beside the team with --temporary --like <seat> --until <end>.',
+  add: 'Starts one declared seat, or a temporary one beside the team with --temporary --like <seat> --until <result:path|merged:branch>.',
   remove: 'Stops one seat and takes it out of the file; --keep leaves it stopped; --abandon is the owner’s, and types nothing.',
   worktree: 'Creates a task worktree from an up-to-date base, or removes one; the branch is never deleted.',
   answer: 'Presses the one recorded key of a seat\'s folder-trust dialog when the file allows it; every check has to pass, and anything else sends nothing.',
-  release: 'Checks one release on npm and GitHub: the version and its checksums, the tag, the GitHub release, and the changelog entry.',
+  release: 'Checks a release on npm and GitHub. When the file has the pairs: Linear milestone, qualifying status update, and the release marker in the public activity file.',
 };
 const SITE_PAGES: Record<string, string> = {
   '/privacy/': 'How teamcli.io reaches you, and what stays in your browser.',
