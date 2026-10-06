@@ -740,10 +740,10 @@ try {
   //	   rendered width must hold its longest unbreakable token plus its horizontal
   //	   padding. A single token never breaks, a phrase wraps at its spaces, and a cell
   //	   whose content fits, however short it is — Exit, Flag, a number — is not a fault.
-  //	   The round-1 rule's 96px and 4× survive in the failure lines as reported
-  //	   measurements only, never as the condition. A frame that does scroll is a keyboard
-  //	   tab stop (tabindex 0, with the site's inside focus outline), so a reader who
-  //	   cannot use a pointer can scroll it.
+  //	   The failure line reports measured numbers only — the cell's width against its
+  //	   longest token plus padding, and the row-mate's width beside it — never a ratio
+  //	   cap. A frame that does scroll is a keyboard tab stop (tabindex 0, with the
+  //	   site's inside focus outline), so a reader who cannot use a pointer can scroll it.
   //	3. the top navigation marks the page's section exactly once: a /docs/commands/…
   //	   page is Commands, every other page that declares a section is Documentation, and
   //	   the pages that declare none — the home page, privacy and the 404 — carry no
