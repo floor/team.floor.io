@@ -8,7 +8,7 @@ import { Eta } from 'eta';
 import { extname, resolve, sep } from 'node:path';
 import { IMMUTABLE_CACHE, SHORT_CACHE, isImmutableAsset, loadAssetManifest } from './src/server/assets';
 import { materialSheets, type StylesheetBundle } from './src/server/css';
-import { crewWords, descriptionFor, homePoints, homeSamples, info, inline, installMarkup, nav, pages } from './src/server/pages';
+import { descriptionFor, heroLine, homePoints, homeSamples, info, inline, installMarkup, nav, pages } from './src/server/pages';
 import { fenceHtml } from './src/server/markdown';
 import { searchSite, suggestions } from './src/server/search';
 import { jsonForScript, robotsTxt, SITE, SITE_NAME, sitemapXml, structuredData } from './src/server/seo';
@@ -45,7 +45,7 @@ function shell(body: { path: string; title: string; description: string; content
   return eta.render('base', {
     path: body.path, title: body.title, description: body.description, css: body.css, section: body.section ?? 'Documentation',
     site: SITE, siteName: SITE_NAME,
-    isHome: Boolean(body.isHome), jsonLd: body.jsonLd ?? [], nav, version: info.version, content: body.content, materialSheets, crewWords,
+    isHome: Boolean(body.isHome), jsonLd: body.jsonLd ?? [], nav, version: info.version, content: body.content, materialSheets, heroLine,
   });
 }
 /** A documentation page: the page's own content, wrapped with its table of contents and pager. */
@@ -115,9 +115,9 @@ export async function handleRequest(request: Request): Promise<Response> {
 
   let response: Response;
   if (path === '/') {
-    response = plainPage('/', `team — a project's AI team, ${crewWords}`, descriptionFor('/'), 'homepage', {
+    response = plainPage('/', `team — a project's AI team, ${heroLine}`, descriptionFor('/'), 'homepage', {
       version: info.version,
-      crewWords,
+      heroLine,
       tagline: inline(homePoints()[0]!.text),
       install: installMarkup(),
       points: homePoints().map(point => ({ title: point.title, html: inline(point.text) })),

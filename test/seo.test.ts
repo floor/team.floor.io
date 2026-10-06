@@ -47,7 +47,7 @@ describe('robots.txt', () => {
 
 describe('structured data', () => {
   test('the home page is the command itself, then the site', () => {
-    const [app, site] = structuredData('/', 'team — a project\'s AI team, any vendor, one crew', 'the description') as Record<string, unknown>[];
+    const [app, site] = structuredData('/', 'team — a project\'s AI team, whether they come from one lab or several', 'the description') as Record<string, unknown>[];
     expect(app!['@type']).toBe('SoftwareApplication');
     expect(app!.name).toBe('team');
     expect(app!.description).toBe('the description');

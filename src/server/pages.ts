@@ -15,8 +15,9 @@ export const info = refInfo();
 
 /** The words of the hero's second line, in one place: the landing renders them (the
     sentence's period is the template's) and the shell ends the preview image's alt text
-    with them, so the two can only be re-worded together. */
-export const crewWords = 'any vendor, one crew';
+    with them, so the two can only be re-worded together. Taken from RFC 000, Part 1:
+    "whether they come from one lab or several." */
+export const heroLine = 'whether they come from one lab or several';
 
 /** A page built from parts: the headings its table of contents links to, then the text. */
 export class Doc {
