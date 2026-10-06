@@ -20,12 +20,18 @@ export function versionLine(): string {
   return `TeamCLI · VERSION ${version}`;
 }
 
-/** The words of the hero's second line, in one place: the landing renders them (the
-    sentence's period is the template's) and the shell ends the preview image's alt text
-    with them, so the two can only be re-worded together. Taken from RFC 000, Part 1,
-    "whether they come from one lab or several." The title that carries the same words
-    has to stay within 70 characters once its apostrophe is escaped, and these do. */
-export const heroLine = 'from one lab or several';
+/** The owner's headline, word for word. The home page's title is this sentence. */
+export const headline = 'A team of AI agents for your project.';
+/** The line under the headline: RFC 000, Part 1. It does not repeat the headline. */
+export const tagline = 'Agents propose. You decide.';
+
+/** The package's first line: the paragraph under the README's title. */
+export function packageLead(): string {
+  const body = README.replace(/^#[^\n]*\n+/, '');
+  const opening = (body.split(/\r?\n\s*\r?\n/)[0] ?? '').replace(/\s+/g, ' ').trim();
+  if (!opening || opening.startsWith('#')) throw new ReferenceError('the package has no opening line');
+  return opening;
+}
 
 /** A page built from parts: the headings its table of contents links to, then the text. */
 export class Doc {
@@ -412,7 +418,6 @@ const DESCRIPTIONS: Record<string, string> = {
   release: 'Checks one release on npm and GitHub: the version and its checksums, the tag, the GitHub release, and the changelog entry.',
 };
 const SITE_PAGES: Record<string, string> = {
-  '/': 'A project declares its team in one file: the seats, the models, the rules and the folders each one may touch. Set it up, change it and watch it run.',
   '/privacy/': 'How teamcli.io reaches you, and what stays in your browser.',
   '/docs/': 'Your first team in five minutes: install team, write .agents/team.yaml, approve it, and start the session.',
   '/docs/file/': 'Every part of .agents/team.yaml: the head, identity, workspace, machine, seats, watch and budgets, from the README, the example and the watch command page.',
@@ -423,7 +428,9 @@ const SITE_PAGES: Record<string, string> = {
 
 /** A description from the map above; a page that has none is a mistake, not a default. */
 export function descriptionFor(path: string): string {
-  const description = path.startsWith('/docs/commands/') && path !== '/docs/commands/'
+  const description = path === '/'
+    ? packageLead()
+    : path.startsWith('/docs/commands/') && path !== '/docs/commands/'
     ? DESCRIPTIONS[path.slice('/docs/commands/'.length, -1)]
     : SITE_PAGES[path];
   if (!description) throw new ReferenceError(`no description for ${path}`);

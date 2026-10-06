@@ -19,7 +19,7 @@
   <meta property="og:image" content="<%= it.site %>/og-image.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="team — a team of agents, <%= it.heroLine %>" />
+  <meta property="og:image:alt" content="<%= it.headline %>" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:url" content="<%= it.site %><%= it.path %>" />
   <meta name="twitter:title" content="<%= it.title %>" />

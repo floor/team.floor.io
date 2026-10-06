@@ -5,7 +5,7 @@ import { bundleCss, materialSheets, tokens } from '../src/server/css';
 import { commandNames } from '../src/server/reference';
 import { handleRequest } from '../server';
 import { contentReady, read, refInfo } from '../src/server/team';
-import { descriptionFor, homePoints, homeSamples, info, INSTALL_PACKAGE, installCommands, installLine, installMarkup, nav, pages, readingOrder, versionLine } from '../src/server/pages';
+import { descriptionFor, headline, homePoints, homeSamples, info, INSTALL_PACKAGE, installCommands, installLine, installMarkup, nav, packageLead, pages, readingOrder, tagline, versionLine } from '../src/server/pages';
 
 describe('the page list', () => {
   test('every page is a place of its own, with a title, a description and content', () => {
@@ -37,8 +37,24 @@ describe('the page list', () => {
   });
 
   test('a description is the site\'s own words, and a page without one is a mistake', () => {
-    expect(descriptionFor('/')).toContain('team');
+    expect(descriptionFor('/')).toBe(packageLead());
+    expect(descriptionFor('/')).toBe('Set up and run a team of AI agents for your project. Agents propose, you decide.');
     expect(() => descriptionFor('/nowhere/')).toThrow(/no description/);
+  });
+
+  test('the headline is the owner\'s sentence, and the line under it does not repeat it', async () => {
+    expect(headline).toBe('A team of AI agents for your project.');
+    expect(tagline).toBe('Agents propose. You decide.');
+    expect(tagline).not.toContain(headline);
+    const html = await (await handleRequest(new Request('http://localhost/'))).text();
+    expect(html).toContain(`<title>${headline}</title>`);
+    expect(html).toContain(`<h1 class="hero__name" id="hero-title">${headline}</h1>`);
+    expect(html).toContain(`<p class="hero__tagline">${tagline}</p>`);
+    const own = [headline, tagline, versionLine(), ...['/', '/privacy/', '/docs/', '/docs/file/', '/docs/commands/', '/docs/safety/', '/docs/clis/'].map(descriptionFor)];
+    for (const text of own) {
+      expect(text.toLowerCase()).not.toContain('vendor');
+      expect(text.toLowerCase()).not.toContain('crew');
+    }
   });
 });
 
