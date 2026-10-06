@@ -8,7 +8,7 @@ import { Eta } from 'eta';
 import { extname, resolve, sep } from 'node:path';
 import { IMMUTABLE_CACHE, SHORT_CACHE, isImmutableAsset, loadAssetManifest } from './src/server/assets';
 import { materialSheets, type StylesheetBundle } from './src/server/css';
-import { crewWords, descriptionFor, homePoints, homeSamples, info, inline, installLine, nav, pages } from './src/server/pages';
+import { crewWords, descriptionFor, homePoints, homeSamples, info, inline, installMarkup, nav, pages } from './src/server/pages';
 import { fenceHtml } from './src/server/markdown';
 import { searchSite, suggestions } from './src/server/search';
 import { jsonForScript, robotsTxt, SITE, SITE_NAME, sitemapXml, structuredData } from './src/server/seo';
@@ -68,13 +68,6 @@ function plainPage(path: string, title: string, description: string, template: s
   }));
 }
 
-/** The home page's install block: the command, and a copy button. */
-function installBlock(): string {
-  const command = installLine();
-  return `<figure class="example example--install"><pre class="example__code" tabindex="0"><code class="hljs language-bash"><span class="install__prompt" aria-hidden="true">$</span> ${escapeHtml(command)}</code></pre>` +
-    `<button type="button" class="example__copy mtrl-button mtrl-button--text mtrl-button--xs" data-copy data-copy-text="${escapeAttr(command)}">Copy</button></figure>\n`;
-}
-
 const mime: Record<string, string> = { '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.woff2': 'font/woff2' };
 /** The files browsers and link previews ask for at the root, from public/. */
 const rootFiles = new Set(['/favicon.ico', '/favicon.svg', '/apple-touch-icon.png', '/og-image.png']);
@@ -126,7 +119,7 @@ export async function handleRequest(request: Request): Promise<Response> {
       version: info.version,
       crewWords,
       tagline: inline(homePoints()[0]!.text),
-      install: installBlock(),
+      install: installMarkup(),
       points: homePoints().map(point => ({ title: point.title, html: inline(point.text) })),
       samples: homeSamples().map(sample => ({ label: sample.label, caption: inline(sample.caption), html: fenceHtml(sample.fence) })),
     });

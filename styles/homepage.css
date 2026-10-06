@@ -69,11 +69,11 @@
     margin-top: 24px;
 }
 
-/* The install line is one command: it reads as a line, not as a block. */
-.hero__install .example--install {
+/* The block is as wide as its tabs and its command, and the hero centres that. */
+.hero__install .doc-install {
+    width: max-content;
     max-width: 100%;
-    margin-top: 0;
-    text-align: left;
+    margin: 0;
 }
 
 .hero__notes {

@@ -4,7 +4,7 @@ import { describe, expect, test } from 'bun:test';
 import { bundleCss, materialSheets, tokens } from '../src/server/css';
 import { commandNames } from '../src/server/reference';
 import { contentReady, refInfo } from '../src/server/team';
-import { descriptionFor, homePoints, homeSamples, info, installLine, nav, pages, readingOrder } from '../src/server/pages';
+import { descriptionFor, homePoints, homeSamples, info, INSTALL_PACKAGE, installCommands, installLine, installMarkup, nav, pages, readingOrder } from '../src/server/pages';
 
 describe('the page list', () => {
   test('every page is a place of its own, with a title, a description and content', () => {
@@ -44,6 +44,29 @@ describe('the page list', () => {
 describe('the home page, from the reference', () => {
   test('the install line is the reference\'s own command', () => {
     expect(installLine()).toBe('npm install -g team');
+  });
+
+  test('the install block is a tablist, and every command installs the one package', () => {
+    const commands = installCommands();
+    expect(commands.map(item => item.command)).toEqual([
+      `bun add -g ${INSTALL_PACKAGE}`,
+      `npm install -g ${INSTALL_PACKAGE}`,
+      `pnpm add -g ${INSTALL_PACKAGE}`,
+    ]);
+    expect(new Set(commands.map(item => item.command.split(' ').at(-1))).size).toBe(1);
+    const html = installMarkup();
+    expect(html).toContain('role="tablist"');
+    expect([...html.matchAll(/role="tab"/g)].length).toBe(commands.length);
+    expect([...html.matchAll(/role="tabpanel"/g)].length).toBe(commands.length);
+    for (const item of commands) {
+      expect(html).toContain(`data-command="${item.command}"`);
+      expect(html).toContain(`aria-controls="install-panel-${item.id}"`);
+      expect(html).toContain(`id="install-panel-${item.id}"`);
+    }
+    expect(html).toContain('class="doc-install__copy');
+    expect(html).not.toContain('@teamcli/cli');
+    expect(html).toContain('aria-selected="true"');
+    expect([...html.matchAll(/aria-selected="true"/g)].length).toBe(1);
   });
 
   test('three points, each one sentence of the reference', () => {

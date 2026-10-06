@@ -1,9 +1,10 @@
 // The site's one script, loaded by every page as a module.
 //
 // Nothing here is needed to read the site: the pages are complete HTML, the
-// navigation is links, and the terminal blocks are text. This adds the three
-// conveniences — the theme switch, the drawer at narrow widths, and copying a
-// block — and starts the search dialog (src/client/search.ts).
+// navigation is links, and the terminal blocks are text. This adds the
+// conveniences — the theme switch, the drawer at narrow widths, copying a
+// block, and the home page's install tabs — and starts the search dialog
+// (src/client/search.ts).
 import { initSearch } from './search.ts';
 
 const STORAGE_KEY = 'team-site-mode';
@@ -69,7 +70,65 @@ function initCopy(): void {
   }
 }
 
+/** The home page's install tabs: arrow keys move the choice, and the choice is remembered. */
+function initInstall(): void {
+  const tabs = [...document.querySelectorAll<HTMLButtonElement>('.doc-install__option')];
+  const list = document.querySelector<HTMLElement>('.doc-install__switch');
+  if (!tabs.length || !list) return;
+
+  const select = (id: string, remember: boolean) => {
+    document.documentElement.dataset.packageManager = id;
+    for (const tab of tabs) {
+      const on = tab.dataset.packageManager === id;
+      tab.setAttribute('aria-selected', String(on));
+      tab.tabIndex = on ? 0 : -1;
+    }
+    if (remember) {
+      try { localStorage.setItem('team-package-manager', id); } catch { /* private window: the choice lasts the page */ }
+    }
+  };
+
+  select(document.documentElement.dataset.packageManager || tabs[0]!.dataset.packageManager || 'bun', false);
+
+  for (const tab of tabs) {
+    tab.addEventListener('click', () => {
+      select(tab.dataset.packageManager!, true);
+      tab.focus();
+    });
+  }
+
+  list.addEventListener('keydown', event => {
+    const current = tabs.findIndex(tab => tab.getAttribute('aria-selected') === 'true');
+    if (current < 0 || !tabs.includes(event.target as HTMLButtonElement)) return;
+    let next = current;
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') next = (current + 1) % tabs.length;
+    else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') next = (current - 1 + tabs.length) % tabs.length;
+    else if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = tabs.length - 1;
+    else return;
+    event.preventDefault();
+    const tab = tabs[next]!;
+    select(tab.dataset.packageManager!, true);
+    tab.focus();
+  });
+
+  const copy = document.querySelector<HTMLButtonElement>('.doc-install__copy');
+  copy?.addEventListener('click', async () => {
+    const id = document.documentElement.dataset.packageManager;
+    const panel = document.querySelector<HTMLElement>(`.doc-install__panel[data-package-manager="${id}"]`);
+    const text = panel?.dataset.command ?? '';
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      copy.dataset.copied = 'true';
+      copy.textContent = 'Copied';
+      window.setTimeout(() => { delete copy.dataset.copied; copy.textContent = 'Copy'; }, 1600);
+    } catch { /* the clipboard is not available: the command is still selectable */ }
+  });
+}
+
 initTheme();
 initNavigation();
 initCopy();
+initInstall();
 initSearch();

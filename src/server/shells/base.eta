@@ -31,6 +31,7 @@
   <% }); %><link rel="stylesheet" href="/dist/css/<%= it.css %>.css" />
   <script>
     (() => { let mode; try { mode = localStorage.getItem('team-site-mode'); } catch {} document.documentElement.dataset.themeMode = mode === 'light' || mode === 'dark' ? mode : matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; })();
+    (() => { let manager; try { manager = localStorage.getItem('team-package-manager'); } catch {} if (manager === 'bun' || manager === 'npm' || manager === 'pnpm') document.documentElement.dataset.packageManager = manager; })();
   </script>
   <script type="module" src="/dist/site.js"></script>
 </head>

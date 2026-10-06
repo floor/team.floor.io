@@ -110,6 +110,42 @@ export function installLine(): string {
   return line.split('#')[0]!.trim();
 }
 
+/**
+ * The package the home page's install block installs. Every manager's command is
+ * this name, so the block cannot show one package on one tab and another on the next.
+ */
+export const INSTALL_PACKAGE = 'team';
+
+/** The managers the home page offers, in tab order, and the global-install command each one uses. */
+export const INSTALL_MANAGERS = [
+  { id: 'bun', command: 'bun add -g' },
+  { id: 'npm', command: 'npm install -g' },
+  { id: 'pnpm', command: 'pnpm add -g' },
+] as const;
+
+/** One command per manager, the package name taken from {@link INSTALL_PACKAGE}. */
+export function installCommands(): { id: string; command: string }[] {
+  return INSTALL_MANAGERS.map(manager => ({ id: manager.id, command: `${manager.command} ${INSTALL_PACKAGE}` }));
+}
+
+/**
+ * The home page's install block: a tab per manager, the command for each already in the
+ * page, and a Copy button. The first tab is selected. A visitor without scripts sees that
+ * command; the client only switches which one is shown and remembers the choice.
+ */
+export function installMarkup(): string {
+  const commands = installCommands();
+  const tabs = commands.map((item, index) => {
+    const selected = index === 0;
+    return `<button type="button" class="doc-install__option" role="tab" id="install-tab-${item.id}" data-package-manager="${item.id}" aria-selected="${selected}" aria-controls="install-panel-${item.id}" tabindex="${selected ? '0' : '-1'}">${item.id}</button>`;
+  }).join('');
+  const panels = commands.map(item =>
+    `<div class="doc-install__panel" role="tabpanel" id="install-panel-${item.id}" aria-labelledby="install-tab-${item.id}" data-package-manager="${item.id}" data-command="${escapeHtml(item.command)}" tabindex="0"><pre class="doc-install__command"><code class="hljs language-bash"><span class="install__prompt" aria-hidden="true">$</span> ${escapeHtml(item.command)}</code></pre></div>`,
+  ).join('');
+  return `<div class="doc-install"><div class="doc-install__bar"><div class="doc-install__switch" role="tablist" aria-label="Package manager">${tabs}</div>` +
+    `<button type="button" class="doc-install__copy example__copy mtrl-button mtrl-button--text mtrl-button--xs">Copy</button></div>${panels}</div>\n`;
+}
+
 export interface Sample { label: string; caption: string; fence: Fence }
 /**
  * The home page's samples: the shortest team file the reference shows, and two
