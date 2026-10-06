@@ -10,7 +10,7 @@
 import { chromium } from 'playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { headline, homeSamples, installLine, tagline } from '../src/server/pages';
+import { homeSamples, installLine, tagline } from '../src/server/pages';
 import { commandNames, README } from '../src/server/reference';
 import { escapeHtml } from '../src/server/markdown';
 
@@ -64,7 +64,6 @@ function ico(images: { size: number; png: Buffer }[]): Buffer {
 
 // ── the link preview ──────────────────────────────────────────────────────────
 
-if (tagline === headline || tagline.includes(headline)) throw new Error('the card would repeat the headline');
 /** The card's facts, each read from the package rather than written here. */
 const node = /Node \d+ or later/.exec(README)?.[0];
 if (!node) throw new Error('the README no longer says which Node version runs team: the card would have to claim one');
