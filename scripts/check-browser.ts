@@ -42,6 +42,9 @@
 //	   home rolls through the registry, and its reserved width never shifts navigation.
 //	9. The home page's install block: a click and an arrow key each switch the visible
 //	   command, Copy hands over that command, and a reload shows the same tab.
+//	10. Light-mode syntax tokens, measured from computed colour against the code block's
+//	    own background: .hljs-attr, .hljs-string, .hljs-comment and .hljs-built_in, and
+//	    every other highlighted token on those pages, each at least 4.5:1.
 //
 // The server is the site's own request handler on a free port, so this opens no
 // process of its own; the browser opens once and is closed in the end.
@@ -247,7 +250,7 @@ try {
       return {
         block: boxOffset('.hero'),
         textAlign: getComputedStyle(document.querySelector('.hero')!).textAlign,
-        children: ['.eyebrow', '#hero-title', '.hero__tagline', '.hero__install', '.hero__notes']
+        children: ['.eyebrow', '#hero-title', '.hero__install', '.hero__notes']
           .map(selector => ({ selector, offset: contentOffset(selector) })),
         buttons: { offset: round((left + right) / 2 - centre), span: round(right - left) },
       };
@@ -684,6 +687,40 @@ try {
     check(remembered.tab === 'pnpm' && remembered.command.length === 1 && remembered.command[0] === commands.find(item => item.id === 'pnpm')!.command, `install: after a reload the tab is ${JSON.stringify(remembered)}`);
     await context.close();
   }
+
+  // ── 10. light-mode syntax tokens clear 4.5:1 on the code background ──
+  // The four classes the audit named, plus every other highlighted token on the same
+  // pages. The ratio is the computed colour over the block's composited background.
+  {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'light' });
+    const page = await context.newPage();
+    const wanted = ['hljs-attr', 'hljs-string', 'hljs-comment', 'hljs-built_in'];
+    const seen = new Set<string>();
+    const worst = new Map<string, number>();
+    for (const path of ['/', '/docs/', '/docs/commands/up/', '/docs/file/']) {
+      await page.goto(`${origin}${path}`, { waitUntil: 'load' });
+      const tokens = await page.evaluate(() => [...document.querySelectorAll<HTMLElement>('[class*="hljs-"]')].map(element => {
+        const backgrounds: string[] = [];
+        let node: Element | null = element;
+        while (node) {
+          backgrounds.push(getComputedStyle(node).backgroundColor);
+          node = node.parentElement;
+        }
+        return { classes: [...element.classList].filter(name => name.startsWith('hljs-')), color: getComputedStyle(element).color, backgrounds };
+      }));
+      for (const token of tokens) {
+        const ratio = contrast(channels(token.color), backdrop(token.backgrounds));
+        for (const name of token.classes) {
+          seen.add(name);
+          const previous = worst.get(name);
+          if (previous === undefined || ratio < previous) worst.set(name, ratio);
+        }
+      }
+    }
+    for (const name of wanted) check(seen.has(name), `light syntax: ${name} was not on the pages`);
+    for (const [name, ratio] of worst) check(ratio >= 4.5, `light syntax: ${name} is ${ratio.toFixed(2)}:1`);
+    await context.close();
+  }
 } finally {
   await browser.close();
   await server.stop(true);
@@ -694,4 +731,4 @@ if (problems.length) {
   for (const problem of [...new Set(problems)]) console.error(`  ${problem}`);
   process.exit(1);
 }
-console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero\'s content centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer, prose links and code blocks, home transcripts, and the favicon-mark header: reduced-motion final text, terminal character typing and a fixed navigation edge, plus install switching and remembered tabs.');
+console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero\'s content centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer, every name the prose rule carries, the note class on a div.note among them, wearing the link token and a 3:1 mark at rest, turning full-strength on hover and on the keyboard, while the anchors around them, and the action class in a note and in the samples foot, stay bare, the code blocks chip-free inside, scrolling their long lines, and bare where the styles de-chip a name, the home transcripts rendering the reference line for line, the header on every sitemap page wearing a section only where there is one, the favicon-mark header with its reduced-motion final text, terminal character typing and a fixed navigation edge, and the install block switching by click and by arrow key, copying the visible command, and remembering the tab, and the light-mode syntax tokens, .hljs-attr, .hljs-string, .hljs-comment and .hljs-built_in among them, at 4.5:1 on their code background.');

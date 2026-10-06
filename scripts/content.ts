@@ -1,12 +1,28 @@
-// Extracts the content the site is built from: the `team` repository at TEAM_REF,
+// Extracts the content the site is built from: the published `team` package's tag,
 // read with `git archive` so the clone is never checked out, edited or written to.
 // The archive lands in content/team/ (gitignore'd); every page reads it from there.
+// The version is read from the registry at build time. TEAM_REF overrides the tag.
 //
-//   bun scripts/content.ts          # TEAM_REPO (default ../team), TEAM_REF (src/server/team.ts)
+//   bun scripts/content.ts          # TEAM_REPO (default ../team); TEAM_REF optional
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { contentDir, root, TEAM_REF, TEAM_REPO } from '../src/server/team';
+import { contentDir, root, TEAM_REPO } from '../src/server/team';
+
+/** The version npm publishes for `team`. The eyebrow reads this, so it is never typed here. */
+function publishedVersion(): string {
+  const result = Bun.spawnSync(['npm', 'view', 'team', 'version'], { stdout: 'pipe', stderr: 'pipe' });
+  const version = result.stdout.toString().trim();
+  if (result.exitCode !== 0 || !/^\d+\.\d+\.\d+$/.test(version)) {
+    console.error(`Could not read the published version of team${result.stderr.toString().trim() ? `: ${result.stderr.toString().trim()}` : ''}.`);
+    process.exit(1);
+  }
+  return version;
+}
+
+const pinned = process.env.TEAM_REF?.trim() ?? '';
+const published = pinned ? '' : publishedVersion();
+const TEAM_REF = pinned || `v${published}`;
 
 if (!existsSync(resolve(TEAM_REPO, '.git'))) {
   console.error(`No team checkout at ${TEAM_REPO}. Clone floor/team beside this repository, or set TEAM_REPO.`);
@@ -27,6 +43,14 @@ if (packageJson.exitCode !== 0) {
   process.exit(1);
 }
 const version = (JSON.parse(packageJson.stdout.toString()) as { version: string }).version;
+if (!/^\d+\.\d+\.\d+$/.test(version)) {
+  console.error(`package.json at ${TEAM_REF} has no version.`);
+  process.exit(1);
+}
+if (published && version !== published) {
+  console.error(`The tag ${TEAM_REF} says ${version}, and the published package says ${published}.`);
+  process.exit(1);
+}
 // The ref's own date: what the pages are built against, and the sitemap's lastmod for
 // a page whose text comes from the reference.
 const date = git('log', '-1', '--format=%cd', '--date=short', sha).stdout.toString().trim();

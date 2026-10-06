@@ -1,4 +1,4 @@
-// team.floor.io: the site for the `team` command.
+// teamcli.io: the site for the `team` command.
 //
 // Everything a page says comes from the reference at TEAM_REF (src/server/pages.ts), the
 // prose through Marked and the blocks through the site's own renderer (markdown.ts), with
@@ -8,7 +8,7 @@ import { Eta } from 'eta';
 import { extname, resolve, sep } from 'node:path';
 import { IMMUTABLE_CACHE, SHORT_CACHE, isImmutableAsset, loadAssetManifest } from './src/server/assets';
 import { materialSheets, type StylesheetBundle } from './src/server/css';
-import { descriptionFor, heroLine, homePoints, homeSamples, info, inline, installMarkup, nav, pages, versionLine } from './src/server/pages';
+import { descriptionFor, headline, headlineAccent, headlineLead, homePoints, homeSamples, homeTitle, info, inline, INSTALL_MANAGERS, installMarkup, nav, pages, versionLine } from './src/server/pages';
 import { commandNames } from './src/server/reference';
 import { fenceHtml } from './src/server/markdown';
 import { searchSite, suggestions } from './src/server/search';
@@ -52,7 +52,8 @@ function shell(body: { path: string; title: string; description: string; content
     path: body.path, title: body.title, description: body.description, css: body.css, section: body.section ?? 'Documentation',
     site: SITE, siteName: SITE_NAME,
     isHome: Boolean(body.isHome), headerCommand: command && commands.includes(command) ? command : '', rollingCommands,
-    jsonLd: body.jsonLd ?? [], nav, version: info.version, content: body.content, materialSheets, heroLine,
+    jsonLd: body.jsonLd ?? [], nav, version: info.version, content: body.content, materialSheets, headline,
+    installManagers: INSTALL_MANAGERS.map(manager => manager.id),
   });
 }
 /** A documentation page: the page's own content, wrapped with its table of contents and pager. */
@@ -122,11 +123,11 @@ export async function handleRequest(request: Request): Promise<Response> {
 
   let response: Response;
   if (path === '/') {
-    response = plainPage('/', `team — a project's AI team, ${heroLine}`, descriptionFor('/'), 'homepage', {
+    response = plainPage('/', homeTitle, descriptionFor('/'), 'homepage', {
       version: info.version,
       versionLine: versionLine(),
-      heroLine,
-      tagline: inline(homePoints()[0]!.text),
+      headlineLead,
+      headlineAccent,
       install: installMarkup(),
       points: homePoints().map(point => ({ title: point.title, html: inline(point.text) })),
       samples: homeSamples().map(sample => ({ label: sample.label, caption: inline(sample.caption), html: fenceHtml(sample.fence) })),
@@ -144,5 +145,5 @@ export async function handleRequest(request: Request): Promise<Response> {
 
 if (import.meta.main) {
   const server = Bun.serve({ port: Number(process.env.PORT || 4310), hostname: process.env.HOST || '127.0.0.1', fetch: handleRequest });
-  console.log(`team.floor.io ready at ${server.url}`);
+  console.log(`teamcli.io ready at ${server.url}`);
 }

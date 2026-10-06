@@ -19,7 +19,7 @@
   <meta property="og:image" content="<%= it.site %>/og-image.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="team — a team of agents, <%= it.heroLine %>" />
+  <meta property="og:image:alt" content="<%= it.headline %>" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:url" content="<%= it.site %><%= it.path %>" />
   <meta name="twitter:title" content="<%= it.title %>" />
@@ -31,7 +31,7 @@
   <% }); %><link rel="stylesheet" href="/dist/css/<%= it.css %>.css" />
   <script>
     (() => { let mode; try { mode = localStorage.getItem('team-site-mode'); } catch {} document.documentElement.dataset.themeMode = mode === 'light' || mode === 'dark' ? mode : matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; })();
-    (() => { let manager; try { manager = localStorage.getItem('team-package-manager'); } catch {} if (manager === 'bun' || manager === 'npm' || manager === 'pnpm') document.documentElement.dataset.packageManager = manager; })();
+    (() => { let manager; try { manager = localStorage.getItem('team-package-manager'); } catch {} if (<%~ JSON.stringify(it.installManagers) %>.includes(manager)) document.documentElement.dataset.packageManager = manager; })();
   </script>
   <script type="module" src="/dist/site.js"></script>
 </head>
@@ -40,8 +40,8 @@
   <header class="header"><div class="header__inner">
     <a class="header__logo" href="/" aria-label="team, home"><img class="header__mark" src="/favicon.svg" width="24" height="24" alt="" /><span>team</span><% if (it.isHome || it.headerCommand) { %><span class="header__command" aria-hidden="true" data-header-command="<%= it.headerCommand %>" data-header-commands="<%= it.rollingCommands.join(',') %>" data-header-home="<%= it.isHome %>"><span class="header__typed"><%= it.headerCommand %></span><span class="header__caret"></span></span><% } %></a>
     <nav class="header__nav" aria-label="Main navigation">
-      <a href="/docs/" class="<%= it.section === 'Documentation' ? 'active' : '' %>">Documentation</a>
-      <a href="/docs/commands/" class="<%= it.path === '/docs/commands/' ? 'active' : '' %>">Commands</a>
+      <a href="/docs/" class="<%= it.section === 'Documentation' && !it.path.startsWith('/docs/commands/') ? 'active' : '' %>" <% if (it.section === 'Documentation' && !it.path.startsWith('/docs/commands/')) { %>aria-current="page"<% } %>>Documentation</a>
+      <a href="/docs/commands/" class="<%= it.path.startsWith('/docs/commands/') ? 'active' : '' %>" <% if (it.path.startsWith('/docs/commands/')) { %>aria-current="page"<% } %>>Commands</a>
       <a href="https://github.com/floor/team" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
     </nav>
     <button type="button" class="header__search" id="search-trigger" aria-label="Search (⌘K)" aria-haspopup="dialog" aria-keyshortcuts="Meta+K Control+K">

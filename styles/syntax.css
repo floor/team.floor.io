@@ -181,7 +181,8 @@
 
 .doc-install__option[data-package-manager="bun"],
 :root[data-package-manager="npm"] .doc-install__option[data-package-manager="npm"],
-:root[data-package-manager="pnpm"] .doc-install__option[data-package-manager="pnpm"] {
+:root[data-package-manager="pnpm"] .doc-install__option[data-package-manager="pnpm"],
+:root[data-package-manager="yarn"] .doc-install__option[data-package-manager="yarn"] {
     background: color-mix(in srgb, var(--term-command) 14%, transparent);
     color: var(--term-command);
 }
@@ -197,7 +198,8 @@
 
 .doc-install__panel[data-package-manager="bun"],
 :root[data-package-manager="npm"] .doc-install__panel[data-package-manager="npm"],
-:root[data-package-manager="pnpm"] .doc-install__panel[data-package-manager="pnpm"] {
+:root[data-package-manager="pnpm"] .doc-install__panel[data-package-manager="pnpm"],
+:root[data-package-manager="yarn"] .doc-install__panel[data-package-manager="yarn"] {
     display: block;
 }
 
@@ -305,6 +307,7 @@
 }
 
 /* ─── highlight.js — One Light ───────────────────────────────────── */
+/* Each light token is darkened along its own hue until it clears 4.5:1 on --bg-code. */
 
 [data-theme-mode="light"] .hljs {
     color: #383a42;
@@ -312,7 +315,7 @@
 
 [data-theme-mode="light"] .hljs-comment,
 [data-theme-mode="light"] .hljs-quote {
-    color: #a0a1a7;
+    color: #6e7077;
 }
 
 [data-theme-mode="light"] .hljs-keyword,
@@ -325,7 +328,7 @@
 [data-theme-mode="light"] .hljs-regexp,
 [data-theme-mode="light"] .hljs-addition,
 [data-theme-mode="light"] .hljs-meta .hljs-string {
-    color: #50a14f;
+    color: #3e7d3e;
 }
 
 [data-theme-mode="light"] .hljs-number,
@@ -346,13 +349,13 @@
 [data-theme-mode="light"] .hljs-link,
 [data-theme-mode="light"] .hljs-meta,
 [data-theme-mode="light"] .hljs-selector-id {
-    color: #4078f2;
+    color: #2766f0;
 }
 
 [data-theme-mode="light"] .hljs-built_in,
 [data-theme-mode="light"] .hljs-class .hljs-title,
 [data-theme-mode="light"] .hljs-type {
-    color: #c18401;
+    color: #966701;
 }
 
 [data-theme-mode="light"] .hljs-name,
@@ -360,14 +363,14 @@
 [data-theme-mode="light"] .hljs-deletion,
 [data-theme-mode="light"] .hljs-subst,
 [data-theme-mode="light"] .hljs-tag {
-    color: #e45649;
+    color: #d42f20;
 }
 
 [data-theme-mode="light"] .hljs-attr,
 [data-theme-mode="light"] .hljs-attribute,
 [data-theme-mode="light"] .hljs-property,
 [data-theme-mode="light"] .hljs-variable.language_ {
-    color: #0184bc;
+    color: #0177aa;
 }
 
 [data-theme-mode="light"] .hljs-params,

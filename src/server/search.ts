@@ -3,7 +3,7 @@
 // src/client/search.ts; the index itself never leaves the server.
 import MiniSearch from 'minisearch';
 import { decodeEntities } from './markdown';
-import { descriptionFor, heroLine, homePoints, info, nav, pages } from './pages';
+import { descriptionFor, homePoints, homeTitle, info, nav, pages } from './pages';
 
 /** A page's rendered HTML as searchable text: the tags out, the entities decoded. */
 function plainText(html: string): string {
@@ -15,7 +15,7 @@ export interface SearchDocument { id: string; title: string; headings: string; t
 /** Every page of the site as a search document: the home page and Privacy included. */
 export function searchDocuments(): SearchDocument[] {
   const home = {
-    id: '/', title: `team — a project's AI team, ${heroLine}`, headings: 'team', kind: 'Home',
+    id: '/', title: homeTitle, headings: 'team', kind: 'Home',
     description: descriptionFor('/'),
     text: plainText(homePoints().map(point => `${point.title}. ${point.text}`).join(' ')),
   };
