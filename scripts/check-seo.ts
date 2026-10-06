@@ -9,7 +9,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { handleRequest } from '../server';
 import { descriptionFor, info } from '../src/server/pages';
-import { SITE, sitemapPages } from '../src/server/seo';
+import { SITE, SITE_NAME, sitemapPages } from '../src/server/seo';
 
 const root = resolve(import.meta.dir, '..');
 const problems: string[] = [];
@@ -57,7 +57,7 @@ for (const page of pageList) {
   descriptions.set(description, page.path);
 
   check(meta(html, 'property', 'og:type') === 'website', `${page.path}: og:type`);
-  check(meta(html, 'property', 'og:site_name') === 'team.floor.io', `${page.path}: og:site_name`);
+  check(meta(html, 'property', 'og:site_name') === SITE_NAME, `${page.path}: og:site_name`);
   check(meta(html, 'property', 'og:url') === canonical, `${page.path}: og:url is not the canonical URL`);
   check(meta(html, 'property', 'og:title') === title, `${page.path}: og:title is not the title`);
   check(meta(html, 'property', 'og:description') === description, `${page.path}: og:description is not the description`);
@@ -84,6 +84,11 @@ for (const page of pageList) {
   check(parsed.length >= scripts.length, `${page.path}: ${scripts.length} structured data blocks held ${parsed.length} objects`);
   for (const object of parsed) {
     check(object['@context'] === 'https://schema.org', `${page.path}: structured data without a schema.org context`);
+  }
+  const website = parsed.find(object => object['@type'] === 'WebSite');
+  if (website) {
+    check(website.name === SITE_NAME, `${page.path}: the WebSite name is ${JSON.stringify(website.name)}`);
+    check(website.url === SITE, `${page.path}: the WebSite url is ${JSON.stringify(website.url)}`);
   }
   const trail = parsed.find(object => object['@type'] === 'BreadcrumbList');
   if (page.path.startsWith('/docs/')) {

@@ -366,7 +366,7 @@ const DESCRIPTIONS: Record<string, string> = {
 };
 const SITE_PAGES: Record<string, string> = {
   '/': 'A project declares its team in one file: the seats, the models, the rules and the folders each one may touch. Set it up, change it and watch it run.',
-  '/privacy/': 'How team.floor.io reaches you, and what stays in your browser.',
+  '/privacy/': 'How teamcli.io reaches you, and what stays in your browser.',
   '/docs/': 'Your first team in five minutes: install team, write .agents/team.yaml, approve it, and start the session.',
   '/docs/file/': 'Every part of .agents/team.yaml: the head, identity, workspace, machine, seats, watch and budgets, from the README, the example and the watch command page.',
   '/docs/commands/': 'The eleven commands of team: what each reads and writes, who may run it, its refusals, its exit codes and its examples.',

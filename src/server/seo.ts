@@ -4,7 +4,9 @@
 import { execFileSync } from 'node:child_process';
 import { info, pages } from './pages';
 
-export const SITE = 'https://team.floor.io';
+export const SITE = 'https://teamcli.io';
+/** The name a visitor and a link preview read: the host of SITE. */
+export const SITE_NAME = new URL(SITE).host;
 /** Routes for the site's own use, never a page to index: robots.txt disallows them. */
 export const INTERNAL_PREFIXES = ['/api/'];
 
@@ -59,7 +61,7 @@ const where = ['https://github.com/floor/team', 'https://www.npmjs.com/package/t
  * the trail Home → Documentation → page. `name` is the page's own name.
  */
 export function structuredData(path: string, name: string, description: string): object[] {
-  const site = { '@context': 'https://schema.org', '@type': 'WebSite', name: 'team.floor.io', url: SITE, publisher: author };
+  const site = { '@context': 'https://schema.org', '@type': 'WebSite', name: SITE_NAME, url: SITE, publisher: author };
   if (path === '/') {
     return [
       {

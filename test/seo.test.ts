@@ -2,7 +2,7 @@
 // the one page list the routes serve, so a page that exists is listed, and one that does
 // not is not.
 import { describe, expect, test } from 'bun:test';
-import { jsonForScript, robotsTxt, SITE, sitemapPages, sitemapXml, structuredData } from '../src/server/seo';
+import { jsonForScript, robotsTxt, SITE, SITE_NAME, sitemapPages, sitemapXml, structuredData } from '../src/server/seo';
 import { info, pages } from '../src/server/pages';
 
 /** The public pages in the sitemap's own order: the home page, the docs, then Privacy. */
@@ -54,6 +54,10 @@ describe('structured data', () => {
     expect(app!.softwareVersion).toBe(info.version);
     expect(app!.license).toBe('https://opensource.org/licenses/MIT');
     expect(site!['@type']).toBe('WebSite');
+    expect(site!.name).toBe(SITE_NAME);
+    expect(site!.url).toBe(SITE);
+    expect(SITE).toBe('https://teamcli.io');
+    expect(SITE_NAME).toBe('teamcli.io');
     for (const object of [app!, site!]) expect(object['@context']).toBe('https://schema.org');
   });
 
@@ -73,6 +77,8 @@ describe('structured data', () => {
     const data = structuredData('/privacy/', 'Privacy — team', 'x') as Record<string, unknown>[];
     expect(data.length).toBe(1);
     expect(data[0]!['@type']).toBe('WebSite');
+    expect(data[0]!.name).toBe(SITE_NAME);
+    expect(data[0]!.url).toBe(SITE);
   });
 
   test('JSON in a <script> cannot close the element', () => {

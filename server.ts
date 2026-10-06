@@ -11,7 +11,7 @@ import { materialSheets, type StylesheetBundle } from './src/server/css';
 import { crewWords, descriptionFor, homePoints, homeSamples, info, inline, installLine, nav, pages } from './src/server/pages';
 import { fenceHtml } from './src/server/markdown';
 import { searchSite, suggestions } from './src/server/search';
-import { jsonForScript, robotsTxt, sitemapXml, structuredData } from './src/server/seo';
+import { jsonForScript, robotsTxt, SITE, SITE_NAME, sitemapXml, structuredData } from './src/server/seo';
 import { root } from './src/server/team';
 
 const eta = new Eta({ views: resolve(root, 'src/server/shells'), cache: process.env.NODE_ENV === 'production' });
@@ -44,6 +44,7 @@ function pager(path: string): string {
 function shell(body: { path: string; title: string; description: string; content: string; css: StylesheetBundle; section?: string; isHome?: boolean; jsonLd?: string[] }): string {
   return eta.render('base', {
     path: body.path, title: body.title, description: body.description, css: body.css, section: body.section ?? 'Documentation',
+    site: SITE, siteName: SITE_NAME,
     isHome: Boolean(body.isHome), jsonLd: body.jsonLd ?? [], nav, version: info.version, content: body.content, materialSheets, crewWords,
   });
 }
