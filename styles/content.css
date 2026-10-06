@@ -199,6 +199,19 @@
     border: 0;
 }
 
+/* A prose chip whose single token cannot fit any line wraps instead of scrolling the
+   page. The release page's refusal list carries the JSON error shape as one 116-character
+   inline code sample with no break opportunity in it: at 390 it measured 379.5px inside
+   the list's column and scrolled the page (scrollWidth 430 > clientWidth 390). Cells keep
+   the no-break rule of the tables above — a token that cannot fit widens its column and
+   the table's frame scrolls; running prose has no frame, so the token itself yields. Only
+   a token that cannot fit a line at all is touched; every chip that already fits reads
+   exactly as before. */
+.md p > code,
+.md li > code {
+    overflow-wrap: anywhere;
+}
+
 /* An indented block: the reference's own preformatted text, quieter than a block of
    the site's own — no bar, no label, no copy button, just the text as it is written. */
 .md-pre {
