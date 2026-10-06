@@ -241,6 +241,12 @@
     border-radius: var(--radius);
 }
 
+/* A frame that scrolls is a keyboard tab stop — the markdown emits tabindex 0 on every
+   one — and wears the same inside outline as the code frames (.md-pre, .example__code). */
+.table-wrap:focus-visible {
+    outline-offset: -2px;
+}
+
 .md table {
     width: 100%;
     border-collapse: collapse;
