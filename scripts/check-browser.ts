@@ -49,8 +49,9 @@
 //	11. Every page the sitemap lists, plus the 404, at 1440, 1024 and 390: the page does
 //	    not scroll sideways; no table cell's text is clipped (a cell over its own box while
 //	    its table's wrapper does not scroll) and no cell is narrower than its own content
-//	    (its longest unbreakable token plus its horizontal padding); and the top navigation
-//	    marks the page's own section exactly once, with aria-current.
+//	    (its longest unbreakable token plus its horizontal padding), every scrolling table
+//	    frame a keyboard tab stop; and the top navigation marks the page's own section
+//	    exactly once, with aria-current.
 //
 // The server is the site's own request handler on a free port, so this opens no
 // process of its own; the browser opens once and is closed in the end.
@@ -740,7 +741,9 @@ try {
   //	   padding. A single token never breaks, a phrase wraps at its spaces, and a cell
   //	   whose content fits, however short it is — Exit, Flag, a number — is not a fault.
   //	   The round-1 rule's 96px and 4× survive in the failure lines as reported
-  //	   measurements only, never as the condition.
+  //	   measurements only, never as the condition. A frame that does scroll is a keyboard
+  //	   tab stop (tabindex 0, with the site's inside focus outline), so a reader who
+  //	   cannot use a pointer can scroll it.
   //	3. the top navigation marks the page's section exactly once: a /docs/commands/…
   //	   page is Commands, every other page that declares a section is Documentation, and
   //	   the pages that declare none — the home page, privacy and the 404 — carry no
@@ -790,10 +793,11 @@ try {
             scrollWidth: document.documentElement.scrollWidth,
             clientWidth: document.documentElement.clientWidth,
             tables: [...document.querySelectorAll<HTMLTableElement>('table')].map((table, index) => {
-              const wrapper = table.closest('.table-wrap');
+              const wrapper = table.closest<HTMLElement>('.table-wrap');
               return {
                 index: index + 1,
                 wrapperScrolls: wrapper !== null && wrapper.scrollWidth > wrapper.clientWidth,
+                wrapperTab: wrapper === null ? null : wrapper.tabIndex,
                 rows: [...table.rows].map((row, rowIndex) => [...row.cells].map((cell, cellIndex) => ({
                   row: rowIndex + 1,
                   cell: cellIndex + 1,
@@ -823,6 +827,7 @@ try {
         check(facts.scrollWidth <= facts.clientWidth, `${where} rule 1 sideways scroll: documentElement.scrollWidth ${facts.scrollWidth} > clientWidth ${facts.clientWidth}`);
 
         for (const table of facts.tables) {
+          check(!table.wrapperScrolls || table.wrapperTab === 0, `${where} rule 2 frame: table ${table.index}'s frame scrolls and its tabIndex is ${table.wrapperTab}, not 0 — the keyboard cannot scroll it`);
           for (const row of table.rows) {
             for (const cell of row) {
               const clipped = !table.wrapperScrolls && cell.scrollWidth > cell.clientWidth;
@@ -868,4 +873,4 @@ if (problems.length) {
   for (const problem of [...new Set(problems)]) console.error(`  ${problem}`);
   process.exit(1);
 }
-console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero\'s content centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer, every name the prose rule carries, the note class on a div.note among them, wearing the link token and a 3:1 mark at rest, turning full-strength on hover and on the keyboard, while the anchors around them, and the action class in a note and in the samples foot, stay bare, the code blocks chip-free inside, scrolling their long lines, and bare where the styles de-chip a name, the home transcripts rendering the reference line for line, the header on every sitemap page wearing a section only where there is one, the favicon-mark header with its reduced-motion final text, terminal character typing and a fixed navigation edge, and the install block switching by click and by arrow key, copying the visible command, and remembering the tab, and the light-mode syntax tokens, .hljs-attr, .hljs-string, .hljs-comment and .hljs-built_in among them, at 4.5:1 on their code background, and every page of the sitemap plus the 404 at 1440/1024/390 without a sideways scroll, without a table cell clipped or narrower than its longest unbreakable token, and with one top-navigation link carrying aria-current for the page\'s own section.');
+console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero\'s content centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer, every name the prose rule carries, the note class on a div.note among them, wearing the link token and a 3:1 mark at rest, turning full-strength on hover and on the keyboard, while the anchors around them, and the action class in a note and in the samples foot, stay bare, the code blocks chip-free inside, scrolling their long lines, and bare where the styles de-chip a name, the home transcripts rendering the reference line for line, the header on every sitemap page wearing a section only where there is one, the favicon-mark header with its reduced-motion final text, terminal character typing and a fixed navigation edge, and the install block switching by click and by arrow key, copying the visible command, and remembering the tab, and the light-mode syntax tokens, .hljs-attr, .hljs-string, .hljs-comment and .hljs-built_in among them, at 4.5:1 on their code background, and every page of the sitemap plus the 404 at 1440/1024/390 without a sideways scroll, without a table cell clipped or narrower than its longest unbreakable token, with every scrolling table frame a keyboard tab stop, and with one top-navigation link carrying aria-current for the page\'s own section.');
