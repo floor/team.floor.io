@@ -742,10 +742,10 @@ try {
   //	   The round-1 rule's 96px and 4× survive in the failure lines as reported
   //	   measurements only, never as the condition.
   //	3. the top navigation marks the page's section exactly once: a /docs/commands/…
-  //	   page is Commands, every other page that declares a section — the header's own
-  //	   "/ Documentation", the 404 page's included — is Documentation, and the pages that
-  //	   declare none, the home page and privacy, carry no current link at all. The mark is
-  //	   aria-current, the one assistive tech reads; the visible class alone is not the mark.
+  //	   page is Commands, every other page that declares a section is Documentation, and
+  //	   the pages that declare none — the home page, privacy and the 404 — carry no
+  //	   current link at all. The mark is aria-current, the one assistive tech reads; the
+  //	   visible class alone is not the mark.
   // The page list is the site's own sitemap.xml, read over HTTP, so this measures what the
   // site publishes and not a list retyped here.
   {
