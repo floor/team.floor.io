@@ -6,11 +6,11 @@
 //   - favicon.ico: the same mark at 16 and 32 px (PNG payloads in an ICO).
 //   - apple-touch-icon.png: 180 px, the mark on the dark scheme, square: iOS rounds it.
 //   - og-image.png: the 1200×630 link preview. The eyebrow is TeamCLI, the line under
-//     the wordmark is the manifesto's, and the pills are read from the package.
+//     the wordmark is the headline, and the pills are read from the package.
 import { chromium } from 'playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { homeSamples, installLine, tagline } from '../src/server/pages';
+import { headline, homeSamples, installLine } from '../src/server/pages';
 import { commandNames, README } from '../src/server/reference';
 import { escapeHtml } from '../src/server/markdown';
 
@@ -103,7 +103,7 @@ const card = `<!doctype html><html><head><meta charset="utf-8"><style>
   <div class="text">
     <div class="eyebrow">TEAMCLI</div>
     <div class="wordmark"><span class="tile">${markSvg('dark').replace('<rect width="32" height="32" rx="7" fill="#191c1e"/>', '').replace(/width="32" height="32"/, '').replace('role="img" aria-label="team"', 'aria-hidden="true"')}</span><span>team</span></div>
-    <div class="tagline">${escapeHtml(tagline)}</div>
+    <div class="tagline">${escapeHtml(headline)}</div>
     <div class="pills">${pills.map(pill => `<span class="pill">${pill}</span>`).join('')}</div>
   </div>
   <div class="panel"><div class="bar"><i></i><i></i><i></i>Terminal</div><pre>${transcript}</pre></div>
