@@ -19,6 +19,20 @@ export const contentReady = (): boolean => existsSync(resolve(contentDir, 'READM
 /** A file of the extracted ref, as text. Throws when the content was never fetched. */
 export const read = (path: string): string => readFileSync(resolve(contentDir, path), 'utf8');
 
+/** The tool's version, read from the package.json the content script extracted. A missing file or a missing version throws: the eyebrow cannot fall back to a number typed in the page. */
+export function packageVersion(): string {
+  let parsed: { version?: unknown };
+  try {
+    parsed = JSON.parse(read('package.json')) as { version?: unknown };
+  } catch {
+    throw new Error('content/team/package.json is missing: run `bun run content`');
+  }
+  if (typeof parsed.version !== 'string' || !/^\d+\.\d+\.\d+$/.test(parsed.version)) {
+    throw new Error('content/team/package.json has no version');
+  }
+  return parsed.version;
+}
+
 export interface RefInfo { ref: string; commit: string; version: string; date: string }
 /** What the pages say they are built from: the ref, its commit, the package version, its date. */
 export function refInfo(): RefInfo {

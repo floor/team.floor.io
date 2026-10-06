@@ -7,11 +7,18 @@
 // shipping a page that says something the package no longer does.
 import { bullet, commandNames, commandPage, commandTable, fenceWith, paragraph, section, sentence, README, ReferenceError } from './reference';
 import { escapeHtml, fenceHtml, renderMarkdown, slug, type Fence, type Rendered } from './markdown';
-import { contentReady, read, refInfo } from './team';
+import { contentReady, packageVersion, read, refInfo } from './team';
 
 if (!contentReady()) throw new Error('content/team is missing: run `bun run content` (scripts/content.ts) first.');
 
 export const info = refInfo();
+
+/** The home page's eyebrow. The version is the package's own, and it has to be the version the reference record carries: the two are written together, and a page that showed one of them stale would be wrong. */
+export function versionLine(): string {
+  const version = packageVersion();
+  if (version !== info.version) throw new Error(`content/team/package.json says ${version}, and the reference record says ${info.version || 'nothing'}`);
+  return `TeamCLI · VERSION ${version}`;
+}
 
 /** The words of the hero's second line, in one place: the landing renders them (the
     sentence's period is the template's) and the shell ends the preview image's alt text

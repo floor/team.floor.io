@@ -1,7 +1,7 @@
 <% /* The hero's second line: the words come from pages.ts (heroLine), which the shell's preview-image alt text reads too; the sentence's period lives here. */ %>
 <div class="landing">
   <section class="hero" aria-labelledby="hero-title">
-    <span class="eyebrow">THE TEAM CLI · VERSION <%= it.version %></span>
+    <span class="eyebrow"><%= it.versionLine %></span>
     <h1 class="hero__name" id="hero-title">A team of agents,<br><span class="hero__accent"><%= it.heroLine %>.</span></h1>
     <p class="hero__tagline"><%~ it.tagline %></p>
     <div class="hero__actions"><a class="mtrl-button mtrl-button--filled" href="/docs/">Get started <span class="mtrl-button__icon" aria-hidden="true">→</span></a><a class="mtrl-button mtrl-button--tonal" href="/docs/commands/">Command reference</a></div>

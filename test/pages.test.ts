@@ -3,8 +3,9 @@
 import { describe, expect, test } from 'bun:test';
 import { bundleCss, materialSheets, tokens } from '../src/server/css';
 import { commandNames } from '../src/server/reference';
-import { contentReady, refInfo } from '../src/server/team';
-import { descriptionFor, homePoints, homeSamples, info, INSTALL_PACKAGE, installCommands, installLine, installMarkup, nav, pages, readingOrder } from '../src/server/pages';
+import { handleRequest } from '../server';
+import { contentReady, read, refInfo } from '../src/server/team';
+import { descriptionFor, homePoints, homeSamples, info, INSTALL_PACKAGE, installCommands, installLine, installMarkup, nav, pages, readingOrder, versionLine } from '../src/server/pages';
 
 describe('the page list', () => {
   test('every page is a place of its own, with a title, a description and content', () => {
@@ -116,6 +117,14 @@ describe('the reference the site is built against', () => {
     expect(ref.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(ref.commit).toMatch(/^[0-9a-f]{40}$/);
     expect(info.version).toBe(ref.version);
+  });
+
+  test('the eyebrow is TeamCLI and the version of the extracted package', async () => {
+    const version = (JSON.parse(read('package.json')) as { version: string }).version;
+    expect(versionLine()).toBe(`TeamCLI · VERSION ${version}`);
+    const html = await (await handleRequest(new Request('http://localhost/'))).text();
+    expect(html).toContain(`>${versionLine()}<`);
+    expect(html).not.toContain('THE TEAM CLI');
   });
 });
 
