@@ -312,7 +312,7 @@ export function safety(): Rendered {
     .heading('What an approval covers')
     .md(sentence(approve, 'What needs a'))
     .md(sentence(approve, 'Until an edit is'))
-    .heading('Trust is left to the owner')
+    .heading('dialogs.trust: owner or coordinator')
     .md(paragraph(up, 'The lobby is a folder no CLI has seen before'))
     .heading('What team never does')
     .md(never.map(text => `- ${text}`).join('\n'))
@@ -426,7 +426,7 @@ const SITE_PAGES: Record<string, string> = {
   '/docs/': 'Your first team in five minutes: install team, write .agents/team.yaml, approve it, and start the session.',
   '/docs/file/': 'Every part of .agents/team.yaml: the head, identity, workspace, machine, seats, watch and budgets, from the README, the example and the watch command page.',
   '/docs/commands/': 'Every command of team: what each reads and writes, who may run it, its refusals, its exit codes and its examples.',
-  '/docs/safety/': 'Why team is safe to run: the owner outside herdr, the approved copy, trust left to the owner, and the prompts team never answers.',
+  '/docs/safety/': 'Why team is safe to run: the owner outside herdr, the approved copy, and dialogs.trust: owner sends no key, coordinator may press it from its own seat.',
   '/docs/clis/': 'What team knows of claude-code, codex, cursor and antigravity: the launch profile, the sign-in check, and what it never writes.',
 };
 

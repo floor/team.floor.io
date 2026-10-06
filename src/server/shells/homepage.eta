@@ -17,7 +17,7 @@
   </section>
   <div class="landing-next">
     <a class="doc-entry" href="/docs/file/"><span class="doc-entry__name">The team file</span><span class="doc-entry__summary">Every field of <code>.agents/team.yaml</code>, section by section.</span></a>
-    <a class="doc-entry" href="/docs/safety/"><span class="doc-entry__name">Safety</span><span class="doc-entry__summary">The owner, the approved copy, and the prompts team never answers.</span></a>
+    <a class="doc-entry" href="/docs/safety/"><span class="doc-entry__name">Safety</span><span class="doc-entry__summary">The owner, the approved copy, and dialogs.trust: owner sends no key, or the coordinator may.</span></a>
     <a class="doc-entry" href="/docs/clis/"><span class="doc-entry__name">Supported CLIs</span><span class="doc-entry__summary">claude-code, codex, cursor and antigravity.</span></a>
   </div>
 </div>
