@@ -42,6 +42,16 @@ describe('the page list', () => {
     expect(() => descriptionFor('/nowhere/')).toThrow(/no description/);
   });
 
+  test('a page names this site teamcli.io', async () => {
+    for (const path of ['/', '/docs/commands/', '/privacy/', '/robots.txt', '/sitemap.xml']) {
+      const body = await (await handleRequest(new Request(`https://teamcli.io${path}`))).text();
+      expect(body).not.toContain('team.floor.io');
+      expect(body).not.toContain('teamcli.' + 'org');
+      expect(body).not.toContain('@teamcli/cli');
+      if (path === '/robots.txt' || path === '/sitemap.xml' || path === '/') expect(body).toContain('https://teamcli.io');
+    }
+  });
+
   test('the headline is the owner\'s sentence, and the line under it does not repeat it', async () => {
     expect(headline).toBe('A team of AI agents for your project.');
     expect(tagline).toBe('Agents propose. You decide.');

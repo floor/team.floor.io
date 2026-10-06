@@ -1,4 +1,4 @@
-// team.floor.io: the site for the `team` command.
+// teamcli.io: the site for the `team` command.
 //
 // Everything a page says comes from the reference at TEAM_REF (src/server/pages.ts), the
 // prose through Marked and the blocks through the site's own renderer (markdown.ts), with
@@ -138,5 +138,5 @@ export async function handleRequest(request: Request): Promise<Response> {
 
 if (import.meta.main) {
   const server = Bun.serve({ port: Number(process.env.PORT || 4310), hostname: process.env.HOST || '127.0.0.1', fetch: handleRequest });
-  console.log(`team.floor.io ready at ${server.url}`);
+  console.log(`teamcli.io ready at ${server.url}`);
 }
