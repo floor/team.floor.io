@@ -22,9 +22,10 @@ export function versionLine(): string {
 
 /** The words of the hero's second line, in one place: the landing renders them (the
     sentence's period is the template's) and the shell ends the preview image's alt text
-    with them, so the two can only be re-worded together. Taken from RFC 000, Part 1:
-    "whether they come from one lab or several." */
-export const heroLine = 'whether they come from one lab or several';
+    with them, so the two can only be re-worded together. Taken from RFC 000, Part 1,
+    "whether they come from one lab or several." The title that carries the same words
+    has to stay within 70 characters once its apostrophe is escaped, and these do. */
+export const heroLine = 'from one lab or several';
 
 /** A page built from parts: the headings its table of contents links to, then the text. */
 export class Doc {
