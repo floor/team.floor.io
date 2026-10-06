@@ -5,7 +5,7 @@ import { bundleCss, materialSheets, tokens } from '../src/server/css';
 import { commandNames } from '../src/server/reference';
 import { handleRequest } from '../server';
 import { contentReady, read, refInfo } from '../src/server/team';
-import { descriptionFor, headline, headlineAccent, headlineLead, homePoints, homeSamples, homeTitle, info, INSTALL_PACKAGE, installCommands, installLine, installMarkup, nav, packageLead, pages, readingOrder, versionLine } from '../src/server/pages';
+import { descriptionFor, headline, headlineAccent, headlineLead, homePoints, homeSamples, homeTitle, info, INSTALL_PACKAGE, installCommands, installLine, installMarkup, nav, packageLead, pages, readingOrder, tagline, versionLine } from '../src/server/pages';
 
 describe('the page list', () => {
   test('every page is a place of its own, with a title, a description and content', () => {
@@ -52,17 +52,18 @@ describe('the page list', () => {
     }
   });
 
-  test('the headline is two lines, and nothing sits under it', async () => {
+  test('the headline is two lines, with the manifesto under it', async () => {
     expect(headlineLead).toBe('A team of agents for your project,');
     expect(headlineAccent).toBe('from one lab or several.');
+    expect(tagline).toBe('Agents propose. You decide.');
     expect(homeTitle).toBe('TeamCLI: a team of agents for your project, from one lab or several');
     expect(homeTitle.length).toBeLessThanOrEqual(70);
     const html = await (await handleRequest(new Request('http://localhost/'))).text();
     expect(html).toContain(`<title>${homeTitle}</title>`);
     expect(html).toContain(`<h1 class="hero__name" id="hero-title">${headlineLead}<br><span class="hero__accent">${headlineAccent}</span></h1>`);
-    expect(html).not.toContain('hero__tagline');
-    expect(html).not.toContain('Agents propose. You decide.');
-    const own = [headline, headlineLead, headlineAccent, homeTitle, versionLine(), ...['/', '/privacy/', '/docs/', '/docs/file/', '/docs/commands/', '/docs/safety/', '/docs/clis/'].map(descriptionFor)];
+    expect(html).toContain(`<p class="hero__tagline">${tagline}</p>`);
+    expect(html).toContain('name="description" content="Set up and run a team of AI agents for your project. Agents propose, you decide."');
+    const own = [headline, headlineLead, headlineAccent, tagline, homeTitle, versionLine(), ...['/', '/privacy/', '/docs/', '/docs/file/', '/docs/commands/', '/docs/safety/', '/docs/clis/'].map(descriptionFor)];
     for (const text of own) {
       expect(text.toLowerCase()).not.toContain('vendor');
       expect(text.toLowerCase()).not.toContain('crew');
