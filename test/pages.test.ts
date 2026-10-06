@@ -78,6 +78,13 @@ describe('the page list', () => {
     expect(descriptionFor('/docs/commands/add/')).toBe('Starts one declared seat, or a temporary one beside the team with --temporary --like <seat> --until <result:path|merged:branch>.');
     expect(descriptionFor('/docs/commands/release/')).toBe('Checks a release on npm and GitHub. When the file has the pairs: Linear milestone, qualifying status update, and the release marker in the public activity file.');
     expect(descriptionFor('/docs/commands/release/').length).toBeLessThanOrEqual(160);
+    expect(descriptionFor('/docs/safety/')).toBe('Why team is safe to run: the owner outside herdr, the approved copy, and dialogs.trust: owner sends no key, coordinator may press it from its own seat.');
+    const safety = pages().find(page => page.path === '/docs/safety/')!.html;
+    expect(safety).toContain('dialogs.trust: owner or coordinator');
+    expect(safety).not.toContain('Trust is left to the owner');
+    const home = await (await handleRequest(new Request('http://localhost/'))).text();
+    expect(home).toContain('dialogs.trust: owner sends no key, or the coordinator may.');
+    expect(home).not.toContain('prompts team never answers');
   });
 });
 
