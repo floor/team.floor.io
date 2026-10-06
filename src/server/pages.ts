@@ -412,7 +412,7 @@ const DESCRIPTIONS: Record<string, string> = {
   check: 'Checks one commit, a range, or a PR body against the signature rule; exit 1 when a commit is refused.',
   doctor: 'What this machine still needs: the approval, herdr, each CLI, its version and login, each launch’s model, and the watch.',
   status: 'The team as it stands: one line per seat, and every difference between the file, the state and the live session, with its repair.',
-  up: 'Starts the session, a workspace and a seat for every seat the file declares, and the watch; --dry-run prints the plan.',
+  up: 'Starts the session, a workspace and each seat the file has not stopped, plus the watch; a stopped seat waits for team add. --dry-run prints the plan.',
   down: 'Stops the team: asks every free seat to exit, closes its workspace, stops the watch, and stops the session.',
   watch: 'Watches a running team: reports idle seats and nudges the operator, in one fixed line, into an empty idle prompt only.',
   add: 'Starts one declared seat, or a temporary one beside the team with --temporary --like <seat> --until <result:path|merged:branch>.',
@@ -424,7 +424,7 @@ const DESCRIPTIONS: Record<string, string> = {
 const SITE_PAGES: Record<string, string> = {
   '/privacy/': 'How teamcli.io reaches you, and what stays in your browser.',
   '/docs/': 'Your first team in five minutes: install team, write .agents/team.yaml, approve it, and start the session.',
-  '/docs/file/': 'Every part of .agents/team.yaml: the head, identity, workspace, machine, seats, watch and budgets, from the README, the example and the watch command page.',
+  '/docs/file/': 'Seven sections of .agents/team.yaml — the head, identity, workspace, machine, seats, watch and budgets — then the other fields the README names.',
   '/docs/commands/': 'Every command of team: what each reads and writes, who may run it, its refusals, its exit codes and its examples.',
   '/docs/safety/': 'Why team is safe to run: the owner outside herdr, the approved copy, and dialogs.trust: owner sends no key, coordinator may press it from its own seat.',
   '/docs/clis/': 'What team knows of claude-code, codex, cursor and antigravity: the launch profile, the sign-in check, and what it never writes.',

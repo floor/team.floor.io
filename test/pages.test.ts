@@ -85,6 +85,12 @@ describe('the page list', () => {
     const home = await (await handleRequest(new Request('http://localhost/'))).text();
     expect(home).toContain('dialogs.trust: owner sends no key, or the coordinator may.');
     expect(home).not.toContain('prompts team never answers');
+    expect(home).toContain('Seven sections of <code>.agents/team.yaml</code>, then the other fields.');
+    expect(home).not.toContain('Every field of');
+    expect(descriptionFor('/docs/file/')).toBe('Seven sections of .agents/team.yaml — the head, identity, workspace, machine, seats, watch and budgets — then the other fields the README names.');
+    expect(descriptionFor('/docs/commands/up/')).toBe('Starts the session, a workspace and each seat the file has not stopped, plus the watch; a stopped seat waits for team add. --dry-run prints the plan.');
+    expect(descriptionFor('/docs/file/').length).toBeLessThanOrEqual(160);
+    expect(descriptionFor('/docs/commands/up/').length).toBeLessThanOrEqual(160);
   });
 });
 
