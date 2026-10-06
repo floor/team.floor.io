@@ -1,3 +1,3 @@
 <div class="page-wrap"><header class="page-heading"><span class="eyebrow">404</span><h1>Page not found</h1><p>That page isn't here. The command reference is a good place to look instead.</p></header>
-<p><a class="text-link" href="/docs/commands/">All eleven commands →</a></p>
+<p><a class="text-link" href="/docs/commands/">All <%= it.commands %> commands →</a></p>
 <p><a class="text-link" href="/docs/">Getting started →</a></p></div>
