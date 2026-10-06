@@ -179,7 +179,7 @@ export function homePoints(): { title: string; text: string }[] {
   const capitalised = watch.summary.charAt(0).toUpperCase() + watch.summary.slice(1);
   return [
     { title: 'One file declares the team', text: sentence(README, 'A project declares its team in') },
-    { title: 'Safe by design', text: `${sentence(README, 'The owner is a terminal outside herdr')} ${sentence(README, 'Nothing writes a vendor config')} ${sentence(README, 'Launching a Cursor seat')}` },
+    { title: 'Safe by design', text: `${sentence(README, 'The owner is a terminal outside herdr')} ${sentence(README, 'Nothing writes a lab\'s config')} ${sentence(README, 'Launching a Cursor seat')}` },
     { title: 'The watch tells you', text: `${capitalised.split(';')[0]}.` },
   ];
 }
@@ -277,7 +277,7 @@ export function commandPageContent(name: string): Rendered {
 /**
  * /docs/safety/ — the safety model in plain words, each claim a piece of the reference.
  *
- * "Nothing writes a vendor config or an `AGENTS.md`" is the reference's sentence about
+ * "Nothing writes a lab's config or an `AGENTS.md`" is the reference's sentence about
  * what team does, and its Cursor paragraph is the one that says what a launch still
  * writes: Cursor's own project record. The claim and that sentence travel together here,
  * as docs:check holds them to, so the page never promises more than the reference does.
@@ -287,10 +287,10 @@ export function safety(): Rendered {
   const approve = commandPage('approve');
   const watch = commandPage('watch');
   const never = [
-    sentence(README, 'Nothing writes a vendor config'),
+    sentence(README, 'Nothing writes a lab\'s config'),
     sentence(README, 'It never answers prompts'),
     sentence(README, 'A file you receive from someone else'),
-    sentence(README, '`up` and `down` take `--dry-run`'),
+    sentence(README, '`up`, `down` and `add` take `--dry-run`'),
   ];
   return new Doc()
     .h1('Safety')
@@ -314,7 +314,7 @@ export function safety(): Rendered {
     .heading('Who may run what')
     .table('Who may run each command', ['Command', 'Who may run it'], commandTable().map(row => [`<code>team ${row.name}</code>`, inline(row.who)]))
     .heading('What this version builds')
-    .md(paragraph(README, '**Status: 0.1, early'))
+    .md(paragraph(README, '**Status: early'))
     .md(paragraph(README, '`team up`, `team down`'))
     .render();
 }
@@ -408,13 +408,15 @@ const DESCRIPTIONS: Record<string, string> = {
   add: 'Starts one declared seat, or a temporary one beside the team with --temporary --like <seat> --until <end>.',
   remove: 'Stops one seat and takes it out of the file; --keep leaves it stopped; --abandon is the owner’s, and types nothing.',
   worktree: 'Creates a task worktree from an up-to-date base, or removes one; the branch is never deleted.',
+  answer: 'Presses the one recorded key of a seat\'s folder-trust dialog when the file allows it; every check has to pass, and anything else sends nothing.',
+  release: 'Checks one release on npm and GitHub: the version and its checksums, the tag, the GitHub release, and the changelog entry.',
 };
 const SITE_PAGES: Record<string, string> = {
   '/': 'A project declares its team in one file: the seats, the models, the rules and the folders each one may touch. Set it up, change it and watch it run.',
   '/privacy/': 'How teamcli.io reaches you, and what stays in your browser.',
   '/docs/': 'Your first team in five minutes: install team, write .agents/team.yaml, approve it, and start the session.',
   '/docs/file/': 'Every part of .agents/team.yaml: the head, identity, workspace, machine, seats, watch and budgets, from the README, the example and the watch command page.',
-  '/docs/commands/': 'The eleven commands of team: what each reads and writes, who may run it, its refusals, its exit codes and its examples.',
+  '/docs/commands/': 'Every command of team: what each reads and writes, who may run it, its refusals, its exit codes and its examples.',
   '/docs/safety/': 'Why team is safe to run: the owner outside herdr, the approved copy, trust left to the owner, and the prompts team never answers.',
   '/docs/clis/': 'What team knows of claude-code, codex, cursor and antigravity: the launch profile, the sign-in check, and what it never writes.',
 };
