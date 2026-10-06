@@ -259,11 +259,17 @@
    token never breaks (no word-break, no overflow-wrap anywhere in a cell — a token that
    cannot fit widens its column instead of splitting); a chip's border is never drawn in
    two pieces, because a wrapped chip clones its padding and border onto each of its
-   lines. The first column of a command table is a name, not prose: `width: 1%` is the
-   shrink-to-fit hint auto layout reads, so the names take only what their tokens need
-   and the prose columns get the width. A table that still cannot fit scrolls sideways
-   inside its own frame — `.table-wrap` above is that frame — and no text is ever
-   clipped or hidden. */
+   lines. The first column of a command table holds the exact text a person sees in
+   their terminal, so it must read as a line: the columns share the width by content,
+   with the first column's cells at a preferred `width: 55%`. Auto layout reads that as
+   the column's ask, not a fixed size — short names still let the column shrink toward
+   its longest token, and a long message takes just over the half: the reference's
+   longest takes two or three lines there, never nine. (A percentage min/max-width on a
+   cell is not honoured by auto layout — measured: it changed nothing — so the share is
+   stated as the one percentage auto layout reads.) A table that still cannot fit
+   scrolls sideways inside its own frame — `.table-wrap` above is that frame — and no
+   text is ever clipped or hidden. At phone width each row stacks instead; see the
+   600px query at the foot of this sheet. */
 .md th,
 .md td {
     overflow-wrap: normal;
@@ -278,7 +284,7 @@
 
 .md th:first-child,
 .md td:first-child {
-    width: 1%;
+    width: 55%;
 }
 
 /* ─── The site's own notes between pieces of the reference ───────── */
@@ -476,6 +482,45 @@
 @media (max-width: 600px) {
     .md h1 {
         font-size: var(--fs-2xl);
+    }
+
+    /* A two-column table at phone width gives each column a hundred-odd pixels — the
+       code reads in broken pieces and the prose a few words a line. Instead each row
+       stacks: the exact terminal text on top, full width, wrapping at spaces over a
+       line or three, and its meaning under it in prose, with the row's border between
+       pairs. The header row names the columns, which the stacking makes self-evident,
+       so it goes. The table's own frame still scrolls if a single token is ever wider
+       than the phone. */
+    .md table,
+    .md tbody,
+    .md tr,
+    .md td {
+        display: block;
+    }
+
+    .md thead {
+        display: none;
+    }
+
+    .md td:first-child,
+    .md td:last-child {
+        width: auto;
+    }
+
+    .md td:first-child {
+        padding-bottom: 2px;
+    }
+
+    .md td:last-child {
+        padding-top: 2px;
+    }
+
+    .md tbody tr + tr {
+        border-top: 1px solid var(--border);
+    }
+
+    .md tbody tr + tr td {
+        border-top: 0;
     }
 
     .md h2 {
