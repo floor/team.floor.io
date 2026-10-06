@@ -38,8 +38,7 @@
 <body class="<%= it.isHome ? 'home' : '' %>">
   <a class="skip-link" href="#content">Skip to content</a>
   <header class="header"><div class="header__inner">
-    <a class="header__logo" href="/"><span class="header__mark" aria-hidden="true">&gt;_</span>team</a>
-    <% if (it.section) { %><span class="header__sep" aria-hidden="true">/</span><span class="header__section"><%= it.section %></span><% } %>
+    <a class="header__logo" href="/" aria-label="team, home"><img class="header__mark" src="/favicon.svg" width="24" height="24" alt="" /><span>team</span><% if (it.isHome || it.headerCommand) { %><span class="header__command" aria-hidden="true" data-header-command="<%= it.headerCommand %>" data-header-commands="<%= it.rollingCommands.join(',') %>" data-header-home="<%= it.isHome %>"><span class="header__typed"><%= it.headerCommand %></span><span class="header__caret"></span></span><% } %></a>
     <nav class="header__nav" aria-label="Main navigation">
       <a href="/docs/" class="<%= it.section === 'Documentation' && !it.path.startsWith('/docs/commands/') ? 'active' : '' %>" <% if (it.section === 'Documentation' && !it.path.startsWith('/docs/commands/')) { %>aria-current="page"<% } %>>Documentation</a>
       <a href="/docs/commands/" class="<%= it.path.startsWith('/docs/commands/') ? 'active' : '' %>" <% if (it.path.startsWith('/docs/commands/')) { %>aria-current="page"<% } %>>Commands</a>

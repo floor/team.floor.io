@@ -9,6 +9,7 @@ import { extname, resolve, sep } from 'node:path';
 import { IMMUTABLE_CACHE, SHORT_CACHE, isImmutableAsset, loadAssetManifest } from './src/server/assets';
 import { materialSheets, type StylesheetBundle } from './src/server/css';
 import { descriptionFor, headline, headlineAccent, headlineLead, homePoints, homeSamples, homeTitle, info, inline, INSTALL_MANAGERS, installMarkup, nav, pages, versionLine } from './src/server/pages';
+import { commandNames } from './src/server/reference';
 import { fenceHtml } from './src/server/markdown';
 import { searchSite, suggestions } from './src/server/search';
 import { jsonForScript, robotsTxt, SITE, SITE_NAME, sitemapXml, structuredData } from './src/server/seo';
@@ -42,10 +43,16 @@ function pager(path: string): string {
 
 /** One page, in the site's frame: the head, the navigation, the footer, the search dialog. */
 function shell(body: { path: string; title: string; description: string; content: string; css: StylesheetBundle; section?: string; isHome?: boolean; jsonLd?: string[] }): string {
+  const commands = commandNames();
+  const command = /^\/docs\/commands\/([a-z]+)\/$/.exec(body.path)?.[1];
+  // The registry remains the source of every command; the first three are the path a
+  // person takes from a new file to a running team.
+  const rollingCommands = ['init', 'approve', 'up'].filter(name => commands.includes(name)).concat(commands.filter(name => !['init', 'approve', 'up'].includes(name)));
   return eta.render('base', {
     path: body.path, title: body.title, description: body.description, css: body.css, section: body.section ?? 'Documentation',
     site: SITE, siteName: SITE_NAME,
-    isHome: Boolean(body.isHome), jsonLd: body.jsonLd ?? [], nav, version: info.version, content: body.content, materialSheets, headline,
+    isHome: Boolean(body.isHome), headerCommand: command && commands.includes(command) ? command : '', rollingCommands,
+    jsonLd: body.jsonLd ?? [], nav, version: info.version, content: body.content, materialSheets, headline,
     installManagers: INSTALL_MANAGERS.map(manager => manager.id),
   });
 }

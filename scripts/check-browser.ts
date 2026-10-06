@@ -38,9 +38,8 @@
 //	   the fence's own text line for line — while the line spans were block-level every line
 //	   was followed by an empty one — and the block is no taller than one line-height per
 //	   line plus its padding.
-//	8. The header on every page of the sitemap: the logo, and a section only where there is
-//	   one — the home page and privacy carry no section, so they carry neither the separator
-//	   nor an empty span ("&gt;_ team /" with nothing after it).
+//	8. The header is the favicon mark and fixed `team`; command pages type their command,
+//	   home rolls through the registry, and its reserved width never shifts navigation.
 //	9. The home page's install block: a click and an arrow key each switch the visible
 //	   command, Copy hands over that command, and a reload shows the same tab.
 //	10. Light-mode syntax tokens, measured from computed colour against the code block's
@@ -608,30 +607,49 @@ try {
     await context.close();
   }
 
-  // ── 8. the header on every page: a section, or neither of its parts ─────────
-  // A page with no section (the home page, privacy) rendered the separator anyway and an
-  // empty span after it: ">_ team /" with nothing following. The separator and the section
-  // travel together — a page that has one keeps ">_ team / Documentation".
+  // ── 8. the header: one shared mark and terminal typing ───────────────────────
   {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
     const page = await context.newPage();
     for (const { path } of sitemapPages()) {
       await page.goto(`${origin}${path}`, { waitUntil: 'load' });
       const facts = await page.evaluate(() => ({
-        logo: document.querySelector('.header__logo')?.textContent?.trim() ?? '',
+        mark: document.querySelector<HTMLImageElement>('.header__mark')?.getAttribute('src') ?? '',
+        label: document.querySelector('.header__logo')?.getAttribute('aria-label') ?? '',
         sep: document.querySelector('.header__sep')?.textContent ?? null,
         section: document.querySelector('.header__section')?.textContent ?? null,
       }));
       const where = `header ${path}`;
-      check(facts.logo === '>_team', `${where}: the logo reads ${JSON.stringify(facts.logo)}`);
-      check(facts.section === null || facts.section.trim() !== '', `${where}: the section span is empty`);
-      check((facts.sep === null) === (facts.section === null), `${where}: the separator ${facts.sep === null ? 'is missing beside' : 'stands with no'} section`);
-      if (path.startsWith('/docs/')) {
-        check(facts.sep === '/' && facts.section === 'Documentation', `${where}: the header reads ${JSON.stringify([facts.logo, facts.sep, facts.section])}`);
-      } else {
-        check(facts.sep === null, `${where}: a page without a section still shows the separator ${JSON.stringify(facts.sep)}`);
-      }
+      check(facts.mark === '/favicon.svg', `${where}: the mark is ${JSON.stringify(facts.mark)}, not the favicon`);
+      check(facts.label === 'team, home', `${where}: the home link is named ${JSON.stringify(facts.label)}`);
+      check(facts.sep === null && facts.section === null, `${where}: the old section remains`);
     }
+    await context.close();
+  }
+
+  {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
+    const page = await context.newPage();
+    await page.goto(`${origin}/docs/commands/add/`, { waitUntil: 'load' });
+    check(await page.locator('.header__typed').textContent() === 'add', 'reduced motion: the command is not final at load');
+    await page.goto(`${origin}/`, { waitUntil: 'load' });
+    check(await page.locator('.header__typed').textContent() === '', 'reduced motion: home does not read team alone');
+    await context.close();
+  }
+
+  {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const page = await context.newPage();
+    await page.goto(`${origin}/docs/commands/add/`, { waitUntil: 'load' });
+    const before = await page.locator('.header__nav').boundingBox();
+    await page.waitForTimeout(300);
+    const first = await page.locator('.header__typed').textContent();
+    await page.waitForTimeout(520);
+    const final = await page.locator('.header__typed').textContent();
+    const after = await page.locator('.header__nav').boundingBox();
+    check(first === 'a', `typing: the first command frame is ${JSON.stringify(first)}`);
+    check(final === 'add', `typing: the final command frame is ${JSON.stringify(final)}`);
+    check(before?.x === after?.x, `typing: navigation moved from ${before?.x} to ${after?.x}`);
     await context.close();
   }
 
@@ -713,4 +731,4 @@ if (problems.length) {
   for (const problem of [...new Set(problems)]) console.error(`  ${problem}`);
   process.exit(1);
 }
-console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero\'s content centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer, every name the prose rule carries, the note class on a div.note among them, wearing the link token and a 3:1 mark at rest, turning full-strength on hover and on the keyboard, while the anchors around them, and the action class in a note and in the samples foot, stay bare, the code blocks chip-free inside, scrolling their long lines, and bare where the styles de-chip a name, the home transcripts rendering the reference line for line, the header on every sitemap page wearing a section only where there is one, and the install block switching by click and by arrow key, copying the visible command, and remembering the tab, and the light-mode syntax tokens, .hljs-attr, .hljs-string, .hljs-comment and .hljs-built_in among them, at 4.5:1 on their code background.');
+console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero\'s content centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer, every name the prose rule carries, the note class on a div.note among them, wearing the link token and a 3:1 mark at rest, turning full-strength on hover and on the keyboard, while the anchors around them, and the action class in a note and in the samples foot, stay bare, the code blocks chip-free inside, scrolling their long lines, and bare where the styles de-chip a name, the home transcripts rendering the reference line for line, the header on every sitemap page wearing a section only where there is one, the favicon-mark header with its reduced-motion final text, terminal character typing and a fixed navigation edge, and the install block switching by click and by arrow key, copying the visible command, and remembering the tab, and the light-mode syntax tokens, .hljs-attr, .hljs-string, .hljs-comment and .hljs-built_in among them, at 4.5:1 on their code background.');
