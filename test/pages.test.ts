@@ -63,12 +63,13 @@ describe('the home page, from the reference', () => {
     expect(installLine()).toBe('npm install -g team');
   });
 
-  test('the install block is a tablist, and every command installs the one package', () => {
+  test('the install block is a tablist, and every command installs the one package', async () => {
     const commands = installCommands();
     expect(commands.map(item => item.command)).toEqual([
       `bun add -g ${INSTALL_PACKAGE}`,
       `npm install -g ${INSTALL_PACKAGE}`,
       `pnpm add -g ${INSTALL_PACKAGE}`,
+      `yarn global add ${INSTALL_PACKAGE}`,
     ]);
     expect(new Set(commands.map(item => item.command.split(' ').at(-1))).size).toBe(1);
     const html = installMarkup();
@@ -82,6 +83,9 @@ describe('the home page, from the reference', () => {
     }
     expect(html).toContain('class="doc-install__copy');
     expect(html).not.toContain('@teamcli/cli');
+    const page = await (await handleRequest(new Request('http://localhost/'))).text();
+    expect(page).toContain('["bun","npm","pnpm","yarn"]');
+    expect(page).toContain('data-command="yarn global add team"');
     expect(html).toContain('aria-selected="true"');
     expect([...html.matchAll(/aria-selected="true"/g)].length).toBe(1);
   });

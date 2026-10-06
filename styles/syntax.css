@@ -181,7 +181,8 @@
 
 .doc-install__option[data-package-manager="bun"],
 :root[data-package-manager="npm"] .doc-install__option[data-package-manager="npm"],
-:root[data-package-manager="pnpm"] .doc-install__option[data-package-manager="pnpm"] {
+:root[data-package-manager="pnpm"] .doc-install__option[data-package-manager="pnpm"],
+:root[data-package-manager="yarn"] .doc-install__option[data-package-manager="yarn"] {
     background: color-mix(in srgb, var(--term-command) 14%, transparent);
     color: var(--term-command);
 }
@@ -197,7 +198,8 @@
 
 .doc-install__panel[data-package-manager="bun"],
 :root[data-package-manager="npm"] .doc-install__panel[data-package-manager="npm"],
-:root[data-package-manager="pnpm"] .doc-install__panel[data-package-manager="pnpm"] {
+:root[data-package-manager="pnpm"] .doc-install__panel[data-package-manager="pnpm"],
+:root[data-package-manager="yarn"] .doc-install__panel[data-package-manager="yarn"] {
     display: block;
 }
 

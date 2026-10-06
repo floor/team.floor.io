@@ -136,6 +136,7 @@ export const INSTALL_MANAGERS = [
   { id: 'bun', command: 'bun add -g' },
   { id: 'npm', command: 'npm install -g' },
   { id: 'pnpm', command: 'pnpm add -g' },
+  { id: 'yarn', command: 'yarn global add' },
 ] as const;
 
 /** One command per manager, the package name taken from {@link INSTALL_PACKAGE}. */

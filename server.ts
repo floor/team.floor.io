@@ -8,7 +8,7 @@ import { Eta } from 'eta';
 import { extname, resolve, sep } from 'node:path';
 import { IMMUTABLE_CACHE, SHORT_CACHE, isImmutableAsset, loadAssetManifest } from './src/server/assets';
 import { materialSheets, type StylesheetBundle } from './src/server/css';
-import { descriptionFor, headline, homePoints, homeSamples, info, inline, installMarkup, nav, pages, tagline, versionLine } from './src/server/pages';
+import { descriptionFor, headline, homePoints, homeSamples, info, inline, INSTALL_MANAGERS, installMarkup, nav, pages, tagline, versionLine } from './src/server/pages';
 import { fenceHtml } from './src/server/markdown';
 import { searchSite, suggestions } from './src/server/search';
 import { jsonForScript, robotsTxt, SITE, SITE_NAME, sitemapXml, structuredData } from './src/server/seo';
@@ -46,6 +46,7 @@ function shell(body: { path: string; title: string; description: string; content
     path: body.path, title: body.title, description: body.description, css: body.css, section: body.section ?? 'Documentation',
     site: SITE, siteName: SITE_NAME,
     isHome: Boolean(body.isHome), jsonLd: body.jsonLd ?? [], nav, version: info.version, content: body.content, materialSheets, headline,
+    installManagers: INSTALL_MANAGERS.map(manager => manager.id),
   });
 }
 /** A documentation page: the page's own content, wrapped with its table of contents and pager. */
