@@ -48,9 +48,9 @@
 //
 //	11. Every page the sitemap lists, plus the 404, at 1440, 1024 and 390: the page does
 //	    not scroll sideways; no table cell's text is clipped (a cell over its own box while
-//	    its table's wrapper does not scroll) and no cell sits under 96px beside a cell over
-//	    four times wider; and the top navigation marks the page's own section exactly once,
-//	    with aria-current.
+//	    its table's wrapper does not scroll) and no cell is narrower than its own content
+//	    (its longest unbreakable token plus its horizontal padding); and the top navigation
+//	    marks the page's own section exactly once, with aria-current.
 //
 // The server is the site's own request handler on a free port, so this opens no
 // process of its own; the browser opens once and is closed in the end.
@@ -735,10 +735,12 @@ try {
   //	2. no table cell's text is clipped: a cell may not overflow its own box
   //	   (scrollWidth > clientWidth) while its table's wrapper does not scroll — a table
   //	   wider than its frame is a state the reader can scroll into and back out of, and
-  //	   the wrap is that frame — and no cell may sit under 96px wide while a cell of its
-  //	   own row is more than four times wider: the prose column squeezed to a word a line
-  //	   beside a names column that took the width. A one-cell row is its own widest
-  //	   sibling, so it is never "four times wider" than itself.
+  //	   the wrap is that frame — and no cell may be narrower than its own content: its
+  //	   rendered width must hold its longest unbreakable token plus its horizontal
+  //	   padding. A single token never breaks, a phrase wraps at its spaces, and a cell
+  //	   whose content fits, however short it is — Exit, Flag, a number — is not a fault.
+  //	   The round-1 rule's 96px and 4× survive in the failure lines as reported
+  //	   measurements only, never as the condition.
   //	3. the top navigation marks the page's section exactly once: a /docs/commands/…
   //	   page is Commands, every other page that declares a section — the header's own
   //	   "/ Documentation", the 404 page's included — is Documentation, and the pages that
@@ -762,6 +764,27 @@ try {
         const facts = await page.evaluate(() => {
           const round = (value: number) => Math.round(value * 10) / 10;
           const label = (element: Element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim().slice(0, 44);
+          // The floor rule measures each cell's longest unbreakable token: the widest run
+          // of characters no break opportunity splits — whitespace breaks, a no-break
+          // space does not — measured with a Range, so it is what the browser paints.
+          const tokenWidth = (cell: Element) => {
+            const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT);
+            const range = document.createRange();
+            let longest = 0;
+            for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
+              const text = node.textContent ?? '';
+              for (const match of text.matchAll(/[^\s ]+/g)) {
+                range.setStart(node, match.index!);
+                range.setEnd(node, match.index! + match[0].length);
+                longest = Math.max(longest, range.getBoundingClientRect().width);
+              }
+            }
+            return longest;
+          };
+          const horizontalPadding = (cell: Element) => {
+            const style = getComputedStyle(cell);
+            return parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+          };
           const nav = document.querySelector('.header__nav') ?? document.querySelector('header nav');
           return {
             scrollWidth: document.documentElement.scrollWidth,
@@ -778,6 +801,11 @@ try {
                   width: round(cell.getBoundingClientRect().width),
                   scrollWidth: cell.scrollWidth,
                   clientWidth: cell.clientWidth,
+                  token: round(tokenWidth(cell)),
+                  padding: round(horizontalPadding(cell)),
+                  // The stacked layout at phone width hides the header row, and a cell
+                  // with no box has no text to clip: it is measured but never a fault.
+                  rendered: cell.getClientRects().length > 0,
                 }))),
               };
             }),
@@ -800,10 +828,15 @@ try {
               const clipped = !table.wrapperScrolls && cell.scrollWidth > cell.clientWidth;
               check(!clipped, `${where} rule 2 clipped cell: table ${table.index} row ${cell.row} cell ${cell.cell} ${JSON.stringify(cell.label)} scrollWidth ${cell.scrollWidth} > clientWidth ${cell.clientWidth}, its table's wrapper does not scroll`);
             }
-            const narrowest = [...row].sort((one, other) => one.width - other.width)[0];
-            const widest = [...row].sort((one, other) => other.width - one.width)[0];
-            const squeezed = narrowest !== undefined && widest !== undefined && narrowest.width > 0 && narrowest.width < 96 && widest.width > narrowest.width * 4;
-            check(!squeezed, `${where} rule 2 narrow cell: table ${table.index} row ${narrowest?.row} ${JSON.stringify(narrowest?.label)} is ${narrowest?.width}px wide beside ${JSON.stringify(widest?.label)} at ${widest?.width}px (${narrowest && widest && narrowest.width > 0 ? (widest.width / narrowest.width).toFixed(1) : '0'}×)`);
+            const widest = [...row].filter(cell => cell.rendered).sort((one, other) => other.width - one.width)[0];
+            for (const cell of row) {
+              // A cell with no box (the hidden header row at phone width) has nothing to
+              // clip, and a table whose frame scrolls is the accepted state rule 2a
+              // carves out: the reader scrolls the frame to the full token.
+              if (!cell.rendered || table.wrapperScrolls) continue;
+              const floor = Math.round((cell.token + cell.padding) * 10) / 10;
+              check(cell.width + 0.5 >= floor, `${where} rule 2 narrow cell: table ${table.index} row ${cell.row} ${JSON.stringify(cell.label)} is ${cell.width}px wide, under its longest token ${cell.token}px + ${cell.padding}px padding = ${floor}px, beside ${JSON.stringify(widest?.label)} at ${widest?.width}px`);
+            }
           }
         }
 
@@ -835,4 +868,4 @@ if (problems.length) {
   for (const problem of [...new Set(problems)]) console.error(`  ${problem}`);
   process.exit(1);
 }
-console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero\'s content centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer, every name the prose rule carries, the note class on a div.note among them, wearing the link token and a 3:1 mark at rest, turning full-strength on hover and on the keyboard, while the anchors around them, and the action class in a note and in the samples foot, stay bare, the code blocks chip-free inside, scrolling their long lines, and bare where the styles de-chip a name, the home transcripts rendering the reference line for line, the header on every sitemap page wearing a section only where there is one, the favicon-mark header with its reduced-motion final text, terminal character typing and a fixed navigation edge, and the install block switching by click and by arrow key, copying the visible command, and remembering the tab, and the light-mode syntax tokens, .hljs-attr, .hljs-string, .hljs-comment and .hljs-built_in among them, at 4.5:1 on their code background, and every page of the sitemap plus the 404 at 1440/1024/390 without a sideways scroll, without a table cell clipped or squeezed under 96px beside a cell four times wider, and with one top-navigation link carrying aria-current for the page\'s own section.');
+console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero\'s content centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer, every name the prose rule carries, the note class on a div.note among them, wearing the link token and a 3:1 mark at rest, turning full-strength on hover and on the keyboard, while the anchors around them, and the action class in a note and in the samples foot, stay bare, the code blocks chip-free inside, scrolling their long lines, and bare where the styles de-chip a name, the home transcripts rendering the reference line for line, the header on every sitemap page wearing a section only where there is one, the favicon-mark header with its reduced-motion final text, terminal character typing and a fixed navigation edge, and the install block switching by click and by arrow key, copying the visible command, and remembering the tab, and the light-mode syntax tokens, .hljs-attr, .hljs-string, .hljs-comment and .hljs-built_in among them, at 4.5:1 on their code background, and every page of the sitemap plus the 404 at 1440/1024/390 without a sideways scroll, without a table cell clipped or narrower than its longest unbreakable token, and with one top-navigation link carrying aria-current for the page\'s own section.');
