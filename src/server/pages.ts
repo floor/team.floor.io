@@ -20,13 +20,11 @@ export function versionLine(): string {
   return `TeamCLI · VERSION ${version}`;
 }
 
-/** The owner's headline, two lines. The second is the accent line. */
+/** The owner's headline, two lines. The second is the accent line. There is no line under it. */
 export const headlineLead = 'A team of agents for your project,';
 export const headlineAccent = 'from one lab or several.';
 /** The same words in one line, for the preview alt and the link card. */
 export const headline = `${headlineLead} ${headlineAccent}`;
-/** The line under the headline. */
-export const tagline = 'Agents propose. You decide.';
 /** The home page's title. It is not the headline, and it stays within 70 characters. */
 export const homeTitle = 'TeamCLI: a team of agents for your project, from one lab or several';
 
