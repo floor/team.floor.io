@@ -255,9 +255,30 @@
     border-top: 1px solid var(--border);
 }
 
-/* The first column of a command table is a name, not prose. */
-.md td:first-child code {
-    white-space: nowrap;
+/* One rule for every table on the site. A code phrase may wrap at spaces; a single
+   token never breaks (no word-break, no overflow-wrap anywhere in a cell — a token that
+   cannot fit widens its column instead of splitting); a chip's border is never drawn in
+   two pieces, because a wrapped chip clones its padding and border onto each of its
+   lines. The first column of a command table is a name, not prose: `width: 1%` is the
+   shrink-to-fit hint auto layout reads, so the names take only what their tokens need
+   and the prose columns get the width. A table that still cannot fit scrolls sideways
+   inside its own frame — `.table-wrap` above is that frame — and no text is ever
+   clipped or hidden. */
+.md th,
+.md td {
+    overflow-wrap: normal;
+    word-break: normal;
+}
+
+.md th code,
+.md td code {
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+}
+
+.md th:first-child,
+.md td:first-child {
+    width: 1%;
 }
 
 /* ─── The site's own notes between pieces of the reference ───────── */
