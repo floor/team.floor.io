@@ -776,7 +776,7 @@ try {
             let longest = 0;
             for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
               const text = node.textContent ?? '';
-              for (const match of text.matchAll(/[^\s ]+/g)) {
+              for (const match of text.matchAll(/[^\t\n\v\f\r ]+/g)) {
                 range.setStart(node, match.index!);
                 range.setEnd(node, match.index! + match[0].length);
                 longest = Math.max(longest, range.getBoundingClientRect().width);
