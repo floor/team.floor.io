@@ -21,6 +21,47 @@ function initTheme(): void {
   });
 }
 
+/** The word after the fixed `team` mark: terminal-paced, and silent to screen readers. */
+function initHeaderCommand(): void {
+  const command = document.querySelector<HTMLElement>('[data-header-command]');
+  const typed = command?.querySelector<HTMLElement>('.header__typed');
+  if (!command || !typed) return;
+
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const pageCommand = command.dataset.headerCommand ?? '';
+  const commands = (command.dataset.headerCommands ?? '').split(',').filter(Boolean);
+  const home = command.dataset.headerHome === 'true';
+  const longest = Math.max(0, ...commands.map(name => name.length));
+  command.style.setProperty('--header-command-length', String(longest));
+  if (reduced) { typed.textContent = pageCommand; return; }
+  if (!home && !pageCommand) return;
+  typed.textContent = '';
+
+  let timer = 0;
+  let index = 0;
+  let value = '';
+  let deleting = false;
+  const target = () => home ? commands[index] ?? '' : pageCommand;
+  const tick = () => {
+    const word = target();
+    if (deleting) value = value.slice(0, -1);
+    else value = word.slice(0, value.length + 1);
+    typed.textContent = value;
+    if (!home && value === word) return;
+    if (!deleting && value === word) { deleting = true; timer = window.setTimeout(tick, 1450); }
+    else if (deleting && !value) { deleting = false; index = (index + 1) % commands.length; timer = window.setTimeout(tick, 260); }
+    else timer = window.setTimeout(tick, deleting ? 55 : 115);
+  };
+  const pause = () => window.clearTimeout(timer);
+  const resume = () => { window.clearTimeout(timer); timer = window.setTimeout(tick, 300); };
+  const header = command.closest('.header');
+  header?.addEventListener('mouseenter', pause);
+  header?.addEventListener('mouseleave', resume);
+  header?.addEventListener('focusin', pause);
+  header?.addEventListener('focusout', event => { if (!header.contains((event as FocusEvent).relatedTarget as Node | null)) resume(); });
+  timer = window.setTimeout(tick, 260);
+}
+
 /** The sidebar as a drawer under 900px, with the overlay behind it. */
 function initNavigation(): void {
   const sidebar = document.getElementById('sidebar');
@@ -128,6 +169,7 @@ function initInstall(): void {
 }
 
 initTheme();
+initHeaderCommand();
 initNavigation();
 initCopy();
 initInstall();
