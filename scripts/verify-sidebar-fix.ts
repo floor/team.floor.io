@@ -23,9 +23,12 @@
 // f4-up-390-* before-captures; the manifest is briefs/manifest-sidebar-fix.md.
 import { chromium, type Browser, type Page } from 'playwright';
 import { handleRequest } from '../server';
-import { mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
+import { resolve } from 'node:path';
 
-const OUT = '/Users/jvial/Code/floor/team.floor.io/briefs/extra/e4-sidebar-fix';
+const OUT = process.env.OUT_DIR ?? (existsSync(resolve(import.meta.dir, '../briefs'))
+  ? resolve(import.meta.dir, '../briefs/extra/e4-sidebar-fix')
+  : resolve(import.meta.dir, '../../../../team.floor.io/briefs/extra/e4-sidebar-fix'));
 const PAGE = '/docs/commands/up/';
 mkdirSync(OUT, { recursive: true });
 
@@ -99,8 +102,11 @@ async function openDrawer(browser: Browser, scheme: 'light' | 'dark') {
   const expanded = await page.getAttribute('#hamburger', 'aria-expanded');
   check(expanded === 'true', tag, `hamburger aria-expanded=${expanded}`);
 
-  // Tab walk from the hamburger: every following stop up to drawerLinks count must be inside the drawer.
+  // Tab walk from the hamburger: first Tab lands on button#overlay; subsequent drawerLinks tabs land in #sidebar.
   await page.focus('#hamburger');
+  await page.keyboard.press('Tab');
+  const ov = await tabStop(page);
+  check(ov.who === '#overlay', tag, 'first Tab stop after open hamburger is #overlay');
   let inside = 0; let escaped = false;
   for (let i = 1; i <= drawerLinks; i++) {
     await page.keyboard.press('Tab');
@@ -108,7 +114,7 @@ async function openDrawer(browser: Browser, scheme: 'light' | 'dark') {
     if (s.inSidebar) inside++;
     else { escaped = true; break; }
   }
-  check(inside === drawerLinks && !escaped, tag, `${inside}/${drawerLinks} drawer links are Tab stops after the hamburger`);
+  check(inside === drawerLinks && !escaped, tag, `${inside}/${drawerLinks} drawer links are Tab stops after the hamburger and overlay`);
   await page.screenshot({ path: `${OUT}/after-${tag}-drawer.png` });
 
   // Close via the overlay: still visible mid-slide-out, hidden after the 140ms transition.
@@ -153,7 +159,7 @@ try {
   }
 } finally {
   await browser.close();
-  server.stop();
+  server.stop(true);
 }
 console.log(failures === 0 ? 'ALL CHECKS PASSED' : `${failures} CHECK(S) FAILED`);
 process.exit(failures === 0 ? 0 : 1);
