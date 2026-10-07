@@ -97,6 +97,12 @@ async function openDrawer(browser: Browser, scheme: 'light' | 'dark') {
     document.querySelectorAll('#sidebar a[href]').length);
 
   await page.click('#hamburger');
+  // One animation tick: a transitioned property still computes its from-value in
+  // the click's own frame; the drawer is visible from the next tick (probe: +0ms
+  // hidden with transform still -306, +30ms visible mid-slide).
+  await page.waitForFunction(
+    () => getComputedStyle(document.getElementById('sidebar')!).visibility === 'visible',
+    null, { timeout: 1000 });
   const stOpen = await sidebarStyle(page);
   check(stOpen.visibility === 'visible', tag, `open sidebar visibility=${stOpen.visibility} (want visible at transition start)`);
   const expanded = await page.getAttribute('#hamburger', 'aria-expanded');
@@ -117,8 +123,9 @@ async function openDrawer(browser: Browser, scheme: 'light' | 'dark') {
   check(inside === drawerLinks && !escaped, tag, `${inside}/${drawerLinks} drawer links are Tab stops after the hamburger and overlay`);
   await page.screenshot({ path: `${OUT}/after-${tag}-drawer.png` });
 
-  // Close via the overlay: still visible mid-slide-out, hidden after the 140ms transition.
-  await page.click('#overlay');
+  // Close via the overlay, at a point the settled drawer (300px wide) does not cover:
+  // still visible mid-slide-out, hidden after the 140ms transition.
+  await page.click('#overlay', { position: { x: 360, y: 400 } });
   await page.waitForTimeout(50);
   const stMid = await sidebarStyle(page);
   check(stMid.visibility === 'visible', tag, `mid-close (50ms of 140ms) visibility=${stMid.visibility} (want still visible)`);
