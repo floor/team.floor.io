@@ -138,7 +138,7 @@ export async function handleRequest(request: Request): Promise<Response> {
     const found = pages().find(entry => entry.path === path);
     response = found
       ? docPage(found.path, found.title, found.description, found, { section: found.section })
-      : docPage(path, 'Page not found — team', 'That page isn\'t here.', { html: eta.render('not-found', { commands: commandNames().length }), toc: [] }, { status: 404 });
+      : docPage(path, 'Page not found — team', 'That page isn\'t here.', { html: eta.render('not-found', { commands: commandNames().length }), toc: [] }, { section: '', status: 404 });
   }
   return request.method === 'HEAD' ? new Response(null, { status: response.status, headers: response.headers }) : response;
 }

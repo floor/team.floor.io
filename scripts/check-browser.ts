@@ -46,6 +46,13 @@
 //	    own background: .hljs-attr, .hljs-string, .hljs-comment and .hljs-built_in, and
 //	    every other highlighted token on those pages, each at least 4.5:1.
 //
+//	11. Every page the sitemap lists, plus the 404, at 1440, 1024 and 390: the page does
+//	    not scroll sideways; no table cell's text is clipped (a cell over its own box while
+//	    its table's wrapper does not scroll) and no cell is narrower than its own content
+//	    (its longest unbreakable token plus its horizontal padding), every scrolling table
+//	    frame a keyboard tab stop; and the top navigation marks the page's own section
+//	    exactly once, with aria-current.
+//
 // The server is the site's own request handler on a free port, so this opens no
 // process of its own; the browser opens once and is closed in the end.
 import { chromium, type Browser, type Page } from 'playwright';
@@ -721,6 +728,141 @@ try {
     for (const [name, ratio] of worst) check(ratio >= 4.5, `light syntax: ${name} is ${ratio.toFixed(2)}:1`);
     await context.close();
   }
+
+  // ── 11. every page of the site, plus the 404, at three widths ───────────────
+  // The three presentation faults, measured on every page the site publishes and on the
+  // 404, at the widths a reader arrives with — 1440, 1024, 390:
+  //	1. the page does not scroll sideways: documentElement.scrollWidth ≤ clientWidth.
+  //	2. no table cell's text is clipped: a cell may not overflow its own box
+  //	   (scrollWidth > clientWidth) while its table's wrapper does not scroll — a table
+  //	   wider than its frame is a state the reader can scroll into and back out of, and
+  //	   the wrap is that frame — and no cell may be narrower than its own content: its
+  //	   rendered width must hold its longest unbreakable token plus its horizontal
+  //	   padding. A single token never breaks, a phrase wraps at its spaces, and a cell
+  //	   whose content fits, however short it is — Exit, Flag, a number — is not a fault.
+  //	   The failure line reports measured numbers only — the cell's width against its
+  //	   longest token plus padding, and the row-mate's width beside it — never a ratio
+  //	   cap. A frame that does scroll is a keyboard tab stop (tabindex 0, with the
+  //	   site's inside focus outline), so a reader who cannot use a pointer can scroll it.
+  //	3. the top navigation marks the page's section exactly once: a /docs/commands/…
+  //	   page is Commands, every other page that declares a section is Documentation, and
+  //	   the pages that declare none — the home page, privacy and the 404 — carry no
+  //	   current link at all. The mark is aria-current, the one assistive tech reads; the
+  //	   visible class alone is not the mark.
+  // The page list is the site's own sitemap.xml, read over HTTP, so this measures what the
+  // site publishes and not a list retyped here.
+  {
+    const sitemap = await fetch(`${origin}/sitemap.xml`);
+    const listed = sitemap.ok ? [...(await sitemap.text()).matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => new URL(match[1]!).pathname) : [];
+    check(listed.length > 0, `presentation: the sitemap answered ${sitemap.status} and listed ${listed.length} pages`);
+    for (const width of [1440, 1024, 390]) {
+      const context = await browser.newContext({ viewport: { width, height: 900 }, deviceScaleFactor: 1 });
+      const page = await context.newPage();
+      for (const path of [...listed, '/nope/']) {
+        const status = (await page.goto(`${origin}${path}`, { waitUntil: 'load' }))?.status() ?? 0;
+        const where = `${path} ${width}`;
+        const wanted = path === '/nope/' ? 404 : 200;
+        check(status === wanted, `${where} page: the server answered ${status}, not ${wanted}`);
+        if (status !== wanted) continue;
+        const facts = await page.evaluate(() => {
+          const round = (value: number) => Math.round(value * 10) / 10;
+          const label = (element: Element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim().slice(0, 44);
+          // The floor rule measures each cell's longest unbreakable token: the widest run
+          // of characters no break opportunity splits — whitespace breaks, a no-break
+          // space does not — measured with a Range, so it is what the browser paints.
+          const tokenWidth = (cell: Element) => {
+            const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT);
+            const range = document.createRange();
+            let longest = 0;
+            for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
+              const text = node.textContent ?? '';
+              for (const match of text.matchAll(/[^\t\n\v\f\r ]+/g)) {
+                range.setStart(node, match.index!);
+                range.setEnd(node, match.index! + match[0].length);
+                longest = Math.max(longest, range.getBoundingClientRect().width);
+              }
+            }
+            return longest;
+          };
+          const horizontalPadding = (cell: Element) => {
+            const style = getComputedStyle(cell);
+            return parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+          };
+          const nav = document.querySelector('.header__nav') ?? document.querySelector('header nav');
+          return {
+            scrollWidth: document.documentElement.scrollWidth,
+            clientWidth: document.documentElement.clientWidth,
+            tables: [...document.querySelectorAll<HTMLTableElement>('table')].map((table, index) => {
+              const wrapper = table.closest<HTMLElement>('.table-wrap');
+              return {
+                index: index + 1,
+                wrapperScrolls: wrapper !== null && wrapper.scrollWidth > wrapper.clientWidth,
+                wrapperTab: wrapper === null ? null : wrapper.tabIndex,
+                rows: [...table.rows].map((row, rowIndex) => [...row.cells].map((cell, cellIndex) => ({
+                  row: rowIndex + 1,
+                  cell: cellIndex + 1,
+                  label: label(cell),
+                  width: round(cell.getBoundingClientRect().width),
+                  scrollWidth: cell.scrollWidth,
+                  clientWidth: cell.clientWidth,
+                  token: round(tokenWidth(cell)),
+                  padding: round(horizontalPadding(cell)),
+                  // The stacked layout at phone width hides the header row, and a cell
+                  // with no box has no text to clip: it is measured but never a fault.
+                  rendered: cell.getClientRects().length > 0,
+                }))),
+              };
+            }),
+            nav: nav === null ? null : {
+              declared: document.querySelector('.header__section')?.textContent?.trim() ?? null,
+              links: [...nav.querySelectorAll<HTMLAnchorElement>('a')].map(link => ({
+                path: new URL(link.getAttribute('href') ?? '', location.href).pathname,
+                current: link.getAttribute('aria-current'),
+                text: (link.textContent ?? '').trim(),
+              })),
+            },
+          };
+        });
+
+        check(facts.scrollWidth <= facts.clientWidth, `${where} rule 1 sideways scroll: documentElement.scrollWidth ${facts.scrollWidth} > clientWidth ${facts.clientWidth}`);
+
+        for (const table of facts.tables) {
+          check(!table.wrapperScrolls || table.wrapperTab === 0, `${where} rule 2 frame: table ${table.index}'s frame scrolls and its tabIndex is ${table.wrapperTab}, not 0 — the keyboard cannot scroll it`);
+          for (const row of table.rows) {
+            for (const cell of row) {
+              const clipped = !table.wrapperScrolls && cell.scrollWidth > cell.clientWidth;
+              check(!clipped, `${where} rule 2 clipped cell: table ${table.index} row ${cell.row} cell ${cell.cell} ${JSON.stringify(cell.label)} scrollWidth ${cell.scrollWidth} > clientWidth ${cell.clientWidth}, its table's wrapper does not scroll`);
+            }
+            const widest = [...row].filter(cell => cell.rendered).sort((one, other) => other.width - one.width)[0];
+            for (const cell of row) {
+              // A cell with no box (the hidden header row at phone width) has nothing to
+              // clip, and a table whose frame scrolls is the accepted state rule 2a
+              // carves out: the reader scrolls the frame to the full token.
+              if (!cell.rendered || table.wrapperScrolls) continue;
+              const floor = Math.round((cell.token + cell.padding) * 10) / 10;
+              check(cell.width + 0.5 >= floor, `${where} rule 2 narrow cell: table ${table.index} row ${cell.row} ${JSON.stringify(cell.label)} is ${cell.width}px wide, under its longest token ${cell.token}px + ${cell.padding}px padding = ${floor}px, beside ${JSON.stringify(widest?.label)} at ${widest?.width}px`);
+            }
+          }
+        }
+
+        const nav = facts.nav;
+        check(nav !== null, `${where} rule 3 navigation: the header carries no top navigation`);
+        if (nav) {
+          const expected = path.startsWith('/docs/commands/') ? 'Commands' : path.startsWith('/docs/') ? 'Documentation' : nav.declared;
+          const target = expected === 'Commands' ? '/docs/commands/' : expected === 'Documentation' ? '/docs/' : null;
+          const current = nav.links.filter(link => link.current !== null);
+          const carrying = `${current.length} of ${nav.links.length} links carry aria-current (${current.map(link => JSON.stringify(link.path)).join(', ') || 'none'})`;
+          if (target === null) {
+            check(current.length === 0, `${where} rule 3 aria-current: ${carrying}, and the page declares no section`);
+          } else {
+            check(current.length === 1, `${where} rule 3 aria-current: ${carrying}, expected exactly one — ${JSON.stringify(target)} (${expected})`);
+            check(current.length !== 1 || current[0]!.path === target, `${where} rule 3 aria-current: the current link is ${JSON.stringify(current[0]?.path ?? '')} (${current[0]?.text ?? ''}), the page's section is ${expected} (${JSON.stringify(target)})`);
+          }
+        }
+      }
+      await context.close();
+    }
+  }
 } finally {
   await browser.close();
   await server.stop(true);
@@ -731,4 +873,4 @@ if (problems.length) {
   for (const problem of [...new Set(problems)]) console.error(`  ${problem}`);
   process.exit(1);
 }
-console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero\'s content centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer, every name the prose rule carries, the note class on a div.note among them, wearing the link token and a 3:1 mark at rest, turning full-strength on hover and on the keyboard, while the anchors around them, and the action class in a note and in the samples foot, stay bare, the code blocks chip-free inside, scrolling their long lines, and bare where the styles de-chip a name, the home transcripts rendering the reference line for line, the header on every sitemap page wearing a section only where there is one, the favicon-mark header with its reduced-motion final text, terminal character typing and a fixed navigation edge, and the install block switching by click and by arrow key, copying the visible command, and remembering the tab, and the light-mode syntax tokens, .hljs-attr, .hljs-string, .hljs-comment and .hljs-built_in among them, at 4.5:1 on their code background.');
+console.log('test:browser passed: 390/768/1440 × light/dark, the home page without JavaScript, the hero\'s content centred at 390/375/1440 and its buttons padded, the dialog, the theme and the drawer, every name the prose rule carries, the note class on a div.note among them, wearing the link token and a 3:1 mark at rest, turning full-strength on hover and on the keyboard, while the anchors around them, and the action class in a note and in the samples foot, stay bare, the code blocks chip-free inside, scrolling their long lines, and bare where the styles de-chip a name, the home transcripts rendering the reference line for line, the header on every sitemap page wearing a section only where there is one, the favicon-mark header with its reduced-motion final text, terminal character typing and a fixed navigation edge, and the install block switching by click and by arrow key, copying the visible command, and remembering the tab, and the light-mode syntax tokens, .hljs-attr, .hljs-string, .hljs-comment and .hljs-built_in among them, at 4.5:1 on their code background, and every page of the sitemap plus the 404 at 1440/1024/390 without a sideways scroll, without a table cell clipped or narrower than its longest unbreakable token, with every scrolling table frame a keyboard tab stop, and with one top-navigation link carrying aria-current for the page\'s own section.');
