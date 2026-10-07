@@ -38,13 +38,13 @@
 <body class="<%= it.isHome ? 'home' : '' %>">
   <a class="skip-link" href="#content">Skip to content</a>
   <header class="header"><div class="header__inner">
-    <a class="header__logo" href="/" aria-label="team, home"><img class="header__mark" src="/favicon.svg" width="24" height="24" alt="" /><span>team</span><% if (it.isHome || it.headerCommand) { %><span class="header__command" aria-hidden="true" data-header-command="<%= it.headerCommand %>" data-header-commands="<%= it.rollingCommands.join(',') %>" data-header-home="<%= it.isHome %>"><span class="header__typed"><%= it.headerCommand %></span><span class="header__caret"></span></span><% } %></a>
+    <span class="header__brand"><a class="header__logo" href="/" aria-label="team, home"><img class="header__mark" src="/favicon.svg" width="24" height="24" alt="" /><span>team</span></a><% if (it.isHome || it.headerCommand) { %><span class="header__command" aria-hidden="true" data-header-command="<%= it.headerCommand %>" data-header-commands="<%= it.rollingCommands.join(',') %>" data-header-home="<%= it.isHome %>"><span class="header__typed"><%= it.headerCommand %></span><span class="header__caret"></span></span><% } %></span>
     <nav class="header__nav" aria-label="Main navigation">
       <a href="/docs/" class="<%= it.section === 'Documentation' && !it.path.startsWith('/docs/commands/') ? 'active' : '' %>" <% if (it.section === 'Documentation' && !it.path.startsWith('/docs/commands/')) { %>aria-current="page"<% } %>>Documentation</a>
       <a href="/docs/commands/" class="<%= it.path.startsWith('/docs/commands/') ? 'active' : '' %>" <% if (it.path.startsWith('/docs/commands/')) { %>aria-current="page"<% } %>>Commands</a>
       <a href="https://github.com/floor/team" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
     </nav>
-    <button type="button" class="header__search" id="search-trigger" aria-label="Search (⌘K)" aria-haspopup="dialog" aria-keyshortcuts="Meta+K Control+K">
+    <button type="button" class="header__search" id="search-trigger" aria-label="Search ⌘K" aria-haspopup="dialog" aria-keyshortcuts="Meta+K Control+K">
       <svg class="header__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <span class="header__search-kbd" aria-hidden="true"><kbd>⌘</kbd><kbd>K</kbd></span>
     </button>
