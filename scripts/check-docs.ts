@@ -17,7 +17,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import { handleRequest } from '../server';
 import { decodeEntities, fences, type Fence } from '../src/server/markdown';
-import { commandNames, commandPage, README } from '../src/server/reference';
+import { commandNames, commandPage, commandTable, README } from '../src/server/reference';
 import { homeSamples, installLine, pages, descriptionFor } from '../src/server/pages';
 import { SITE, sitemapPages } from '../src/server/seo';
 import { read } from '../src/server/team';
@@ -161,7 +161,7 @@ for (const path of ['/docs/safety/', '/docs/commands/']) {
   const page = pages().find(entry => entry.path === path)!;
   const cells = [...page.html.matchAll(WHO_CELL)].map(match => text(match[1] ?? match[2] ?? ''));
   // A page that stopped showing them would take this rule with it.
-  check(cells.length === commandNames().length, `${path}: ${cells.length} who cells for ${commandNames().length} commands`);
+  check(cells.length === (path === '/docs/safety/' ? commandTable().length : commandNames().length), `${path}: ${cells.length} who cells for ${path === '/docs/safety/' ? commandTable().length : commandNames().length} commands`);
   for (const cell of cells) {
     check(!/^[a-z][a-z-]*: /.test(cell), `${path}: a who cell reads ${JSON.stringify(cell.slice(0, 60))}: a rule labelled for another command reached the page`);
   }

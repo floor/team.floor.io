@@ -81,7 +81,7 @@ describe('the commands table', () => {
 
   test('a cell that is one rule for the row is shown whole, on every row it names', () => {
     // "anyone; read only" is a sentence, not a label per command: it stays whole.
-    expect(commandTable().find(row => row.name === 'check')?.who).toBe('anyone; read only');
+    expect(commandTable().find(row => row.name === 'commits')?.who).toBe('anyone; read only');
     // `team worktree new` / `remove` are two commands in one row with one rule.
     expect(commandTable().find(row => row.name === 'worktree')?.who).toBe('the owner, the coordinator or the operator');
   });

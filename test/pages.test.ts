@@ -74,7 +74,7 @@ describe('the page list', () => {
   test('a missing page counts the commands the site lists', async () => {
     const html = await (await handleRequest(new Request('http://localhost/no-such-page/'))).text();
     expect(html).toContain(`All ${commandNames().length} commands →`);
-    expect(commandNames().length).toBe(13);
+    expect(commandNames().length).toBe(16);
     expect(html).not.toContain('eleven');
     expect(descriptionFor('/docs/commands/add/')).toBe('Starts one declared seat, or a temporary one beside the team with --temporary --like <seat> --until <result:path|merged:branch>.');
     expect(descriptionFor('/docs/commands/release/')).toBe('Checks a release on npm and GitHub. When the file has the pairs: Linear milestone, qualifying status update, and the release marker in the public activity file.');
