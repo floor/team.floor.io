@@ -189,7 +189,7 @@ export function homePoints(): { title: string; text: string }[] {
   const capitalised = watch.summary.charAt(0).toUpperCase() + watch.summary.slice(1);
   return [
     { title: 'One file declares the team', text: sentence(README, 'A project declares its team in') },
-    { title: 'Safe by design', text: `${sentence(README, 'The owner is a terminal outside herdr')} ${sentence(README, 'Nothing writes a lab\'s config')} ${sentence(README, 'Launching a Cursor seat')}` },
+    { title: 'Safe by design', text: `${sentence(README, 'The owner is a terminal outside herdr')} ${sentence(README, '`approve` and `up` read the')} ${sentence(README, 'Nothing writes a lab\'s config')} ${sentence(README, 'Launching a Cursor seat')}` },
     { title: 'The watch tells you', text: `${capitalised.split(';')[0]}.` },
   ];
 }
@@ -409,7 +409,9 @@ export function pages(): PageMeta[] {
 const DESCRIPTIONS: Record<string, string> = {
   init: 'Writes the team file: a skeleton for this project, or the copy you last approved, kept out of git.',
   approve: 'The owner reads the whole file back, then records it, its ceilings and its seats on this machine; --show prints it.',
-  check: 'Checks one commit, a range, or a PR body against the signature rule; exit 1 when a commit is refused.',
+  check: 'One answer to one question: is anything wrong with this team that someone should act on? It reads the file, approval, state and herdr.',
+  commits: 'Checks a commit, or a range of commits, against the signature rule and forbidden patterns; exit 1 when a commit is refused.',
+  pr: 'Checks a pull request body against the signature rule and forbidden patterns, needing no repository; exit 1 when refused.',
   doctor: 'What this machine still needs: the approval, herdr, each CLI, its version and login, each launch’s model, and the watch.',
   status: 'The team as it stands: one line per seat, and every difference between the file, the state and the live session, with its repair.',
   up: 'Starts the session, a workspace and each seat the file has not stopped, plus the watch; a stopped seat waits for team add. --dry-run prints the plan.',
@@ -420,6 +422,7 @@ const DESCRIPTIONS: Record<string, string> = {
   worktree: 'Creates a task worktree from an up-to-date base, or removes one; the branch is never deleted.',
   answer: 'Presses the one recorded key of a seat\'s folder-trust dialog when the file allows it; every check has to pass, and anything else sends nothing.',
   release: 'Checks a release on npm and GitHub. When the file has the pairs: Linear milestone, qualifying status update, and the release marker in the public activity file.',
+  usage: 'Shows one project’s budget accounts, windows, remaining usage, and when each figure was last read.',
 };
 const SITE_PAGES: Record<string, string> = {
   '/privacy/': 'How teamcli.io reaches you, and what stays in your browser.',
