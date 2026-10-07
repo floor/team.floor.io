@@ -189,7 +189,7 @@ export function homePoints(): { title: string; text: string }[] {
   const capitalised = watch.summary.charAt(0).toUpperCase() + watch.summary.slice(1);
   return [
     { title: 'One file declares the team', text: sentence(README, 'A project declares its team in') },
-    { title: 'Safe by design', text: `${sentence(README, 'The owner is a terminal outside herdr')} ${sentence(README, 'Nothing writes a lab\'s config')} ${sentence(README, 'Launching a Cursor seat')}` },
+    { title: 'Safe by design', text: `${sentence(README, 'The owner is a terminal outside herdr')} ${sentence(README, '`approve` and `up` read the')} ${sentence(README, 'Nothing writes a lab\'s config')} ${sentence(README, 'Launching a Cursor seat')}` },
     { title: 'The watch tells you', text: `${capitalised.split(';')[0]}.` },
   ];
 }

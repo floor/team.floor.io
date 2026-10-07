@@ -139,6 +139,7 @@ describe('the home page, from the reference', () => {
 
   test('what team writes, and what a launch of a CLI still writes, travel together', () => {
     const point = homePoints().find(entry => entry.title === 'Safe by design')!;
+    expect(point.text).toContain('guard against a mistaken agent');
     expect(point.text).toContain('lab\'s config');
     expect(point.text).toContain('project record');
     expect(point.text.toLowerCase()).not.toContain('vendor');
