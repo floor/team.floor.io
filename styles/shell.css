@@ -417,12 +417,17 @@ video {
         background: var(--bg-raised);
         border-right: 1px solid var(--border);
         transform: translateX(-102%);
-        transition: transform var(--transition);
+        /* Closed drawers keep their links out of the Tab order and the
+           accessibility tree; visibility flips at the end of the close
+           transition so the slide-out stays visible while animating. */
+        visibility: hidden;
+        transition: transform var(--transition), visibility var(--transition);
         overscroll-behavior: contain;
     }
 
     .sidebar--open {
         transform: none;
+        visibility: visible;
     }
 
     .mobile-navigation {
