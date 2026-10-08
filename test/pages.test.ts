@@ -127,7 +127,7 @@ describe('the home page, from the reference', () => {
     expect([...html.matchAll(/aria-selected="true"/g)].length).toBe(1);
   });
 
-  test('three points, each one sentence of the reference', () => {
+  test('three home points, each a single block of prose', () => {
     const points = homePoints();
     expect(points.length).toBe(3);
     for (const point of points) {
@@ -142,6 +142,7 @@ describe('the home page, from the reference', () => {
     expect(point.text).toContain('guard against a mistaken agent');
     expect(point.text).toContain('lab\'s config');
     expect(point.text).toContain('project record');
+    expect(point.text).toContain('known limitation');
     expect(point.text.toLowerCase()).not.toContain('vendor');
     expect(point.text.toLowerCase()).not.toContain('crew');
     const safety = pages().find(page => page.path === '/docs/safety/')!.html;

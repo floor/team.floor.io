@@ -182,14 +182,15 @@ export function homeSamples(): Sample[] {
   ];
 }
 
-/** The three points of the home page, each one sentence of the reference. */
+/** The three points of the home page. The first and the third are sentences of the reference; the middle one is the site's own. */
 export function homePoints(): { title: string; text: string }[] {
   const watch = commandTable().find(row => row.name === 'watch');
   if (!watch) throw new ReferenceError('the commands table no longer lists `team watch`');
   const capitalised = watch.summary.charAt(0).toUpperCase() + watch.summary.slice(1);
   return [
     { title: 'One file declares the team', text: sentence(README, 'A project declares its team in') },
-    { title: 'Safe by design', text: `${sentence(README, 'The owner is a terminal outside herdr')} ${sentence(README, '`approve` and `up` read the')} ${sentence(README, 'Nothing writes a lab\'s config')} ${sentence(README, 'Launching a Cursor seat')}` },
+    // Site-authored by design: the approved exception to this file's "nothing retypes the reference" rule.
+    { title: 'Safe by design', text: 'The owner works from a terminal outside the agent tree, with nothing running above it. Before `approve` and `up` act, team reads the processes above the call and refuses a seat — or a script a seat runs — that stands in for the owner: a guard against a mistaken agent, not a hostile one, so a seat that forges the owner\'s placement is a known limitation being hardened. team never writes a lab\'s config or an `AGENTS.md`, and launching a Cursor seat leaves only Cursor\'s own project record, just as starting it by hand would.' },
     { title: 'The watch tells you', text: `${capitalised.split(';')[0]}.` },
   ];
 }
