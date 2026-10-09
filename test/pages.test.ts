@@ -52,15 +52,15 @@ describe('the page list', () => {
     }
   });
 
-  test('the headline is two lines, and nothing sits under it', async () => {
-    expect(headlineLead).toBe('A team of agents for your project,');
-    expect(headlineAccent).toBe('from one lab or several.');
-    expect(homeTitle).toBe('TeamCLI: a team of agents for your project, from one lab or several');
+  test('the headline is two lines over a subline', async () => {
+    expect(headlineLead).toBe('Ship with a team that');
+    expect(headlineAccent).toBe('never sleeps.');
+    expect(homeTitle).toBe('TeamCLI: specialized agents for your project');
     expect(homeTitle.length).toBeLessThanOrEqual(70);
     const html = await (await handleRequest(new Request('http://localhost/'))).text();
     expect(html).toContain(`<title>${homeTitle}</title>`);
     expect(html).toContain(`<h1 class="hero__name" id="hero-title">${headlineLead}<br><span class="hero__accent">${headlineAccent}</span></h1>`);
-    expect(html).not.toContain('hero__tagline');
+    expect(html).toContain('<p class="hero__tagline">Specialized agents, from any lab.</p>');
     expect(html).not.toContain('Agents propose. You decide.');
     expect(html).toContain('name="description" content="Set up and run a team of AI agents for your project. Agents propose, you decide."');
     const own = [headline, headlineLead, headlineAccent, homeTitle, versionLine(), ...['/', '/privacy/', '/docs/', '/docs/file/', '/docs/commands/', '/docs/safety/', '/docs/clis/'].map(descriptionFor)];
@@ -137,12 +137,10 @@ describe('the home page, from the reference', () => {
     }
   });
 
-  test('what team writes, and what a launch of a CLI still writes, travel together', () => {
+  test('the landing sums up safety in its own words; the exact claims stay on the safety page', () => {
     const point = homePoints().find(entry => entry.title === 'Safe by design')!;
-    expect(point.text).toContain('guard against a mistaken agent');
-    expect(point.text).toContain('lab\'s config');
-    expect(point.text).toContain('project record');
-    expect(point.text).toContain('known limitation');
+    expect(point.text).toContain('what only you can');
+    expect(point.text).toContain('stops at the edge');
     expect(point.text.toLowerCase()).not.toContain('vendor');
     expect(point.text.toLowerCase()).not.toContain('crew');
     const safety = pages().find(page => page.path === '/docs/safety/')!.html;

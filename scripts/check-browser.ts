@@ -257,7 +257,7 @@ try {
       return {
         block: boxOffset('.hero'),
         textAlign: getComputedStyle(document.querySelector('.hero')!).textAlign,
-        children: ['.eyebrow', '#hero-title', '.hero__install', '.hero__notes']
+        children: ['.eyebrow', '#hero-title', '.hero__tagline', '.hero__install', '.hero__notes']
           .map(selector => ({ selector, offset: contentOffset(selector) })),
         buttons: { offset: round((left + right) / 2 - centre), span: round(right - left) },
       };
