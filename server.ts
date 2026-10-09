@@ -8,7 +8,7 @@ import { Eta } from 'eta';
 import { extname, resolve, sep } from 'node:path';
 import { IMMUTABLE_CACHE, SHORT_CACHE, isImmutableAsset, loadAssetManifest } from './src/server/assets';
 import { materialSheets, type StylesheetBundle } from './src/server/css';
-import { descriptionFor, headline, headlineAccent, headlineLead, homePoints, homeSamples, homeTitle, info, inline, INSTALL_MANAGERS, installMarkup, nav, pages, versionLine } from './src/server/pages';
+import { descriptionFor, headline, headlineAccent, headlineLead, heroSubline, homePoints, homeSamples, homeTitle, info, inline, INSTALL_MANAGERS, installMarkup, nav, pages, versionLine } from './src/server/pages';
 import { commandNames } from './src/server/reference';
 import { fenceHtml } from './src/server/markdown';
 import { searchSite, suggestions } from './src/server/search';
@@ -128,6 +128,7 @@ export async function handleRequest(request: Request): Promise<Response> {
       versionLine: versionLine(),
       headlineLead,
       headlineAccent,
+      subline: heroSubline,
       install: installMarkup(),
       points: homePoints().map(point => ({ title: point.title, html: inline(point.text) })),
       samples: homeSamples().map(sample => ({ label: sample.label, caption: inline(sample.caption), html: fenceHtml(sample.fence) })),

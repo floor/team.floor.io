@@ -20,13 +20,15 @@ export function versionLine(): string {
   return `TeamCLI · VERSION ${version}`;
 }
 
-/** The owner's headline, two lines. The second is the accent line. There is no line under it. */
-export const headlineLead = 'A team of agents for your project,';
-export const headlineAccent = 'from one lab or several.';
+/** The owner's headline, two lines; the second is the accent line, with the subline under it. */
+export const headlineLead = 'Ship with a team that';
+export const headlineAccent = 'never sleeps.';
+/** The subline under the headline. */
+export const heroSubline = 'Specialized agents, from any lab.';
 /** The same words in one line, for the preview alt and the link card. */
 export const headline = `${headlineLead} ${headlineAccent}`;
 /** The home page's title. It is not the headline, and it stays within 70 characters. */
-export const homeTitle = 'TeamCLI: a team of agents for your project, from one lab or several';
+export const homeTitle = 'TeamCLI: specialized agents for your project';
 
 /** The package's first line: the paragraph under the README's title. */
 export function packageLead(): string {
@@ -190,7 +192,8 @@ export function homePoints(): { title: string; text: string }[] {
   return [
     { title: 'One file declares the team', text: sentence(README, 'A project declares its team in') },
     // Site-authored by design: the approved exception to this file's "nothing retypes the reference" rule.
-    { title: 'Safe by design', text: 'The owner works from a terminal outside the agent tree, with nothing running above it. Before `approve` and `up` act, team reads the processes above the call and refuses a seat — or a script a seat runs — that stands in for the owner: a guard against a mistaken agent, not a hostile one, so a seat that forges the owner\'s placement is a known limitation being hardened. team never writes a lab\'s config or an `AGENTS.md`, and launching a Cursor seat leaves only Cursor\'s own project record, just as starting it by hand would.' },
+    // A visitor's summary of the safety model; the exact, reference-bound claims live on /docs/safety/.
+    { title: 'Safe by design', text: 'Clear line between what agents decide and what only you can: the team moves fast inside its envelope and stops at the edge.' },
     { title: 'The watch tells you', text: `${capitalised.split(';')[0]}.` },
   ];
 }
