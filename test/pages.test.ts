@@ -56,10 +56,9 @@ describe('the home page, from the reference', () => {
     }
   });
 
-  test('what team writes, and what a launch of a CLI still writes, travel together', () => {
+  test('the landing sums up safety in its own words; the exact claims stay on the safety page', () => {
     const point = homePoints().find(entry => entry.title === 'Safe by design')!;
-    expect(point.text).toContain('vendor config');
-    expect(point.text).toContain('project record');
+    expect(point.text).toContain('stops at the edge');
     const safety = pages().find(page => page.path === '/docs/safety/')!.html;
     expect(safety).toContain('vendor config');
     expect(safety).toContain('project record');

@@ -8,7 +8,7 @@ import { Eta } from 'eta';
 import { extname, resolve, sep } from 'node:path';
 import { IMMUTABLE_CACHE, SHORT_CACHE, isImmutableAsset, loadAssetManifest } from './src/server/assets';
 import { materialSheets, type StylesheetBundle } from './src/server/css';
-import { crewWords, descriptionFor, homePoints, homeSamples, info, inline, installLine, nav, pages } from './src/server/pages';
+import { crewWords, descriptionFor, heroSubline, homePoints, homeSamples, info, inline, installLine, nav, pages } from './src/server/pages';
 import { fenceHtml } from './src/server/markdown';
 import { searchSite, suggestions } from './src/server/search';
 import { jsonForScript, robotsTxt, sitemapXml, structuredData } from './src/server/seo';
@@ -124,7 +124,7 @@ export async function handleRequest(request: Request): Promise<Response> {
     response = plainPage('/', `team — a project's AI team, ${crewWords}`, descriptionFor('/'), 'homepage', {
       version: info.version,
       crewWords,
-      tagline: inline(homePoints()[0]!.text),
+      tagline: inline(heroSubline),
       install: installBlock(),
       points: homePoints().map(point => ({ title: point.title, html: inline(point.text) })),
       samples: homeSamples().map(sample => ({ label: sample.label, caption: inline(sample.caption), html: fenceHtml(sample.fence) })),

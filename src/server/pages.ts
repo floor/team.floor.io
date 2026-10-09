@@ -13,10 +13,14 @@ if (!contentReady()) throw new Error('content/team is missing: run `bun run cont
 
 export const info = refInfo();
 
-/** The words of the hero's second line, in one place: the landing renders them (the
-    sentence's period is the template's) and the shell ends the preview image's alt text
-    with them, so the two can only be re-worded together. */
-export const crewWords = 'any vendor, one crew';
+/** The hero subline's distinctive phrase, in one place: the landing subline, the page
+    title and the preview image's alt text all end with it, and the search index reads
+    the same title, so they can only be re-worded together. */
+export const crewWords = 'from any lab';
+
+/** The hero's subline, built from {@link crewWords} so the landing and the social card
+    can't drift. The landing renders it under the headline. */
+export const heroSubline = `Specialized agents, ${crewWords}.`;
 
 /** A page built from parts: the headings its table of contents links to, then the text. */
 export class Doc {
@@ -127,14 +131,16 @@ export function homeSamples(): Sample[] {
   ];
 }
 
-/** The three points of the home page, each one sentence of the reference. */
+/** The three points of the home page. The first and last are a sentence of the reference;
+    the middle one is the landing's own words — its one sentence sums up the safety model
+    for a visitor, while the exact, reference-bound claims live on the /docs/safety/ page. */
 export function homePoints(): { title: string; text: string }[] {
   const watch = commandTable().find(row => row.name === 'watch');
   if (!watch) throw new ReferenceError('the commands table no longer lists `team watch`');
   const capitalised = watch.summary.charAt(0).toUpperCase() + watch.summary.slice(1);
   return [
     { title: 'One file declares the team', text: sentence(README, 'A project declares its team in') },
-    { title: 'Safe by design', text: `${sentence(README, 'The owner is a terminal outside herdr')} ${sentence(README, 'Nothing writes a vendor config')} ${sentence(README, 'Launching a Cursor seat')}` },
+    { title: 'Safe by design', text: 'Clear line between what agents decide and what only you can: the team moves fast inside its envelope and stops at the edge.' },
     { title: 'The watch tells you', text: `${capitalised.split(';')[0]}.` },
   ];
 }

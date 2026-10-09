@@ -1,8 +1,8 @@
-<% /* The hero's second line: the words come from pages.ts (crewWords), which the shell's preview-image alt text reads too; the sentence's period lives here. */ %>
+<% /* The hero: the headline's accent tail lives here; the subline (it.tagline, from heroSubline) and the preview-image alt both end with crewWords (pages.ts), so they can't drift. */ %>
 <div class="landing">
   <section class="hero" aria-labelledby="hero-title">
     <span class="eyebrow">THE TEAM CLI · VERSION <%= it.version %></span>
-    <h1 class="hero__name" id="hero-title">A team of agents,<br><span class="hero__accent"><%= it.crewWords %>.</span></h1>
+    <h1 class="hero__name" id="hero-title">Ship with a team that<br><span class="hero__accent">never sleeps.</span></h1>
     <p class="hero__tagline"><%~ it.tagline %></p>
     <div class="hero__actions"><a class="mtrl-button mtrl-button--filled" href="/docs/">Get started <span class="mtrl-button__icon" aria-hidden="true">→</span></a><a class="mtrl-button mtrl-button--tonal" href="/docs/commands/">Command reference</a></div>
     <div class="hero__install"><%~ it.install %></div>
