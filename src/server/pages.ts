@@ -190,7 +190,9 @@ export function homePoints(): { title: string; text: string }[] {
   if (!watch) throw new ReferenceError('the commands table no longer lists `team watch`');
   const capitalised = watch.summary.charAt(0).toUpperCase() + watch.summary.slice(1);
   return [
-    { title: 'One file declares the team', text: sentence(README, 'A project declares its team in') },
+    // Site-authored by design: a product-positioning line, not a reference sentence — the
+    // approved exception to this file's "nothing retypes the reference" rule.
+    { title: 'Any model, in any seat', text: 'Put the right specialized agent — from any lab — on each role, and swap it without rewriting the team.' },
     // Site-authored by design: the approved exception to this file's "nothing retypes the reference" rule.
     // A visitor's summary of the safety model; the exact, reference-bound claims live on /docs/safety/.
     { title: 'Safe by design', text: 'Clear line between what agents decide and what only you can: the team moves fast inside its envelope and stops at the edge.' },
