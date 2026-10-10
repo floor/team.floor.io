@@ -25,7 +25,7 @@ const published = pinned ? '' : publishedVersion();
 const TEAM_REF = pinned || `v${published}`;
 
 if (!existsSync(resolve(TEAM_REPO, '.git'))) {
-  console.error(`No team checkout at ${TEAM_REPO}. Clone floor/team beside this repository, or set TEAM_REPO.`);
+  console.error(`No team checkout at ${TEAM_REPO}. Clone floor/teamcli beside this repository, or set TEAM_REPO.`);
   process.exit(1);
 }
 

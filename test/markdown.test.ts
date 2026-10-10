@@ -128,7 +128,7 @@ describe('localHref', () => {
 
   test('the docs\' own addresses, and anything else as it is', () => {
     expect(localHref('docs/commands/')).toBe('/docs/commands/');
-    expect(localHref('https://github.com/floor/team/tree/main/docs/commands')).toBe('/docs/commands/');
+    expect(localHref('https://github.com/floor/teamcli/tree/main/docs/commands')).toBe('/docs/commands/');
     expect(localHref('../README.md')).toBe('/docs/');
     expect(localHref('https://example.com/x')).toBe('https://example.com/x');
     expect(localHref('#safety')).toBe('#safety');

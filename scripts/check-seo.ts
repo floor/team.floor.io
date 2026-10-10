@@ -109,7 +109,7 @@ for (const page of pageList) {
     check(app?.softwareVersion === info.version, `/: softwareVersion is ${JSON.stringify(app?.softwareVersion)}, the reference is ${info.version}`);
     check(app?.description === descriptionFor('/'), '/: the application does not carry the page\'s description');
     const sameAs = (app?.sameAs ?? []) as string[];
-    check(sameAs.includes('https://github.com/floor/team') && sameAs.includes('https://www.npmjs.com/package/team'), '/: the application does not name its repository and package');
+    check(sameAs.includes('https://github.com/floor/teamcli') && sameAs.includes('https://www.npmjs.com/package/team'), '/: the application does not name its repository and package');
     // The bundle's own name may follow a version, so the number is what is held to the ref.
     const bundle = info.version.replace(/\D+.*$/, '');
     check(html.includes(bundle), `/: the page does not show the reference's version ${info.version}`);

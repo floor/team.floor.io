@@ -55,7 +55,7 @@ export const robotsTxt = (): string =>
 
 const author = { '@type': 'Organization', name: 'Floor IO', url: 'https://floor.io' };
 /** Where the command itself lives: its repository, and the package on npm. */
-const where = ['https://github.com/floor/team', 'https://www.npmjs.com/package/team'];
+const where = ['https://github.com/floor/teamcli', 'https://www.npmjs.com/package/team'];
 /**
  * A page's structured data: on the home page the command itself and the site; elsewhere
  * the trail Home → Documentation → page. `name` is the page's own name.

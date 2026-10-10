@@ -17,7 +17,7 @@ set -euo pipefail
 
 host="${DEPLOY_HOST:-floor.io}"
 dir="${DEPLOY_DIR:-/home/floor}"
-url="${TEAM_URL:-https://github.com/floor/team.git}"
+url="${TEAM_URL:-https://github.com/floor/teamcli.git}"
 
 # The two values are pasted into the remote script. Check each whole value before that
 # text exists (grep would accept a valid first line and let the rest through), then write
@@ -51,14 +51,14 @@ if [ ! -d '@@DIR@@/team' ]; then
 else
   origin=$(git -C '@@DIR@@/team' config --get remote.origin.url || true)
   case "${origin%.git}" in
-    https://github.com/floor/team|git@github.com:floor/team|ssh://git@github.com/floor/team)
+    https://github.com/floor/teamcli|git@github.com:floor/teamcli|ssh://git@github.com/floor/teamcli)
       ;;
     "")
       echo 'Refusing to deploy: @@DIR@@/team has no origin.' >&2
       exit 1
       ;;
     *)
-      echo "Refusing to deploy: @@DIR@@/team origin is $origin, not floor/team." >&2
+      echo "Refusing to deploy: @@DIR@@/team origin is $origin, not floor/teamcli." >&2
       exit 1
       ;;
   esac

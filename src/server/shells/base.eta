@@ -42,7 +42,7 @@
     <nav class="header__nav" aria-label="Main navigation">
       <a href="/docs/" class="<%= it.section === 'Documentation' && !it.path.startsWith('/docs/commands/') ? 'active' : '' %>" <% if (it.section === 'Documentation' && !it.path.startsWith('/docs/commands/')) { %>aria-current="page"<% } %>>Documentation</a>
       <a href="/docs/commands/" class="<%= it.path.startsWith('/docs/commands/') ? 'active' : '' %>" <% if (it.path.startsWith('/docs/commands/')) { %>aria-current="page"<% } %>>Commands</a>
-      <a href="https://github.com/floor/team" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+      <a href="https://github.com/floor/teamcli" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
     </nav>
     <button type="button" class="header__search" id="search-trigger" aria-label="Search ⌘K" aria-haspopup="dialog" aria-keyshortcuts="Meta+K Control+K">
       <svg class="header__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -57,14 +57,14 @@
   <button id="overlay" class="overlay" type="button" aria-label="Close navigation" hidden></button>
   <div class="layout">
     <nav class="sidebar" id="sidebar" aria-label="Documentation navigation">
-      <div class="sidebar__group mobile-navigation"><a class="sidebar__link" href="/docs/">Documentation</a><a class="sidebar__link" href="/docs/commands/">Commands</a><a class="sidebar__link" href="https://github.com/floor/team">GitHub ↗</a></div>
+      <div class="sidebar__group mobile-navigation"><a class="sidebar__link" href="/docs/">Documentation</a><a class="sidebar__link" href="/docs/commands/">Commands</a><a class="sidebar__link" href="https://github.com/floor/teamcli">GitHub ↗</a></div>
       <% it.nav.forEach(group => { %><div class="sidebar__group"><div class="sidebar__label"><%= group.label %></div><% group.items.forEach(item => { %>
         <a class="sidebar__link <%= it.path === item.href ? 'sidebar__link--active' : '' %>" href="<%= item.href %>" <% if (it.path === item.href) { %>aria-current="page"<% } %>><%= item.name %></a>
       <% }); %></div><% }); %>
-      <div class="sidebar__foot">team <%= it.version %> · <a href="https://github.com/floor/team/blob/main/LICENSE">MIT license</a><br>Runs teams in <a href="https://herdr.dev">herdr</a></div>
+      <div class="sidebar__foot">team <%= it.version %> · <a href="https://github.com/floor/teamcli/blob/main/LICENSE">MIT license</a><br>Runs teams in <a href="https://herdr.dev">herdr</a></div>
     </nav>
     <main class="content" id="content" tabindex="-1"><%~ it.content %></main>
   </div>
-  <footer class="site-footer"><span>team · Built by <a href="https://floor.io">Floor IO</a></span><span class="site-footer__links"><a href="https://github.com/floor/team">Source on GitHub ↗</a><a href="https://www.npmjs.com/package/team">npm ↗</a><a href="/privacy/">Privacy</a></span></footer>
+  <footer class="site-footer"><span>team · Built by <a href="https://floor.io">Floor IO</a></span><span class="site-footer__links"><a href="https://github.com/floor/teamcli">Source on GitHub ↗</a><a href="https://www.npmjs.com/package/team">npm ↗</a><a href="/privacy/">Privacy</a></span></footer>
   <%~ include('search') %>
 </body></html>
