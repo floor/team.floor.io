@@ -5,7 +5,7 @@
 // row, a fenced block — and reference.ts throws when the reference no longer has one. So
 // a ref that moved fails loudly here, in `bun test` and in docs:check, instead of quietly
 // shipping a page that says something the package no longer does.
-import { bullet, commandNames, commandPage, commandTable, fenceWith, paragraph, section, sentence, README, ReferenceError } from './reference';
+import { bullet, commandNames, commandPage, commandTable, fenceByInfo, fenceWith, fromBlock, paragraph, section, sentence, README, ReferenceError } from './reference';
 import { escapeHtml, fenceHtml, renderMarkdown, slug, type Fence, type Rendered } from './markdown';
 import { contentReady, packageVersion, read, refInfo } from './team';
 
@@ -288,6 +288,176 @@ export function commandPageContent(name: string): Rendered {
   return renderMarkdown(commandPage(name), { skip: fence => fence.lang === 'fixture' });
 }
 
+// ------------------------------------------- the `up` reference, in pages
+
+/**
+ * `up` is the reference's longest page, and the one a reader acts on first. Its page
+ * holds what fits a screen — the purpose, the synopsis, the flags, three examples, the
+ * short behaviour — and the rest is split, whole and unretyped, into reference pages one
+ * topic each. Together the six pages hold every fence of the reference page exactly once
+ * (docs:check holds them to it), and each states its rule once, linked where it shows.
+ */
+
+/** The reference pages of `team up`, as cards: one line each, in the site's own words. */
+const UP_REFERENCE: { path: string; name: string; summary: string }[] = [
+  { path: '/docs/commands/up/launch/', name: 'The launch', summary: 'The stopped session, the lobby gate, and the folder each seat starts in.' },
+  { path: '/docs/commands/up/records/', name: 'The records', summary: 'Every line a run prints — ready, left out — and what each line means.' },
+  { path: '/docs/commands/up/waiting/', name: 'Waiting for the owner', summary: 'The pause at a dialog: the owner\'s o, s and q keys, and the waiting record.' },
+  { path: '/docs/commands/up/limits/', name: 'Known limits', summary: 'The windows a same-user process still has: the waiting proof, the read-back, the folder chain.' },
+  { path: '/docs/commands/up/refusals/', name: 'Refusals', summary: 'Every refusal before the first step: the owner and delegate gates, the approval, the lobby, the load.' },
+];
+
+/** The sources a `team up` page is read from — the reference page, and this assembly. */
+const UP_FILES = ['content/team/docs/commands/up.md', 'src/server/pages.ts'];
+
+/** A `team up` reference page's first line: where it belongs. */
+function upPart(html: string): string {
+  return `Part of <a href="/docs/commands/up/"><code>team up</code></a> — ${html}`;
+}
+
+/** /docs/commands/up/ — the command itself: purpose, synopsis, flags, the examples, and the short behaviour. */
+export function upPage(): Rendered {
+  const up = commandPage('up');
+  const examples = section(up, 'Examples');
+  return new Doc()
+    .h1('team up')
+    .md(sentence(up, 'Starts the team:'))
+    .md(section(up, 'Synopsis'))
+    .heading('Flags')
+    .md(section(up, 'Flags'))
+    .heading('Examples')
+    .note('The team file the examples read:')
+    .block(fenceWith(up, 'yaml', 'project: beacon'))
+    .md(paragraph(examples, 'Two seats are up and the third is stopped'))
+    .block(fenceWith(up, 'console', 'team up --dry-run'))
+    .md(paragraph(examples, 'The same command for real runs exactly that'))
+    .block(fenceWith(up, 'console', 'watch: started'))
+    .heading('Who may run it')
+    .md(paragraph(section(up, 'Who may run it'), 'The owner, from a terminal outside herdr'))
+    .note('The refusal ids a dry run returns, and the delegate gate, are on <a href="/docs/commands/up/refusals/">the refusals page</a>; the pause a dialog meets, on <a href="/docs/commands/up/waiting/">the waiting page</a>.')
+    .heading('What it reads and writes')
+    .md(section(up, 'What it reads and writes'))
+    .note('The run-lock refusal that paragraph names is on <a href="/docs/commands/up/refusals/">the refusals page</a>.')
+    .heading('What it prints')
+    .md(paragraph(section(up, 'What it prints'), 'One record per seat'))
+    .md(paragraph(section(up, 'What it prints'), 'A seat that reaches its idle prompt'))
+    .note('Every line a run can print, and what each means, is on <a href="/docs/commands/up/records/">the records page</a>.')
+    .heading('Exit codes')
+    .md(section(up, 'Exit codes'))
+    .heading('Known issues')
+    .md(section(up, 'Known issues'))
+    .heading('The reference pages')
+    .raw(`<div class="doc-grid">${UP_REFERENCE.map(card => `<a class="doc-entry" href="${card.path}"><span class="doc-entry__name">${escapeHtml(card.name)}</span><span class="doc-entry__summary">${escapeHtml(card.summary)}</span></a>`).join('')}</div>\n`)
+    .render();
+}
+
+/** /docs/commands/up/launch/ — what a run does before it creates anything, and where each seat starts. */
+export function upLaunch(): Rendered {
+  const up = commandPage('up');
+  return new Doc()
+    .h1('The launch')
+    .note(upPart('what a run does before it creates anything, and where each seat starts.'))
+    .heading('A stopped session')
+    .md(paragraph(up, 'A session stopped in herdr that this team'))
+    .heading('The lobby gate')
+    .md(paragraph(up, 'Every seat, shared and worktree-mode alike'))
+    .heading('Where a seat starts')
+    .md(paragraph(up, 'A seat goes to its real folder'))
+    .heading('The stopped session, started')
+    .md(paragraph(section(up, 'Examples'), 'A session stopped in herdr that this team'))
+    .block(fenceByInfo(up, 'herdr=stopped'))
+    .note('The earlier examples that paragraph names are on <a href="/docs/commands/up/">the team up page</a>.')
+    .render();
+}
+
+/** /docs/commands/up/records/ — every line a run prints, and what each line means. */
+export function upRecords(): Rendered {
+  const up = commandPage('up');
+  const prints = section(up, 'What it prints');
+  return new Doc()
+    .h1('The records')
+    .note(upPart('every line a run prints, and what each line means.'))
+    .heading('A seat already ready')
+    .md(fromBlock(prints, 'A seat already ready is left as it is', 'A command run in a folder'))
+    .heading('The file it reads, and the watch')
+    .md(fromBlock(prints, 'A command run in a folder', 'A seat is its pane only while'))
+    .heading('A stale pane')
+    .md(fromBlock(prints, 'A seat is its pane only while', 'The reading that decides'))
+    .heading('The close, and its proof')
+    .md(fromBlock(prints, 'The reading that decides the repair', 'This comparison is wrong'))
+    .heading('Wrong in the safe direction')
+    .md(fromBlock(prints, 'This comparison is wrong', 'When the workspace does not close'))
+    .heading('A workspace that does not close')
+    .md(fromBlock(prints, 'When the workspace does not close', 'When the idle screen names no model'))
+    .heading('A screen that names no model')
+    .md(fromBlock(prints, 'When the idle screen names no model', 'A seat whose rules travel'))
+    .heading('Rules as a first message')
+    .md(fromBlock(prints, 'A seat whose rules travel as a first message', 'Waiting for the owner'))
+    .heading('A seat that does not get there')
+    .md(fromBlock(prints, "A seat that doesn't get there", 'The records are what stdout gets'))
+    .note('The pause that paragraph\'s <em>above</em> names is on <a href="/docs/commands/up/waiting/">the waiting page</a>.')
+    .heading('Every line, and its meaning')
+    .note('Rows that name <em>the pause, above</em> mean the one on <a href="/docs/commands/up/waiting/">the waiting page</a>.')
+    .md(fromBlock(prints, 'The records are what stdout gets', 'A `version: "0"`'))
+    .heading('The version placeholder')
+    .md(fromBlock(prints, 'A `version: "0"`', '`<account>` in these lines'))
+    .heading('The account in a line')
+    .md(fromBlock(prints, '`<account>` in these lines', 'A launch line the check'))
+    .heading('Notes on a launch line')
+    .md(fromBlock(prints, 'A launch line the check', 'The plan a `--dry-run` prints'))
+    .heading('The dry-run plan')
+    .md(fromBlock(prints, 'The plan a `--dry-run` prints'))
+    .render();
+}
+
+/** /docs/commands/up/waiting/ — the pause a seat at a dialog meets, and the owner's answer to it. */
+export function upWaiting(): Rendered {
+  const up = commandPage('up');
+  return new Doc()
+    .h1('Waiting for the owner')
+    .note(upPart('the pause a seat at a dialog meets, and the owner\'s answer to it.'))
+    .md(paragraph(up, 'The lobby is a folder no CLI has seen before'))
+    .md(section(section(up, 'What it prints'), 'Waiting for the owner', 3))
+    .render();
+}
+
+/** /docs/commands/up/limits/ — the windows a process of the same user still has. */
+export function upLimits(): Rendered {
+  const up = commandPage('up');
+  return new Doc()
+    .h1('Known limits')
+    .note(upPart('the windows a process of the same user still has. The checks the bullets name are on <a href="/docs/commands/up/waiting/">the waiting page</a> and <a href="/docs/commands/up/records/">the records page</a>.'))
+    .md(fromBlock(section(up, 'What it prints'), '- The waiting proof is placement'))
+    .render();
+}
+
+/** /docs/commands/up/refusals/ — what stops a run before its first step, and who may start one. */
+export function upRefusals(): Rendered {
+  const up = commandPage('up');
+  const who = section(up, 'Who may run it');
+  const examples = section(up, 'Examples');
+  return new Doc()
+    .h1('Refusals')
+    .note(upPart('what stops a run before its first step, and who may start one.'))
+    .heading('What a dry run returns')
+    .md(fromBlock(who, '- `up.no-launch`', 'A pane of another session'))
+    .heading('The delegate gate')
+    .md(fromBlock(who, 'A pane of another session'))
+    .note('The ordinary rule that paragraph names — only the owner, from a terminal outside herdr — is on <a href="/docs/commands/up/">the team up page</a>.')
+    .heading('A seat is not the owner')
+    .md(paragraph(examples, 'A seat is not the owner'))
+    .block(fenceWith(up, 'console', 'this call is claude-beacon'))
+    .heading('Every refusal')
+    .md(section(up, 'Refusals'))
+    .heading('An approval that drifted')
+    .md(paragraph(examples, 'An owner section changed in the file'))
+    .block(fenceWith(up, 'yaml', 'limits:'))
+    .block(fenceWith(up, 'console', '! up would refuse'))
+    .md(paragraph(examples, 'The real run goes no further than the refusal'))
+    .block(fenceWith(up, 'console', 'team up: the file is not the approved one'))
+    .render();
+}
+
 // ---------------------------------------------------------------- safety and CLIs
 
 /**
@@ -402,8 +572,18 @@ export function pages(): PageMeta[] {
     page('/docs/safety/', 'Safety — team', '0.7', safety(), ['src/server/shells/safety.eta']),
     page('/docs/clis/', 'Supported CLIs — team', '0.7', clis(), ['src/server/shells/clis.eta']),
   ];
-  const commands = commandNames().map(name =>
-    page(`/docs/commands/${name}/`, `team ${name} — team`, '0.8', commandPageContent(name), [`content/team/docs/commands/${name}.md`]));
+  // `up` comes first in the table's order and carries its reference pages beside it;
+  // every other command is the one page the reference gives.
+  const commands = commandNames().flatMap(name => name === 'up'
+    ? [
+        page('/docs/commands/up/', 'team up — team', '0.8', upPage(), UP_FILES),
+        page('/docs/commands/up/launch/', 'team up: the launch — team', '0.5', upLaunch(), UP_FILES),
+        page('/docs/commands/up/records/', 'team up: the records — team', '0.5', upRecords(), UP_FILES),
+        page('/docs/commands/up/waiting/', 'team up: waiting for the owner — team', '0.5', upWaiting(), UP_FILES),
+        page('/docs/commands/up/limits/', 'team up: known limits — team', '0.5', upLimits(), UP_FILES),
+        page('/docs/commands/up/refusals/', 'team up: refusals — team', '0.5', upRefusals(), UP_FILES),
+      ]
+    : [page(`/docs/commands/${name}/`, `team ${name} — team`, '0.8', commandPageContent(name), [`content/team/docs/commands/${name}.md`])]);
   return [...group, ...commands];
 }
 
@@ -421,6 +601,11 @@ const DESCRIPTIONS: Record<string, string> = {
   doctor: 'What this machine still needs: the approval, herdr, each CLI, its version and login, each launch’s model, and the watch.',
   status: 'The team as it stands: one line per seat, and every difference between the file, the state and the live session, with its repair.',
   up: 'Starts the session, a workspace and each seat the file has not stopped, plus the watch; a stopped seat waits for team add. --dry-run prints the plan.',
+  'up/launch': 'What team up does before it creates anything: the stopped session it clears, the lobby gate it verifies, and the folder each seat starts in.',
+  'up/records': 'Every line a team up run prints — ready and left out — the close proofs, the rules delivery, and the table that says what each line means.',
+  'up/waiting': 'The pause when a seat stops at a dialog: the owner\'s o, s and q keys, the proof of a waiting record, and runs without a terminal.',
+  'up/limits': 'The windows a process of the same user still has in a team up launch: the waiting proof, the read-back and Enter, the rules folder chain.',
+  'up/refusals': 'What stops a team up run before its first step: the owner and delegate gates, the approval, the lobby, the load — with the refused runs shown.',
   down: 'Stops the team: asks every free seat to exit, closes its workspace, stops the watch, and stops the session.',
   watch: 'Watches a running team: reports idle seats and nudges the operator, in one fixed line, into an empty idle prompt only.',
   add: 'Starts one declared seat, or a temporary one beside the team with --temporary --like <seat> --until <result:path|merged:branch>.',

@@ -37,6 +37,27 @@ export function paragraph(markdown: string, startsWith: string): string {
   return need(block, `a paragraph starting "${startsWith}"`);
 }
 
+/**
+ * A run of the reference, whole: from the block that starts with this text to the block
+ * that starts with `until` — a heading by its title, any block by its first words — or
+ * to the end. How a long section is shown in parts without restating a word: each part
+ * is the reference's own run of blocks, so a page built from parts claims nothing the
+ * section does not say.
+ */
+export function fromBlock(markdown: string, startsWith: string, until?: string): string {
+  const blocks = markdown.split(/\r?\n\s*\r?\n/);
+  const plain = (block: string) => block.trim().replace(/^#{1,6} /, '');
+  const at = blocks.findIndex(block => plain(block).startsWith(startsWith));
+  need(at < 0 ? undefined : at, `a block starting "${startsWith}"`);
+  let end = blocks.length;
+  if (until !== undefined) {
+    const stop = blocks.findIndex((block, index) => index > at && plain(block).startsWith(until));
+    need(stop < 0 ? undefined : stop, `a block starting "${until}" after "${startsWith}"`);
+    end = stop;
+  }
+  return blocks.slice(at, end).join('\n\n').trim();
+}
+
 /** One list item, with the lines that continue it. */
 export function bullet(markdown: string, startsWith: string): string {
   const lines = markdown.split('\n');
@@ -113,4 +134,10 @@ export function commandPage(name: string): string {
 /** The first fence of a page whose text holds this, by language. */
 export function fenceWith(page: string, lang: string, contains: string): Fence {
   return need(fences(page).find(fence => fence.lang === lang && fence.text.includes(contains)), `a ${lang} block holding "${contains}"`);
+}
+
+/** A fence of a page by an attribute of its header: `console herdr=stopped` is the
+ *  transcript the reference itself says ran against a stopped herdr. */
+export function fenceByInfo(page: string, info: string): Fence {
+  return need(fences(page).find(fence => fence.info === info), `a fence headed "${info}"`);
 }
