@@ -606,6 +606,66 @@ describe('the team approve reference, in pages', () => {
   });
 });
 
+describe('the team add reference, in pages', () => {
+  const byPath = new Map(pages().map(page => [page.path, page]));
+  const add = byPath.get('/docs/commands/add/')!;
+  const words = (html: string) => html.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
+  const refPaths = ['/docs/commands/add/who/', '/docs/commands/add/output/', '/docs/commands/add/refusals/', '/docs/commands/add/stopped-and-temporary/'];
+
+  test('one hub page and four reference pages, each linked from the hub and linking back', () => {
+    expect([...byPath.keys()].filter(path => path.startsWith('/docs/commands/add/'))).toEqual([
+      '/docs/commands/add/', ...refPaths,
+    ]);
+    for (const path of refPaths) {
+      expect(add.html).toContain(`href="${path}"`);
+      expect(byPath.get(path)!.html).toContain('href="/docs/commands/add/"');
+    }
+  });
+
+  test('the hub holds the purpose, the flags, the basic add and the short behaviour', () => {
+    expect(add.toc.map(item => item.title)).toEqual(['Flags', 'Examples', 'What it reads and writes', 'Who may run it', 'Exit codes', 'The reference pages']);
+    // The basic add: the team file and a missing seat started.
+    expect((add.html.match(/<pre class="(?:example__code|term)"/g) ?? []).length).toBe(2);
+    expect(add.html).toContain('claude-keeper: ready');
+    // The deep material is not on the hub: it is on the reference pages.
+    expect(add.html).not.toContain('A file with a');
+    expect(add.html).not.toContain('is already running');
+    expect(add.html).not.toContain('claude-beacon-tmp-1');
+    expect(add.html).not.toContain('this call is claude-beacon');
+    // The hub is a fraction of the whole set, not the whole on one page.
+    const set = [...byPath.values()].filter(page => page.path.startsWith('/docs/commands/add/')).map(page => words(page.html)).reduce((a, b) => a + b, 0);
+    expect(words(add.html) * 2).toBeLessThan(set);
+  });
+
+  test('the deep material is on the reference pages, in the reference\'s own words', () => {
+    expect(byPath.get('/docs/commands/add/who/')!.html).toContain('A file with a');
+    expect(byPath.get('/docs/commands/add/who/')!.html).toContain('this call is claude-beacon');
+    expect(byPath.get('/docs/commands/add/output/')!.html).toContain('left out: vendor notice');
+    expect(byPath.get('/docs/commands/add/refusals/')!.html).toContain('is already running');
+    expect(byPath.get('/docs/commands/add/refusals/')!.html).toContain('has no seat &quot;scratch&quot;');
+    expect(byPath.get('/docs/commands/add/stopped-and-temporary/')!.html).toContain('claude-beacon-tmp-1');
+    expect(byPath.get('/docs/commands/add/stopped-and-temporary/')!.html).toContain('stopped claude-beacon');
+    // The refusals page does not carry the temporary-seat example; that is the stopped-and-temporary page.
+    expect(byPath.get('/docs/commands/add/refusals/')!.html).not.toContain('claude-beacon-tmp-1');
+  });
+
+  test('the reference pages answer, each with its own title and description', async () => {
+    const expected: [string, string, string][] = [
+      ['/docs/commands/add/who/', 'team add: who may run it — team', 'Who may run team add'],
+      ['/docs/commands/add/output/', 'team add: what it prints — team', 'What team add prints'],
+      ['/docs/commands/add/refusals/', 'team add: refusals — team', 'Every message that refuses team add'],
+      ['/docs/commands/add/stopped-and-temporary/', 'team add: a stopped seat and a temporary seat — team', 'team add clearing a seat left stopped'],
+    ];
+    for (const [path, title, description] of expected) {
+      const response = await handleRequest(new Request(`https://teamcli.io${path}`));
+      expect(response.status).toBe(200);
+      const body = await response.text();
+      expect(body).toContain(`<title>${title}</title>`);
+      expect(body).toContain(description);
+    }
+  });
+});
+
 describe('the team remove reference, in pages', () => {
   const byPath = new Map(pages().map(page => [page.path, page]));
   const remove = byPath.get('/docs/commands/remove/')!;
