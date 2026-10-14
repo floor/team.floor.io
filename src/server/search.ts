@@ -33,10 +33,24 @@ export function searchDocuments(): SearchDocument[] {
 
 export const documents = searchDocuments();
 
+/**
+ * A deep reference sub-page — `/docs/commands/<name>/<topic>/` — as opposed to a command
+ * hub or a top-level doc page. A long command page is split into a hub plus these, and each
+ * holds one slice of the command's detail: short, and dense in the one term it is about. Left
+ * to raw relevance those short dense pages outrank the page a reader actually starts from —
+ * `/docs/file/` fell out of the results for "seat" as the split sweep added them. So a hub or
+ * a top-level page outranks a deep sub-page for any term; a sub-page still wins where it is the
+ * match (its own title, e.g. "refusals" for a search of that word).
+ */
+const isReferenceSubPage = (id: string): boolean => /^\/docs\/commands\/[^/]+\/[^/]+\/$/.test(id);
+
 export const search = new MiniSearch<SearchDocument>({
   fields: ['title', 'headings', 'text'],
   storeFields: ['title', 'description', 'kind'],
-  searchOptions: { boost: { title: 4, headings: 2 }, prefix: true, fuzzy: 0.2, combineWith: 'AND' },
+  searchOptions: {
+    boost: { title: 4, headings: 2 }, prefix: true, fuzzy: 0.2, combineWith: 'AND',
+    boostDocument: (id: string) => (isReferenceSubPage(id) ? 1 : 2),
+  },
 });
 search.addAll(documents);
 
