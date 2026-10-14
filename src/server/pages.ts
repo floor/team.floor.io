@@ -1082,7 +1082,7 @@ export function pages(): PageMeta[] {
     page('/docs/clis/', 'Supported CLIs — team', '0.7', clis(), ['src/server/shells/clis.eta']),
   ];
   // `up` comes first in the table's order and carries its reference pages beside it;
-  // `status`, `usage`, `down` and `approve` are split the same way. Every other command is the one page the reference gives.
+  // every other command is the one page the reference gives.
   const commands = commandNames().flatMap(name => name === 'up'
     ? [
         page('/docs/commands/up/', 'team up — team', '0.8', upPage(), UP_FILES),
