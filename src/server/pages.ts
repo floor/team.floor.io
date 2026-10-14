@@ -459,6 +459,132 @@ export function upRefusals(): Rendered {
     .render();
 }
 
+// ------------------------------------------- the `down` reference, in pages
+
+/**
+ * `down` is a long command page: the stop, who may run it, the delegate gate, the
+ * lines it prints, the refusals, and a walkthrough of ten fenced examples. Its hub
+ * holds what fits a screen — the purpose, the synopsis, the flags, the basic
+ * walkthrough, what it reads and writes, who may run it, the exit codes — and the
+ * rest is split, whole and unretyped, into reference pages one topic each: the
+ * approved delegate, what it prints, a renamed seat and a broken file, and the
+ * refusals. Together the pages hold every fence of the reference page exactly once
+ * (docs:check holds them to it) — the dry-run plan is fenced twice in the
+ * reference, so it shows twice — each in the reference's order, and each rule once.
+ */
+
+/** The reference pages of `team down`, as cards: one line each, in the site's own words. */
+const DOWN_REFERENCE: { path: string; name: string; summary: string }[] = [
+  { path: '/docs/commands/down/delegate/', name: 'The approved delegate', summary: 'The pane the delegates section lists for down, the gate it passes, and the caller-role refusals shown.' },
+  { path: '/docs/commands/down/output/', name: 'What it prints', summary: 'Every line a stop prints, the skip lines for a seat left running, and the idle “nothing to stop”.' },
+  { path: '/docs/commands/down/edge-cases/', name: 'A renamed seat, and a broken file', summary: 'Two runs: a seat renamed after up, and a team file that no longer validates.' },
+  { path: '/docs/commands/down/refusals/', name: 'Refusals', summary: 'Every message that refuses team down, and the exit each one carries.' },
+];
+
+/** The sources a `team down` page is read from — the reference page, and this assembly. */
+const DOWN_FILES = ['content/team/docs/commands/down.md', 'src/server/pages.ts'];
+
+/** A `team down` reference page's first line: where it belongs. */
+function downPart(html: string): string {
+  return `Part of <a href="/docs/commands/down/"><code>team down</code></a> — ${html}`;
+}
+
+/** /docs/commands/down/ — the command itself: purpose, synopsis, flags, the basic walkthrough, and the short behaviour. */
+export function downPage(): Rendered {
+  const down = commandPage('down');
+  const examples = section(down, 'Examples');
+  return new Doc()
+    .h1('team down')
+    .md(paragraph(down, 'Stops the team:'))
+    .md(section(down, 'Synopsis'))
+    .heading('Flags')
+    .md(section(down, 'Flags'))
+    .heading('Examples')
+    .note('The team file the examples read:')
+    .block(fenceWith(down, 'yaml', 'claude-beacon'))
+    .md(paragraph(examples, 'Two seats idle, a watch running'))
+    .block(fenceWith(down, 'console', 'pane run w1:p1 /exit'))
+    .md(paragraph(examples, 'For the owner, running that plan stops everything'))
+    .block(fenceWith(down, 'console', 'claude-keeper: stopped'))
+    .note('The caller-role and the renamed-seat examples are on <a href="/docs/commands/down/delegate/">the delegate page</a> and <a href="/docs/commands/down/edge-cases/">the renamed-seat-and-broken-file page</a>.')
+    .heading('What it reads and writes')
+    .md(section(down, 'What it reads and writes'))
+    .note('A seat the file renamed, and a team file that no longer validates, are shown on <a href="/docs/commands/down/edge-cases/">the renamed-seat-and-broken-file page</a>.')
+    .heading('Who may run it')
+    .md(section(down, 'Who may run it'))
+    .note('The approved delegate this names — the “(below)” — and the caller-role refusals shown are on <a href="/docs/commands/down/delegate/">the delegate page</a>.')
+    .heading('What it prints')
+    .note('Every line a stop prints, the skip lines for a seat left running, and the idle “nothing to stop”, are on <a href="/docs/commands/down/output/">the what-it-prints page</a>.')
+    .heading('Exit codes')
+    .md(section(down, 'Exit codes'))
+    .note('The refusals these codes name are on <a href="/docs/commands/down/refusals/">the refusals page</a>.')
+    .heading('The reference pages')
+    .raw(`<div class="doc-grid">${DOWN_REFERENCE.map(card => `<a class="doc-entry" href="${card.path}"><span class="doc-entry__name">${escapeHtml(card.name)}</span><span class="doc-entry__summary">${escapeHtml(card.summary)}</span></a>`).join('')}</div>\n`)
+    .render();
+}
+
+/** /docs/commands/down/delegate/ — the approved delegate, and the caller-role refusals shown. */
+export function downDelegate(): Rendered {
+  const down = commandPage('down');
+  const examples = section(down, 'Examples');
+  return new Doc()
+    .h1('The approved delegate')
+    .note(downPart('the pane the delegates section lists for down, the gate it passes, and the caller-role refusals shown.'))
+    .md(section(down, 'The approved delegate'))
+    .note('The ordinary rule this gate defers to — who may run it, from where — is on <a href="/docs/commands/down/">the team down page</a>.')
+    .heading('The caller rules, shown')
+    .md(paragraph(examples, 'An implementer'))
+    .block(fenceByInfo(down, 'caller=claude-beacon'))
+    .md(paragraph(examples, 'The orchestrator'))
+    .block(fenceByInfo(down, 'caller=claude-keeper'))
+    .render();
+}
+
+/** /docs/commands/down/output/ — every line a stop prints, the skip lines, and the idle return. */
+export function downOutput(): Rendered {
+  const down = commandPage('down');
+  const examples = section(down, 'Examples');
+  return new Doc()
+    .h1('What it prints')
+    .note(downPart('every line a stop prints, the skip lines for a seat left running, and the idle “nothing to stop”.'))
+    .md(section(down, 'What it prints'))
+    .heading('Nothing to stop')
+    .md(paragraph(examples, 'Once the session is down there is nothing to stop'))
+    .block(fenceWith(down, 'console', 'nothing to stop'))
+    .render();
+}
+
+/** /docs/commands/down/edge-cases/ — a seat the file renamed, and a team file that no longer validates. */
+export function downEdgeCases(): Rendered {
+  const down = commandPage('down');
+  const examples = section(down, 'Examples');
+  return new Doc()
+    .h1('A renamed seat, and a broken file')
+    .note(downPart('two runs: a seat the file renamed after up, and a team file that no longer validates.'))
+    .heading('A renamed seat')
+    .md(paragraph(down, 'A seat the file renamed after'))
+    .md(paragraph(examples, 'The file renamed claude-beacon after'))
+    .block(fenceWith(down, 'yaml', 'claude-relay'))
+    .block(fenceWith(down, 'console', 'pane run w1:p1 /exit'))
+    .heading('A broken file')
+    .md(paragraph(examples, 'Even with the team file broken'))
+    .block(fenceWith(down, 'yaml', 'seats: ['))
+    .block(fenceWith(down, 'console', 'team.yaml is invalid'))
+    .note('The rule that a broken file is replaced by the last copy that validated is on <a href="/docs/commands/down/">the team down page</a>.')
+    .render();
+}
+
+/** /docs/commands/down/refusals/ — every message that refuses team down, and its exit. */
+export function downRefusals(): Rendered {
+  const down = commandPage('down');
+  return new Doc()
+    .h1('Refusals')
+    .note(downPart('every message that refuses it, and the exit each one carries.'))
+    .md(section(down, 'Refusals'))
+    .note('The exit codes these refusals carry are on <a href="/docs/commands/down/">the team down page</a>.')
+    .render();
+}
+
 // ---------------------------------------------------------------- safety and CLIs
 
 /**
@@ -584,6 +710,14 @@ export function pages(): PageMeta[] {
         page('/docs/commands/up/limits/', 'team up: known limits — team', '0.5', upLimits(), UP_FILES),
         page('/docs/commands/up/refusals/', 'team up: refusals — team', '0.5', upRefusals(), UP_FILES),
       ]
+    : name === 'down'
+    ? [
+        page('/docs/commands/down/', 'team down — team', '0.8', downPage(), DOWN_FILES),
+        page('/docs/commands/down/delegate/', 'team down: the approved delegate — team', '0.5', downDelegate(), DOWN_FILES),
+        page('/docs/commands/down/output/', 'team down: what it prints — team', '0.5', downOutput(), DOWN_FILES),
+        page('/docs/commands/down/edge-cases/', 'team down: a renamed seat and a broken file — team', '0.5', downEdgeCases(), DOWN_FILES),
+        page('/docs/commands/down/refusals/', 'team down: refusals — team', '0.5', downRefusals(), DOWN_FILES),
+      ]
     : [page(`/docs/commands/${name}/`, `team ${name} — team`, '0.8', commandPageContent(name), [`content/team/docs/commands/${name}.md`])]);
   return [...group, ...commands];
 }
@@ -608,6 +742,10 @@ const DESCRIPTIONS: Record<string, string> = {
   'up/limits': 'The windows a process of the same user still has in a team up launch: the waiting proof, the read-back and Enter, the rules folder chain.',
   'up/refusals': 'What stops a team up run before its first step: the owner and delegate gates, the approval, the lobby, the load — with the refused runs shown.',
   down: 'Stops the team: asks every free seat to exit, closes its workspace, stops the watch, and stops the session.',
+  'down/delegate': 'The approved delegate for team down: the pane the delegates section lists, the gate it passes only where the ordinary rule refused, and the role refusals.',
+  'down/output': 'What team down prints: a line per seat, watch and session stopped, the skip lines for a seat left running, and the idle “nothing to stop”.',
+  'down/edge-cases': 'Two team down runs: a seat the file renamed after up, stopped under its launched name, and a team file that no longer validates, using the last good copy.',
+  'down/refusals': 'Every message that refuses team down and its exit — the caller-role gates, the owner-only flags, placement, the delegate gate, and the shared lock.',
   watch: 'Watches a running team: reports idle seats and nudges the operator, in one fixed line, into an empty idle prompt only.',
   add: 'Starts one declared seat, or a temporary one beside the team with --temporary --like <seat> --until <result:path|merged:branch>.',
   remove: 'Stops one seat and takes it out of the file; --keep leaves it stopped; --abandon is the owner’s, and types nothing.',
