@@ -331,7 +331,7 @@ try {
   const PROSE: { id: string; what: string; path: string; selector?: string; container?: string; box?: string; boxClass?: string }[] = [
     { id: 'paragraph', what: 'a paragraph of the reference', path: '/docs/', selector: '.md p a' },
     { id: 'privacy', what: 'the privacy article', path: '/privacy/', selector: '.md p a' },
-    { id: 'cell', what: 'a table cell', path: '/docs/commands/up/', selector: '.md td a' },
+    { id: 'cell', what: 'a table cell', path: '/docs/commands/up/refusals/', selector: '.md td a' },
     { id: 'foot', what: 'the samples foot', path: '/', selector: '.samples__foot a' },
     { id: 'list', what: 'a list-item probe', path: '/docs/safety/', container: '.md ul li' },
     { id: 'quote', what: 'a blockquote probe', path: '/docs/safety/', container: '.md', box: 'blockquote' },

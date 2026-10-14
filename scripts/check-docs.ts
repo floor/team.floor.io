@@ -5,8 +5,10 @@
 //   2. Every YAML block the site shows is a file `team`'s own validator accepts — the
 //      validator built from the same ref (content/team/src/file/validate.ts), not npm.
 //   3. Every block on a page is a fenced block of the reference, text for text: a
-//      command page shows exactly the console and YAML fences of its own page, and a
-//      page built from pieces only ever shows a whole fence.
+//      command page shows exactly the console and YAML fences of its own page — across
+//      the reference pages under it too, when a long page is split, each fence exactly
+//      once and each page in the reference's order — and a page built from pieces only
+//      ever shows a whole fence.
 //   4. No private material anywhere in the site's own sources: no user paths, no
 //      internal ids, no mention of the private docs.
 //   5. Every page has a description of one line, at most 160 characters.
@@ -94,11 +96,24 @@ function partOfFence(block: string): boolean {
 }
 
 for (const name of commandNames()) {
-  const page = pages().find(entry => entry.path === `/docs/commands/${name}/`)!;
-  // A command page is its own reference page: what it shows is what that page fences.
+  // A command page is its own reference page; a long one split into reference pages
+  // still is, as a set. What the pages show together is exactly what that reference
+  // page fences: each fence once across the set, each page in the reference's order.
   const expected = (sources.get(`docs/commands/${name}.md`) ?? []).filter(fence => fence.lang !== 'fixture').map(fence => normalise(fence.text));
-  const shown = blocks(page.html);
-  check(shown.join('\u0000') === expected.join('\u0000'), `/docs/commands/${name}/: the page and the reference page's fences differ (${shown.length} shown, ${expected.length} fenced)`);
+  const set = pages().filter(entry => entry.path === `/docs/commands/${name}/` || entry.path.startsWith(`/docs/commands/${name}/`));
+  const shown = set.map(entry => ({ path: entry.path, blocks: blocks(entry.html) }));
+  for (const { path, blocks: pageBlocks } of shown) {
+    let cursor = 0;
+    for (const block of pageBlocks) {
+      const at = expected.indexOf(block, cursor);
+      check(at >= 0, `${path}: a block is not a fence of docs/commands/${name}.md, or is out of the reference's order: ${JSON.stringify(block.slice(0, 60))}…`);
+      if (at >= 0) cursor = at + 1;
+    }
+  }
+  const all = shown.flatMap(entry => entry.blocks);
+  const count = (list: string[], value: string) => list.filter(item => item === value).length;
+  check(all.length === expected.length, `/docs/commands/${name}/: ${all.length} blocks shown across ${set.length} pages, ${expected.length} fenced`);
+  for (const fence of new Set(expected)) check(count(all, fence) === count(expected, fence), `/docs/commands/${name}/: a fence is shown ${count(all, fence)} times across its pages, and the reference holds ${count(expected, fence)}`);
 }
 // /docs/file/ shows the example file section by section: every block is whole lines
 // of a fence, so a section can be short but never invented.

@@ -30,9 +30,12 @@ describe('the page list', () => {
     expect(paths).toContain('/docs/clis/');
   });
 
-  test('the navigation leads to every page, and the reading order is its order', () => {
-    const linked = new Set(nav.flatMap(group => group.items.map(item => item.href)));
-    for (const page of pages()) expect(linked.has(page.path)).toBe(true);
+  test('every page is reached — the navigation, or a link from a page — and the reading order is the navigation\'s own', () => {
+    const inNav = new Set(nav.flatMap(group => group.items.map(item => item.href)));
+    for (const page of pages()) {
+      const reached = inNav.has(page.path) || pages().some(other => other !== page && other.html.includes(`href="${page.path}"`));
+      expect(reached, page.path).toBe(true);
+    }
     expect(readingOrder).toEqual(nav.flatMap(group => group.items));
   });
 
@@ -165,6 +168,68 @@ describe('the safety page, from the reference', () => {
     expect(row('up')).toBe('the owner');
     expect(row('down')).toContain('the coordinator');
     expect(row('up')).not.toBe(row('down'));
+  });
+});
+
+describe('the team up reference, in pages', () => {
+  const byPath = new Map(pages().map(page => [page.path, page]));
+  const up = byPath.get('/docs/commands/up/')!;
+  const words = (html: string) => html.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
+
+  test('one hub page and five reference pages, each linked from the hub and linking back', () => {
+    expect([...byPath.keys()].filter(path => path.startsWith('/docs/commands/up/'))).toEqual([
+      '/docs/commands/up/', '/docs/commands/up/launch/', '/docs/commands/up/records/', '/docs/commands/up/waiting/', '/docs/commands/up/limits/', '/docs/commands/up/refusals/',
+    ]);
+    for (const path of ['/docs/commands/up/launch/', '/docs/commands/up/records/', '/docs/commands/up/waiting/', '/docs/commands/up/limits/', '/docs/commands/up/refusals/']) {
+      expect(up.html).toContain(`href="${path}"`);
+      expect(byPath.get(path)!.html).toContain('href="/docs/commands/up/"');
+    }
+  });
+
+  test('the hub holds the purpose, the flags, three examples and the short behaviour', () => {
+    expect(up.toc.map(item => item.title)).toEqual(['Flags', 'Examples', 'Who may run it', 'What it reads and writes', 'What it prints', 'Exit codes', 'Known issues', 'The reference pages']);
+    expect((up.html.match(/<pre /g) ?? []).length).toBe(4);
+    // The opening is the whole first paragraph: the stopped-seat rule is hub material.
+    expect(up.html).toContain('left out until');
+    // The record sample the first "What it prints" sentence introduces rides with it.
+    expect(up.html).toContain('claude-keeper: ready\nclaude-beacon: ready');
+    // The deep material is not on the hub: it is on the reference pages.
+    expect(up.html).not.toContain('The records are what stdout gets');
+    expect(up.html).not.toContain('[o] open pane');
+    // The hub is a fraction of the whole set, not the whole on one page.
+    const set = [...byPath.values()].filter(page => page.path.startsWith('/docs/commands/up/')).map(page => words(page.html)).reduce((a, b) => a + b, 0);
+    expect(words(up.html) * 3).toBeLessThan(set);
+  });
+
+  test('the deep material is on the reference pages, in the reference\'s own words', () => {
+    expect(byPath.get('/docs/commands/up/launch/')!.html).toContain('under the run lock');
+    expect(byPath.get('/docs/commands/up/records/')!.html).toContain('The records are what stdout gets');
+    expect(byPath.get('/docs/commands/up/waiting/')!.html).toContain('[o] open pane, [s] skip seat, [q] stop cleanly');
+    expect(byPath.get('/docs/commands/up/limits/')!.html).toContain('The waiting proof is placement');
+    expect(byPath.get('/docs/commands/up/refusals/')!.html).toContain('only the owner runs');
+    // The limits page is its five bullets alone: the records tail that follows them in the
+    // reference belongs to the records page, once.
+    const limits = byPath.get('/docs/commands/up/limits/')!.html;
+    expect(limits).not.toContain('The records are what stdout gets');
+    expect(limits).not.toContain('left out: timeout (no terminal for owner)');
+    expect(limits).not.toContain('[o] open pane');
+  });
+
+  test('the reference pages answer, each with its own title and description', async () => {
+    const expected: [string, string, string][] = [
+      ['/docs/commands/up/launch/', 'team up: the launch — team', 'What team up does before it creates anything'],
+      ['/docs/commands/up/records/', 'team up: the records — team', 'Every line a team up run prints'],
+      ['/docs/commands/up/waiting/', 'team up: waiting for the owner — team', 'The pause when a seat stops at a dialog'],
+      ['/docs/commands/up/limits/', 'team up: known limits — team', 'The windows a process of the same user still has'],
+      ['/docs/commands/up/refusals/', 'team up: refusals — team', 'What stops a team up run before its first step'],
+    ];
+    for (const [path, title, description] of expected) {
+      const response = await handleRequest(new Request(`https://teamcli.io${path}`));
+      expect(response.status).toBe(200);
+      const body = await response.text();
+      expect(body).toContain(`<title>${title}</title>`);
+      expect(body).toContain(description);
+    }
   });
 });
 

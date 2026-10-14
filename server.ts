@@ -44,7 +44,9 @@ function pager(path: string): string {
 /** One page, in the site's frame: the head, the navigation, the footer, the search dialog. */
 function shell(body: { path: string; title: string; description: string; content: string; css: StylesheetBundle; section?: string; isHome?: boolean; jsonLd?: string[] }): string {
   const commands = commandNames();
-  const command = /^\/docs\/commands\/([a-z]+)\/$/.exec(body.path)?.[1];
+  // A command page may hold reference pages under it (`/docs/commands/up/records/`):
+  // the header still names the command itself.
+  const command = /^\/docs\/commands\/([a-z]+)(?:\/[a-z-]+)?\/$/.exec(body.path)?.[1];
   // The registry remains the source of every command; the first three are the path a
   // person takes from a new file to a running team.
   const rollingCommands = ['init', 'approve', 'up'].filter(name => commands.includes(name)).concat(commands.filter(name => !['init', 'approve', 'up'].includes(name)));
