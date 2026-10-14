@@ -459,6 +459,179 @@ export function upRefusals(): Rendered {
     .render();
 }
 
+// ------------------------------------------- the `doctor` reference, in pages
+
+/**
+ * `doctor` is the reference's longest command page, and the one that reads the whole
+ * machine. Its hub holds what fits a screen — the purpose, the synopsis, the flags, the
+ * base example, who may run it, what it reads and writes, the short lead of what it
+ * prints, the refusals and the exit codes — and the rest is split, whole and unretyped,
+ * into reference pages one topic each. Together the six pages hold every fence of the
+ * reference page exactly once (docs:check holds them to it), and each states its rule
+ * once, linked where it shows.
+ */
+
+/** The reference pages of `team doctor`, as cards: one line each, in the site's own words. */
+const DOCTOR_REFERENCE: { path: string; name: string; summary: string }[] = [
+  { path: '/docs/commands/doctor/report/', name: 'The report', summary: 'Every finding a run prints, in order — the file warnings, the approval, the seats, the watch — with the trust block and the key fingerprint.' },
+  { path: '/docs/commands/doctor/models/', name: 'Models and launches', summary: 'A launch that names no model, names another, or defers to its launcher, and the version "0" placeholder.' },
+  { path: '/docs/commands/doctor/clis/', name: 'Each CLI', summary: 'herdr and each seat\'s CLI: its version, whether it is installed, and a CLI outside the tested range.' },
+  { path: '/docs/commands/doctor/login/', name: 'The sign-in checks', summary: 'team doctor --login: one read-only login check per CLI the seats use, and nothing else.' },
+  { path: '/docs/commands/doctor/budgets/', name: 'The budget checks', summary: 'The owner\'s approved checks, run as the watch runs them, and what a non-owner caller or a changed check reads.' },
+];
+
+/** The sources a `team doctor` page is read from — the reference page, and this assembly. */
+const DOCTOR_FILES = ['content/team/docs/commands/doctor.md', 'src/server/pages.ts'];
+
+/** A `team doctor` reference page's first line: where it belongs. */
+function doctorPart(html: string): string {
+  return `Part of <a href="/docs/commands/doctor/"><code>team doctor</code></a> — ${html}`;
+}
+
+/** /docs/commands/doctor/ — the command itself: purpose, synopsis, flags, the base example, and the short behaviour. */
+export function doctorPage(): Rendered {
+  const doctor = commandPage('doctor');
+  const examples = section(doctor, 'Examples');
+  const prints = section(doctor, 'What it prints');
+  return new Doc()
+    .h1('team doctor')
+    .md(paragraph(doctor, 'Reads the machine and says what the team needs'))
+    .md(section(doctor, 'Synopsis'))
+    .heading('Flags')
+    .md(section(doctor, 'Flags'))
+    .heading('Examples')
+    .note('The team file the examples read:')
+    .block(fenceWith(doctor, 'yaml', 'project: beacon'))
+    .md(paragraph(examples, 'The account\'s check is a script'))
+    .block(fenceWith(doctor, 'file', 'weekly 40% used'))
+    .md(paragraph(examples, 'Everything here is as it should be'))
+    .block(fenceWith(doctor, 'console', 'nothing missing, 2 warnings'))
+    .md(paragraph(examples, 'The lobby line is the same closed-tree check'))
+    .block(fenceWith(doctor, 'console', 'lobby ~/.config/team/lobby: verified'))
+    .heading('Who may run it')
+    .md(section(doctor, 'Who may run it'))
+    .heading('What it reads and writes')
+    .md(section(doctor, 'What it reads and writes'))
+    .heading('What it prints')
+    .md(fromBlock(prints, 'One line per finding', 'The findings come in order'))
+    .note('Every finding a run prints, in the order they come, is on <a href="/docs/commands/doctor/report/">the report page</a>.')
+    .heading('Refusals')
+    .md(section(doctor, 'Refusals'))
+    .md(paragraph(examples, 'An option it doesn\'t know stops it before it reads anything'))
+    .block(fenceWith(doctor, 'console', 'unknown option --nope'))
+    .heading('Exit codes')
+    .md(section(doctor, 'Exit codes'))
+    .heading('The reference pages')
+    .raw(`<div class="doc-grid">${DOCTOR_REFERENCE.map(card => `<a class="doc-entry" href="${card.path}"><span class="doc-entry__name">${escapeHtml(card.name)}</span><span class="doc-entry__summary">${escapeHtml(card.summary)}</span></a>`).join('')}</div>\n`)
+    .render();
+}
+
+/** /docs/commands/doctor/report/ — every finding a run prints, in the order they come. */
+export function doctorReport(): Rendered {
+  const doctor = commandPage('doctor');
+  const prints = section(doctor, 'What it prints');
+  const examples = section(doctor, 'Examples');
+  return new Doc()
+    .h1('The report')
+    .note(doctorPart('every finding a run prints, in the order they come.'))
+    .heading('The order of findings')
+    .md(fromBlock(prints, 'The findings come in order', 'The `trust` note'))
+    .heading('The trust block')
+    .md(fromBlock(prints, 'The `trust` note is the one finding', 'A seat\'s model is judged'))
+    .heading('Waiting at trust')
+    .md(fromBlock(prints, 'A seat the state records waiting at', 'The key\'s fingerprint'))
+    .heading('The key fingerprint')
+    .md(paragraph(prints, 'The key\'s fingerprint'))
+    .heading('The watch')
+    .md(paragraph(prints, 'A watch that has not run'))
+    .heading('The machine check')
+    .md(paragraph(examples, 'The machine\'s own swap is read for one case only'))
+    .block(fenceWith(doctor, 'console', 'asks for 2.0 GB free swap'))
+    .md(paragraph(examples, 'A check that merely fails right now'))
+    .note('The model warnings the order above names are on <a href="/docs/commands/doctor/models/">the models page</a>; the budget checks, on <a href="/docs/commands/doctor/budgets/">the budget-checks page</a>; the logins, on <a href="/docs/commands/doctor/login/">the sign-in page</a>.')
+    .render();
+}
+
+/** /docs/commands/doctor/models/ — a launch that names no model, names another, or defers to its launcher. */
+export function doctorModels(): Rendered {
+  const doctor = commandPage('doctor');
+  const prints = section(doctor, 'What it prints');
+  const examples = section(doctor, 'Examples');
+  return new Doc()
+    .h1('Models and launches')
+    .note(doctorPart('a launch that names no model, names another, or defers to its launcher.'))
+    .heading('How a model is judged')
+    .md(fromBlock(prints, 'A seat\'s model is judged', 'The placeholder'))
+    .heading('The version placeholder')
+    .md(paragraph(prints, 'The placeholder `version: "0"`'))
+    .heading('A launch that names another model')
+    .md(paragraph(examples, 'A launch that names another model'))
+    .block(fenceWith(doctor, 'yaml', 'model: Claude Sonnet'))
+    .block(fenceWith(doctor, 'console', 'the file says Claude Sonnet 5.5'))
+    .heading('A launch that names no model')
+    .md(paragraph(examples, 'A launch that names no model is not warned'))
+    .block(fenceWith(doctor, 'yaml', 'launch: team-codex'))
+    .block(fenceWith(doctor, 'console', 'the launch runs team-codex'))
+    .md(paragraph(examples, 'The wrapper is told by the launch'))
+    .block(fenceWith(doctor, 'yaml', 'model_from: launcher'))
+    .block(fenceWith(doctor, 'console', 'the model is chosen by its launcher; checked'))
+    .md(paragraph(examples, '`model_from: launcher` wins over the launch'))
+    .render();
+}
+
+/** /docs/commands/doctor/clis/ — herdr and each seat's CLI: its version, install, and tested range. */
+export function doctorClis(): Rendered {
+  const doctor = commandPage('doctor');
+  const examples = section(doctor, 'Examples');
+  return new Doc()
+    .h1('Each CLI')
+    .note(doctorPart('herdr and each seat\'s CLI: its version, whether it is installed, and a CLI outside the tested range.'))
+    .heading('A CLI outside the tested range')
+    .md(paragraph(examples, 'A CLI outside the range this version was tested with'))
+    .block(fenceWith(doctor, 'console', 'older than the tested 2.1.288'))
+    .heading('A CLI that is not installed')
+    .md(paragraph(examples, 'A seat on a CLI that is not installed'))
+    .block(fenceWith(doctor, 'yaml', 'launch: codex --model gpt-5-codex'))
+    .block(fenceWith(doctor, 'console', '2 missing, 2 warnings'))
+    .render();
+}
+
+/** /docs/commands/doctor/login/ — team doctor --login: one read-only sign-in check per CLI. */
+export function doctorLogin(): Rendered {
+  const doctor = commandPage('doctor');
+  const prints = section(doctor, 'What it prints');
+  const examples = section(doctor, 'Examples');
+  return new Doc()
+    .h1('The sign-in checks')
+    .note(doctorPart('team doctor --login: one read-only login check per CLI the seats use.'))
+    .md(paragraph(prints, '`--login` reads the logins alone'))
+    .md(paragraph(examples, '`--login` answers the one question'))
+    .block(fenceWith(doctor, 'yaml', 'launch: codex --model gpt-5-codex'))
+    .block(fenceWith(doctor, 'console', 'log in to codex'))
+    .render();
+}
+
+/** /docs/commands/doctor/budgets/ — the owner's approved checks, run as the watch runs them. */
+export function doctorBudgets(): Rendered {
+  const doctor = commandPage('doctor');
+  const prints = section(doctor, 'What it prints');
+  const examples = section(doctor, 'Examples');
+  return new Doc()
+    .h1('The budget checks')
+    .note(doctorPart('the owner\'s approved checks, run as the watch runs them.'))
+    .md(paragraph(prints, 'The budget checks run from the approved'))
+    .note('The warning that paragraph\'s <em>above</em> names — an account whose check is unapproved or changed after approval reads unknown — is one of the findings on <a href="/docs/commands/doctor/report/">the report page</a>.')
+    .heading('A caller who is not the owner')
+    .md(paragraph(examples, 'A seat\'s `doctor` runs no check'))
+    .block(fenceWith(doctor, 'console', 'the budget checks were not run'))
+    .heading('A check changed after approval')
+    .md(paragraph(examples, 'A check that was edited after its approval'))
+    .block(fenceWith(doctor, 'yaml', 'project: beacon'))
+    .block(fenceWith(doctor, 'file', 'weekly 99% used'))
+    .block(fenceWith(doctor, 'console', 'changed after approval and was not run'))
+    .render();
+}
+
 // ------------------------------------------- the `status` reference, in pages
 
 /**
@@ -1092,6 +1265,15 @@ export function pages(): PageMeta[] {
         page('/docs/commands/up/limits/', 'team up: known limits — team', '0.5', upLimits(), UP_FILES),
         page('/docs/commands/up/refusals/', 'team up: refusals — team', '0.5', upRefusals(), UP_FILES),
       ]
+    : name === 'doctor'
+    ? [
+        page('/docs/commands/doctor/', 'team doctor — team', '0.8', doctorPage(), DOCTOR_FILES),
+        page('/docs/commands/doctor/report/', 'team doctor: the report — team', '0.5', doctorReport(), DOCTOR_FILES),
+        page('/docs/commands/doctor/models/', 'team doctor: models and launches — team', '0.5', doctorModels(), DOCTOR_FILES),
+        page('/docs/commands/doctor/clis/', 'team doctor: each CLI — team', '0.5', doctorClis(), DOCTOR_FILES),
+        page('/docs/commands/doctor/login/', 'team doctor: the sign-in checks — team', '0.5', doctorLogin(), DOCTOR_FILES),
+        page('/docs/commands/doctor/budgets/', 'team doctor: the budget checks — team', '0.5', doctorBudgets(), DOCTOR_FILES),
+      ]
     : name === 'status'
     ? [
         page('/docs/commands/status/', 'team status — team', '0.8', statusPage(), STATUS_FILES),
@@ -1147,6 +1329,11 @@ const DESCRIPTIONS: Record<string, string> = {
   commits: 'Checks a commit, or a range of commits, against the signature rule and forbidden patterns; exit 1 when a commit is refused.',
   pr: 'Checks a pull request body against the signature rule and forbidden patterns, needing no repository; exit 1 when refused.',
   doctor: 'What this machine still needs: the approval, herdr, each CLI, its version and login, each launch’s model, and the watch.',
+  'doctor/report': 'Every finding a team doctor run prints, in order — the file warnings, the approval, the seats, the watch — with the trust block and the key fingerprint.',
+  'doctor/models': 'What team doctor says of a seat’s model: a launch that names none, names another, or defers to its launcher, and the version “0” placeholder.',
+  'doctor/clis': 'herdr and each seat’s CLI in team doctor: its version, whether it is installed, and what a CLI outside the tested range means.',
+  'doctor/login': 'team doctor --login: one read-only sign-in check per CLI the seats use, in the order they first name them, and nothing else.',
+  'doctor/budgets': 'The owner’s budget checks in team doctor, run as the watch runs them, and what a non-owner caller or a check changed after approval reads.',
   status: 'The team as it stands: one line per seat, and every difference between the file, the state and the live session, with its repair.',
   'status/rows': 'One line per seat in team status: its state, model and pane, the pane-is-its-seat comparison, and the approval note.',
   'status/differences': 'Every way the file, the state and the live session disagree in team status, the command that repairs each, and the one it orders first.',
