@@ -517,7 +517,7 @@ export function doctorPage(): Rendered {
     .note('Every finding a run prints, in the order they come, is on <a href="/docs/commands/doctor/report/">the report page</a>.')
     .heading('Refusals')
     .md(section(doctor, 'Refusals'))
-    .note('An option it doesn\'t know stops it before it reads anything:')
+    .md(paragraph(examples, 'An option it doesn\'t know stops it before it reads anything'))
     .block(fenceWith(doctor, 'console', 'unknown option --nope'))
     .heading('Exit codes')
     .md(section(doctor, 'Exit codes'))
