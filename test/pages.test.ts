@@ -233,6 +233,65 @@ describe('the team up reference, in pages', () => {
   });
 });
 
+describe('the team status reference, in pages', () => {
+  const byPath = new Map(pages().map(page => [page.path, page]));
+  const status = byPath.get('/docs/commands/status/')!;
+  const words = (html: string) => html.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
+  const refPaths = ['/docs/commands/status/rows/', '/docs/commands/status/differences/', '/docs/commands/status/budgets/', '/docs/commands/status/json/'];
+
+  test('one hub page and four reference pages, each linked from the hub and linking back', () => {
+    expect([...byPath.keys()].filter(path => path.startsWith('/docs/commands/status/'))).toEqual([
+      '/docs/commands/status/', ...refPaths,
+    ]);
+    for (const path of refPaths) {
+      expect(status.html).toContain(`href="${path}"`);
+      expect(byPath.get(path)!.html).toContain('href="/docs/commands/status/"');
+    }
+  });
+
+  test('the hub holds the purpose, the flags, the base example, the machine check and the short behaviour', () => {
+    expect(status.toc.map(item => item.title)).toEqual(['Flags', 'Examples', 'Who may run it', 'What it reads and writes', 'The machine check', 'Refusals', 'Exit codes', 'The reference pages']);
+    expect((status.html.match(/<pre class="(?:example__code|term)"/g) ?? []).length).toBe(3);
+    // The purpose is the whole first paragraph: the repair-naming is hub material.
+    expect(status.html).toContain('It names the command that repairs each difference');
+    // The base reading and the machine-check note ride on the hub.
+    expect(status.html).toContain('difference: claude-keeper is in the file and is not running');
+    expect(status.html).toContain('would refuse now');
+    // The deep sections are not on the hub: they are on the reference pages.
+    expect(status.html).not.toContain('A pane is its seat only while the process');
+    expect(status.html).not.toContain('the agent in');
+    // The hub is a fraction of the whole set, not the whole on one page.
+    const set = [...byPath.values()].filter(page => page.path.startsWith('/docs/commands/status/')).map(page => words(page.html)).reduce((a, b) => a + b, 0);
+    expect(words(status.html) * 2).toBeLessThan(set);
+  });
+
+  test('the deep material is on the reference pages, in the reference\'s own words', () => {
+    expect(byPath.get('/docs/commands/status/rows/')!.html).toContain('A pane is its seat only while the process');
+    expect(byPath.get('/docs/commands/status/differences/')!.html).toContain('the agent in');
+    expect(byPath.get('/docs/commands/status/differences/')!.html).toContain('<span class="term__command">team add claude-keeper</span>');
+    expect(byPath.get('/docs/commands/status/budgets/')!.html).toContain('CODEX_HOME');
+    expect(byPath.get('/docs/commands/status/json/')!.html).toContain('team status --json');
+    // The rows prose sits on the rows page, not duplicated onto the differences page.
+    expect(byPath.get('/docs/commands/status/differences/')!.html).not.toContain('A pane is its seat only while the process');
+  });
+
+  test('the reference pages answer, each with its own title and description', async () => {
+    const expected: [string, string, string][] = [
+      ['/docs/commands/status/rows/', 'team status: the rows — team', 'One line per seat in team status'],
+      ['/docs/commands/status/differences/', 'team status: differences — team', 'Every way the file, the state and the live session disagree in team status'],
+      ['/docs/commands/status/budgets/', 'team status: budgets — team', 'The budgets table team status prints after the seats'],
+      ['/docs/commands/status/json/', 'team status: the JSON — team', 'team status --json: the same reading as one document'],
+    ];
+    for (const [path, title, description] of expected) {
+      const response = await handleRequest(new Request(`https://teamcli.io${path}`));
+      expect(response.status).toBe(200);
+      const body = await response.text();
+      expect(body).toContain(`<title>${title}</title>`);
+      expect(body).toContain(description);
+    }
+  });
+});
+
 describe('the reference the site is built against', () => {
   test('the content was fetched, and it says which ref it is', () => {
     expect(contentReady()).toBe(true);
