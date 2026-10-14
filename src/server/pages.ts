@@ -459,6 +459,131 @@ export function upRefusals(): Rendered {
     .render();
 }
 
+// ------------------------------------------- the `usage` reference, in pages
+
+/**
+ * `usage` is the fifth-longest command page, and the one a reader scans to see
+ * what this machine holds. Its hub holds what fits a screen — the purpose, the
+ * synopsis, the worked example, and a short lead of each behaviour — and the rest
+ * is split, whole and unretyped, into reference pages one topic each: what it
+ * reads and writes, the report's shape, the restricted view, the JSON, and the
+ * refusals. Together the pages hold every fence of the reference page exactly once
+ * (docs:check holds them to it), each in the reference's order, and each rule is
+ * stated once, linked where it shows.
+ */
+
+/** The reference pages of `team usage`, as cards: one line each, in the site's own words. */
+const USAGE_REFERENCE: { path: string; name: string; summary: string }[] = [
+  { path: '/docs/commands/usage/reads-writes/', name: 'What it reads and writes', summary: 'The stores and files it reads, that it writes nothing, and which file\'s figures are in force.' },
+  { path: '/docs/commands/usage/report/', name: 'The report', summary: 'The header counts, each account and window line, pace and ages, the rows, and the why-lines.' },
+  { path: '/docs/commands/usage/restricted/', name: 'The restricted view', summary: 'Which caller reads which view, and the closed list of fields the restricted view carries.' },
+  { path: '/docs/commands/usage/json/', name: 'The JSON', summary: 'What --json prints: the document\'s keys in both views, and the whole example document.' },
+  { path: '/docs/commands/usage/refusals/', name: 'Refusals', summary: 'The two refusals at exit 2; everything else is a note line at exit 0.' },
+];
+
+/** The sources a `team usage` page is read from — the reference page, and this assembly. */
+const USAGE_FILES = ['content/team/docs/commands/usage.md', 'src/server/pages.ts'];
+
+/** A `team usage` reference page's first line: where it belongs. */
+function usagePart(html: string): string {
+  return `Part of <a href="/docs/commands/usage/"><code>team usage</code></a> — ${html}`;
+}
+
+/** /docs/commands/usage/ — the command itself: purpose, synopsis, the worked example, and the short behaviour. */
+export function usagePage(): Rendered {
+  const usage = commandPage('usage');
+  const examples = section(usage, 'Examples');
+  return new Doc()
+    .h1('team usage')
+    .md(paragraph(usage, 'Shows what this machine holds:'))
+    .md(paragraph(usage, 'Two views are printed from the one placement'))
+    .md(section(usage, 'Synopsis'))
+    .heading('Examples')
+    .md(paragraph(examples, 'The file below names one account'))
+    .block(fenceWith(usage, 'yaml', 'project: beacon'))
+    .md(paragraph(examples, 'The state holds one reading for the'))
+    .block(fenceWith(usage, 'console', 'usage on this machine, 1 team'))
+    .note('The same report as a JSON document, and what every key means, is on <a href="/docs/commands/usage/json/">the JSON page</a>.')
+    .heading('What it reads and writes')
+    .md(paragraph(section(usage, 'What it reads and writes'), 'Reads this machine\'s approval store folder'))
+    .note('The rest — that it writes nothing, which file\'s figures are in force, and the one refusal its “(below)” names — is on <a href="/docs/commands/usage/reads-writes/">the reads-and-writes page</a> and <a href="/docs/commands/usage/refusals/">the refusals page</a>.')
+    .heading('Who may run it')
+    .md(paragraph(section(usage, 'Who may run it, and which view they read'), 'Anyone: a seat, an unplaced agent'))
+    .note('Which caller reads the full or the restricted view, and what the restricted view carries, are on <a href="/docs/commands/usage/restricted/">the restricted-view page</a>.')
+    .heading('Exit codes')
+    .md(section(usage, 'Exit codes'))
+    .heading('The reference pages')
+    .raw(`<div class="doc-grid">${USAGE_REFERENCE.map(card => `<a class="doc-entry" href="${card.path}"><span class="doc-entry__name">${escapeHtml(card.name)}</span><span class="doc-entry__summary">${escapeHtml(card.summary)}</span></a>`).join('')}</div>\n`)
+    .render();
+}
+
+/** /docs/commands/usage/reads-writes/ — the stores and files it reads, that it writes nothing, and the in-force rule. */
+export function usageReadsWrites(): Rendered {
+  const usage = commandPage('usage');
+  return new Doc()
+    .h1('What it reads and writes')
+    .note(usagePart('the stores and files it reads, that it writes nothing, and which file\'s figures are in force.'))
+    .md(fromBlock(section(usage, 'What it reads and writes'), 'It writes **nothing at all**'))
+    .note('What it reads — the stores and the files — is on <a href="/docs/commands/usage/">the team usage page</a>; the one refusal the stores folder can raise is on <a href="/docs/commands/usage/refusals/">the refusals page</a>.')
+    .render();
+}
+
+/** /docs/commands/usage/report/ — the report's shape: counts, lines, pace, ages, rows, why-lines. */
+export function usageReport(): Rendered {
+  const usage = commandPage('usage');
+  return new Doc()
+    .h1('The report')
+    .note(usagePart('the header counts, each account and window line, the pace and ages, the per-team rows, and the why-lines.'))
+    .md(section(usage, 'The report'))
+    .note('The why-line for a file never approved — the “one above” this names — is on <a href="/docs/commands/usage/reads-writes/">the reads-and-writes page</a>.')
+    .render();
+}
+
+/** /docs/commands/usage/restricted/ — who reads which view, and the closed list the restricted view carries. */
+export function usageRestricted(): Rendered {
+  const usage = commandPage('usage');
+  const examples = section(usage, 'Examples');
+  return new Doc()
+    .h1('The restricted view')
+    .note(usagePart('which caller reads the full or the restricted view, and the closed list of fields the restricted view carries.'))
+    .heading('Which view a caller reads')
+    .md(fromBlock(section(usage, 'Who may run it, and which view they read'), 'One function decides the view'))
+    .note('The rule that anyone may run it, from any folder, is on <a href="/docs/commands/usage/">the team usage page</a>.')
+    .heading('What the restricted view carries')
+    .md(section(usage, 'What the restricted view carries'))
+    .note('The earlier <code>note:</code> lines this names are on <a href="/docs/commands/usage/reads-writes/">the reads-and-writes page</a> and <a href="/docs/commands/usage/report/">the report page</a>.')
+    .heading('The two faces, by example')
+    .md(paragraph(examples, 'The same command run by the owner at a terminal'))
+    .md(paragraph(examples, 'A machine that holds other teams'))
+    .note('The restricted text and the JSON these name are on <a href="/docs/commands/usage/">the team usage page</a> and <a href="/docs/commands/usage/json/">the JSON page</a>.')
+    .render();
+}
+
+/** /docs/commands/usage/json/ — what --json prints, and the whole example document. */
+export function usageJson(): Rendered {
+  const usage = commandPage('usage');
+  const examples = section(usage, 'Examples');
+  return new Doc()
+    .h1('The JSON')
+    .note(usagePart('what <code>--json</code> prints: the document\'s keys in both views, and the whole example document.'))
+    .md(section(usage, 'The JSON'))
+    .heading('The document')
+    .md(paragraph(examples, '`--json` prints the same report as one document'))
+    .block(fenceWith(usage, 'console', '"format": 1'))
+    .render();
+}
+
+/** /docs/commands/usage/refusals/ — the two refusals, and that everything else is a note at exit 0. */
+export function usageRefusals(): Rendered {
+  const usage = commandPage('usage');
+  return new Doc()
+    .h1('Refusals')
+    .note(usagePart('the two things that refuse it at exit 2; everything else is a note line at exit 0.'))
+    .md(section(usage, 'Refusals'))
+    .note('The exit codes these carry are on <a href="/docs/commands/usage/">the team usage page</a>.')
+    .render();
+}
+
 // ---------------------------------------------------------------- safety and CLIs
 
 /**
@@ -584,6 +709,15 @@ export function pages(): PageMeta[] {
         page('/docs/commands/up/limits/', 'team up: known limits — team', '0.5', upLimits(), UP_FILES),
         page('/docs/commands/up/refusals/', 'team up: refusals — team', '0.5', upRefusals(), UP_FILES),
       ]
+    : name === 'usage'
+    ? [
+        page('/docs/commands/usage/', 'team usage — team', '0.8', usagePage(), USAGE_FILES),
+        page('/docs/commands/usage/reads-writes/', 'team usage: what it reads and writes — team', '0.5', usageReadsWrites(), USAGE_FILES),
+        page('/docs/commands/usage/report/', 'team usage: the report — team', '0.5', usageReport(), USAGE_FILES),
+        page('/docs/commands/usage/restricted/', 'team usage: the restricted view — team', '0.5', usageRestricted(), USAGE_FILES),
+        page('/docs/commands/usage/json/', 'team usage: the JSON — team', '0.5', usageJson(), USAGE_FILES),
+        page('/docs/commands/usage/refusals/', 'team usage: refusals — team', '0.5', usageRefusals(), USAGE_FILES),
+      ]
     : [page(`/docs/commands/${name}/`, `team ${name} — team`, '0.8', commandPageContent(name), [`content/team/docs/commands/${name}.md`])]);
   return [...group, ...commands];
 }
@@ -615,6 +749,11 @@ const DESCRIPTIONS: Record<string, string> = {
   answer: 'Presses the one recorded key of a seat\'s folder-trust dialog when the file allows it; every check has to pass, and anything else sends nothing.',
   release: 'Checks a release on npm and GitHub. When the file has the pairs: Linear milestone, qualifying status update, and the release marker in the public activity file.',
   usage: 'Shows one project’s budget accounts, windows, remaining usage, and when each figure was last read.',
+  'usage/reads-writes': 'What team usage reads — the approval stores, each team file, state and record — that it writes nothing, and which file\'s figures are in force.',
+  'usage/report': 'The team usage report: the header counts, each account and window line, the pace and ages, the per-team rows, and the why-lines.',
+  'usage/restricted': 'Which caller reads the full or restricted view, and the closed list of fields the restricted view carries — never another team\'s name, root or rows.',
+  'usage/json': 'What team usage --json prints: format 1, the counts, labs, accounts and notes — every key in both views, with the whole example document.',
+  'usage/refusals': 'The two things that refuse team usage at exit 2 — a bad invocation, or an unreadable stores folder; everything else is a note at exit 0.',
 };
 const SITE_PAGES: Record<string, string> = {
   '/privacy/': 'How teamcli.io reaches you, and what stays in your browser.',

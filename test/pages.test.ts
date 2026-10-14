@@ -233,6 +233,65 @@ describe('the team up reference, in pages', () => {
   });
 });
 
+describe('the team usage reference, in pages', () => {
+  const byPath = new Map(pages().map(page => [page.path, page]));
+  const usage = byPath.get('/docs/commands/usage/')!;
+  const words = (html: string) => html.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
+  const refPaths = ['/docs/commands/usage/reads-writes/', '/docs/commands/usage/report/', '/docs/commands/usage/restricted/', '/docs/commands/usage/json/', '/docs/commands/usage/refusals/'];
+
+  test('one hub page and five reference pages, each linked from the hub and linking back', () => {
+    expect([...byPath.keys()].filter(path => path.startsWith('/docs/commands/usage/'))).toEqual([
+      '/docs/commands/usage/', ...refPaths,
+    ]);
+    for (const path of refPaths) {
+      expect(usage.html).toContain(`href="${path}"`);
+      expect(byPath.get(path)!.html).toContain('href="/docs/commands/usage/"');
+    }
+  });
+
+  test('the hub holds the purpose, the worked example and the short behaviour', () => {
+    expect(usage.toc.map(item => item.title)).toEqual(['Examples', 'What it reads and writes', 'Who may run it', 'Exit codes', 'The reference pages']);
+    // The worked example: the team file and the restricted-view output.
+    expect((usage.html.match(/<pre class="(?:example__code|term)"/g) ?? []).length).toBe(2);
+    expect(usage.html).toContain('Shows what this machine holds');
+    expect(usage.html).toContain('usage on this machine, 1 team');
+    // The deep material is not on the hub: it is on the reference pages.
+    expect(usage.html).not.toContain('The header counts the machine');
+    expect(usage.html).not.toContain('The restricted view is a closed list of fields');
+    expect(usage.html).not.toContain('&quot;view&quot;: &quot;restricted&quot;');
+    // The hub is a fraction of the whole set, not the whole on one page.
+    const set = [...byPath.values()].filter(page => page.path.startsWith('/docs/commands/usage/')).map(page => words(page.html)).reduce((a, b) => a + b, 0);
+    expect(words(usage.html) * 2).toBeLessThan(set);
+  });
+
+  test('the deep material is on the reference pages, in the reference\'s own words', () => {
+    expect(byPath.get('/docs/commands/usage/reads-writes/')!.html).toContain('opens no lock, writes no state and logs no line');
+    expect(byPath.get('/docs/commands/usage/report/')!.html).toContain('The header counts the machine');
+    expect(byPath.get('/docs/commands/usage/restricted/')!.html).toContain('The restricted view is a closed list of fields');
+    expect(byPath.get('/docs/commands/usage/json/')!.html).toContain('&quot;view&quot;: &quot;restricted&quot;');
+    expect(byPath.get('/docs/commands/usage/refusals/')!.html).toContain('is a note line and exit 0');
+    // The report page does not carry the JSON document; that is the JSON page.
+    expect(byPath.get('/docs/commands/usage/report/')!.html).not.toContain('&quot;view&quot;: &quot;restricted&quot;');
+  });
+
+  test('the reference pages answer, each with its own title and description', async () => {
+    const expected: [string, string, string][] = [
+      ['/docs/commands/usage/reads-writes/', 'team usage: what it reads and writes — team', 'What team usage reads'],
+      ['/docs/commands/usage/report/', 'team usage: the report — team', 'The team usage report'],
+      ['/docs/commands/usage/restricted/', 'team usage: the restricted view — team', 'Which caller reads the full or restricted view'],
+      ['/docs/commands/usage/json/', 'team usage: the JSON — team', 'What team usage --json prints'],
+      ['/docs/commands/usage/refusals/', 'team usage: refusals — team', 'The two things that refuse team usage'],
+    ];
+    for (const [path, title, description] of expected) {
+      const response = await handleRequest(new Request(`https://teamcli.io${path}`));
+      expect(response.status).toBe(200);
+      const body = await response.text();
+      expect(body).toContain(`<title>${title}</title>`);
+      expect(body).toContain(description);
+    }
+  });
+});
+
 describe('the reference the site is built against', () => {
   test('the content was fetched, and it says which ref it is', () => {
     expect(contentReady()).toBe(true);
