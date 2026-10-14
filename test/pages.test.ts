@@ -606,6 +606,66 @@ describe('the team approve reference, in pages', () => {
   });
 });
 
+describe('the team remove reference, in pages', () => {
+  const byPath = new Map(pages().map(page => [page.path, page]));
+  const remove = byPath.get('/docs/commands/remove/')!;
+  const words = (html: string) => html.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
+  const refPaths = ['/docs/commands/remove/who/', '/docs/commands/remove/output/', '/docs/commands/remove/refusals/', '/docs/commands/remove/keep-and-temporary/'];
+
+  test('one hub page and four reference pages, each linked from the hub and linking back', () => {
+    expect([...byPath.keys()].filter(path => path.startsWith('/docs/commands/remove/'))).toEqual([
+      '/docs/commands/remove/', ...refPaths,
+    ]);
+    for (const path of refPaths) {
+      expect(remove.html).toContain(`href="${path}"`);
+      expect(byPath.get(path)!.html).toContain('href="/docs/commands/remove/"');
+    }
+  });
+
+  test('the hub holds the purpose, the flags, the basic removal and the short behaviour', () => {
+    expect(remove.toc.map(item => item.title)).toEqual(['Flags', 'Examples', 'What it reads and writes', 'Who may run it', 'Exit codes', 'The reference pages']);
+    // The basic removal: the team file and the plain remove (with its idempotent second run).
+    expect((remove.html.match(/<pre class="(?:example__code|term)"/g) ?? []).length).toBe(2);
+    expect(remove.html).toContain('removed claude-beacon');
+    // The deep material is not on the hub: it is on the reference pages.
+    expect(remove.html).not.toContain('A file with a');
+    expect(remove.html).not.toContain('is working; left as it is');
+    expect(remove.html).not.toContain('left running; nothing was typed');
+    expect(remove.html).not.toContain('there is nothing to keep');
+    // The hub is a fraction of the whole set, not the whole on one page.
+    const set = [...byPath.values()].filter(page => page.path.startsWith('/docs/commands/remove/')).map(page => words(page.html)).reduce((a, b) => a + b, 0);
+    expect(words(remove.html) * 2).toBeLessThan(set);
+  });
+
+  test('the deep material is on the reference pages, in the reference\'s own words', () => {
+    expect(byPath.get('/docs/commands/remove/who/')!.html).toContain('A file with a');
+    expect(byPath.get('/docs/commands/remove/who/')!.html).toContain('this call is claude-beacon');
+    expect(byPath.get('/docs/commands/remove/output/')!.html).toContain('it now reads as claude-reviewer-left');
+    expect(byPath.get('/docs/commands/remove/refusals/')!.html).toContain('is working; left as it is');
+    expect(byPath.get('/docs/commands/remove/refusals/')!.html).toContain('a seat name is required');
+    expect(byPath.get('/docs/commands/remove/keep-and-temporary/')!.html).toContain('removed temporary claude-beacon-tmp-1');
+    expect(byPath.get('/docs/commands/remove/keep-and-temporary/')!.html).toContain('stopped claude-beacon');
+    // The refusals page does not carry the non-owner leave; that is the what-it-prints page.
+    expect(byPath.get('/docs/commands/remove/refusals/')!.html).not.toContain('it now reads as claude-reviewer-left');
+  });
+
+  test('the reference pages answer, each with its own title and description', async () => {
+    const expected: [string, string, string][] = [
+      ['/docs/commands/remove/who/', 'team remove: who may run it — team', 'Who may run team remove'],
+      ['/docs/commands/remove/output/', 'team remove: what it prints — team', 'What team remove prints'],
+      ['/docs/commands/remove/refusals/', 'team remove: refusals — team', 'Every message that refuses team remove'],
+      ['/docs/commands/remove/keep-and-temporary/', 'team remove: a temporary seat and --keep — team', 'Removing a temporary seat by the name add gave it'],
+    ];
+    for (const [path, title, description] of expected) {
+      const response = await handleRequest(new Request(`https://teamcli.io${path}`));
+      expect(response.status).toBe(200);
+      const body = await response.text();
+      expect(body).toContain(`<title>${title}</title>`);
+      expect(body).toContain(description);
+    }
+  });
+});
+
 describe('the reference the site is built against', () => {
   test('the content was fetched, and it says which ref it is', () => {
     expect(contentReady()).toBe(true);

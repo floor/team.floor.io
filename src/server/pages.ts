@@ -1294,6 +1294,138 @@ export function approveOverrides(): Rendered {
     .render();
 }
 
+// ------------------------------------------- the `remove` reference, in pages
+
+/**
+ * `remove` is a long command page: the stop and file edit, who may run it, the
+ * delegate gate, the lines it prints, the non-owner leave, the refusals, and a
+ * walkthrough of eleven fenced examples. Its hub holds what fits a screen — the
+ * purpose, the synopsis, the flags, the basic removal, what it reads and writes,
+ * who may run it, the exit codes — and the rest is split, whole and unretyped,
+ * into reference pages one topic each: who may run it, what it prints, the
+ * refusals, and a temporary seat and --keep. Together the pages hold every fence
+ * of the reference page exactly once (docs:check holds them to it), and each
+ * states its rule once, linked where it shows.
+ */
+
+/** The reference pages of `team remove`, as cards: one line each, in the site's own words. */
+const REMOVE_REFERENCE: { path: string; name: string; summary: string }[] = [
+  { path: '/docs/commands/remove/who/', name: 'Who may run it', summary: 'The owner, the orchestrator, the operator and the approved delegate — and the caller-role refusals shown.' },
+  { path: '/docs/commands/remove/output/', name: 'What it prints', summary: 'Every line a removal prints, the non-owner leave, and a seat that does not leave cleanly.' },
+  { path: '/docs/commands/remove/refusals/', name: 'Refusals', summary: 'Every message that refuses team remove, and the busy-seat and name refusals shown.' },
+  { path: '/docs/commands/remove/keep-and-temporary/', name: 'A temporary seat, and --keep', summary: 'A temporary seat removed by its add name, and --keep leaving the entry stopped.' },
+];
+
+/** The sources a `team remove` page is read from — the reference page, and this assembly. */
+const REMOVE_FILES = ['content/team/docs/commands/remove.md', 'src/server/pages.ts'];
+
+/** A `team remove` reference page's first line: where it belongs. */
+function removeRefPart(html: string): string {
+  return `Part of <a href="/docs/commands/remove/"><code>team remove</code></a> — ${html}`;
+}
+
+/** /docs/commands/remove/ — the command itself: purpose, synopsis, flags, the basic removal, and the short behaviour. */
+export function removePage(): Rendered {
+  const remove = commandPage('remove');
+  const examples = section(remove, 'Examples');
+  return new Doc()
+    .h1('team remove')
+    .md(paragraph(remove, 'Takes one seat out of the team:'))
+    .md(section(remove, 'Synopsis'))
+    .heading('Flags')
+    .md(section(remove, 'Flags'))
+    .heading('Examples')
+    .note('The team file the examples read:')
+    .block(fenceWith(remove, 'yaml', 'project: beacon'))
+    .md(paragraph(examples, 'Without `--keep` the seat'))
+    .block(fenceWith(remove, 'console', 'the team has no seat'))
+    .note('A busy seat left as it is, a temporary seat and <code>--keep</code>, the non-owner leave, and the caller-role refusals are on the reference pages below.')
+    .heading('What it reads and writes')
+    .md(section(remove, 'What it reads and writes'))
+    .note('The leave its “(below)” names — a caller other than the owner meeting a seat herdr reports idle or done, with no typing and the pane left running — is on <a href="/docs/commands/remove/output/">the what-it-prints page</a>.')
+    .heading('Who may run it')
+    .md(paragraph(section(remove, 'Who may run it'), 'The owner, the orchestrator'))
+    .note('The approved delegate, and the caller-role refusals shown, are on <a href="/docs/commands/remove/who/">the who-may-run-it page</a>.')
+    .heading('Exit codes')
+    .md(section(remove, 'Exit codes'))
+    .note('The leave these codes name is on <a href="/docs/commands/remove/output/">the what-it-prints page</a>; every refusal is on <a href="/docs/commands/remove/refusals/">the refusals page</a>.')
+    .heading('The reference pages')
+    .raw(`<div class="doc-grid">${REMOVE_REFERENCE.map(card => `<a class="doc-entry" href="${card.path}"><span class="doc-entry__name">${escapeHtml(card.name)}</span><span class="doc-entry__summary">${escapeHtml(card.summary)}</span></a>`).join('')}</div>\n`)
+    .render();
+}
+
+/** /docs/commands/remove/who/ — the approved delegate, and the caller-role refusals shown. */
+export function removeWho(): Rendered {
+  const remove = commandPage('remove');
+  const examples = section(remove, 'Examples');
+  return new Doc()
+    .h1('Who may run it')
+    .note(removeRefPart('the owner, the orchestrator, the operator and the approved delegate — and the caller-role refusals shown.'))
+    .md(paragraph(section(remove, 'Who may run it'), 'A file with a `delegates` section'))
+    .note('The ordinary rule this delegate gate defers to — the owner, the orchestrator and the operator, and the placement it proves — is on <a href="/docs/commands/remove/">the team remove page</a>.')
+    .heading('The caller rules, shown')
+    .md(paragraph(examples, 'Anyone else — the orchestrator'))
+    .note('The leave this names — the removal a caller other than the owner makes — is on <a href="/docs/commands/remove/output/">the what-it-prints page</a>.')
+    .md(paragraph(examples, 'An implementer\'s seat may not remove'))
+    .block(fenceByInfo(remove, 'caller=claude-beacon'))
+    .md(paragraph(examples, 'The orchestrator\'s seat may remove others'))
+    .block(fenceByInfo(remove, 'caller=claude-keeper'))
+    .render();
+}
+
+/** /docs/commands/remove/output/ — every line a removal prints, the non-owner leave, and a seat left behind. */
+export function removeOutput(): Rendered {
+  const remove = commandPage('remove');
+  const examples = section(remove, 'Examples');
+  return new Doc()
+    .h1('What it prints')
+    .note(removeRefPart('every line a removal prints, the non-owner leave, and a seat that does not leave cleanly.'))
+    .md(section(remove, 'What it prints'))
+    .note('The refusal its last paragraph names — a box holding this CLI\'s exit text unsent — is on <a href="/docs/commands/remove/refusals/">the refusals page</a>.')
+    .heading('The non-owner leave')
+    .md(paragraph(examples, 'A caller other than the owner, meeting a seat herdr reports idle or done that is not free'))
+    .block(fenceByInfo(remove, 'caller=claude-keeper screens="claude-reviewer=unknown"'))
+    .render();
+}
+
+/** /docs/commands/remove/refusals/ — every message that refuses it, and the busy-seat and name refusals shown. */
+export function removeRefusals(): Rendered {
+  const remove = commandPage('remove');
+  const examples = section(remove, 'Examples');
+  return new Doc()
+    .h1('Refusals')
+    .note(removeRefPart('every message that refuses it, and the busy-seat and name refusals shown.'))
+    .md(section(remove, 'Refusals'))
+    .note('The leave this section\'s “above” names — a caller other than the owner\'s own answer to those states — is on <a href="/docs/commands/remove/output/">the what-it-prints page</a>; the exit codes are on <a href="/docs/commands/remove/">the team remove page</a>.')
+    .heading('A busy seat is left as it is')
+    .md(paragraph(examples, 'A seat mid-turn is not interrupted'))
+    .block(fenceByInfo(remove, 'screens="claude-beacon=working"'))
+    .md(paragraph(examples, 'A permission prompt is the same'))
+    .block(fenceByInfo(remove, 'screens="claude-beacon=permission"'))
+    .md(paragraph(examples, 'A screen the profile can\'t read never frees itself'))
+    .block(fenceByInfo(remove, 'screens="claude-beacon=unknown"'))
+    .heading('A name is required')
+    .md(paragraph(examples, 'A name is required, and its absence'))
+    .block(fenceWith(remove, 'console', 'a seat name is required'))
+    .render();
+}
+
+/** /docs/commands/remove/keep-and-temporary/ — a temporary seat removed by its add name, and --keep. */
+export function removeKeepAndTemporary(): Rendered {
+  const remove = commandPage('remove');
+  const examples = section(remove, 'Examples');
+  return new Doc()
+    .h1('A temporary seat, and --keep')
+    .note(removeRefPart('a temporary seat removed by the name add gave it, and --keep leaving the seat in the file as stopped for a later team add.'))
+    .heading('A temporary seat')
+    .md(paragraph(examples, 'A temporary seat is recorded in the state'))
+    .block(fenceWith(remove, 'console', 'claude-beacon-tmp-1'))
+    .heading('--keep')
+    .md(paragraph(examples, '`--keep` stops the seat and leaves its place'))
+    .block(fenceWith(remove, 'console', 'stopped claude-beacon'))
+    .render();
+}
+
 // ---------------------------------------------------------------- safety and CLIs
 
 /**
@@ -1471,6 +1603,14 @@ export function pages(): PageMeta[] {
         page('/docs/commands/approve/refusals/', 'team approve: refusals — team', '0.5', approveRefusals(), APPROVE_FILES),
         page('/docs/commands/approve/overrides/', 'team approve: the overrides file — team', '0.5', approveOverrides(), APPROVE_FILES),
       ]
+    : name === 'remove'
+    ? [
+        page('/docs/commands/remove/', 'team remove — team', '0.8', removePage(), REMOVE_FILES),
+        page('/docs/commands/remove/who/', 'team remove: who may run it — team', '0.5', removeWho(), REMOVE_FILES),
+        page('/docs/commands/remove/output/', 'team remove: what it prints — team', '0.5', removeOutput(), REMOVE_FILES),
+        page('/docs/commands/remove/refusals/', 'team remove: refusals — team', '0.5', removeRefusals(), REMOVE_FILES),
+        page('/docs/commands/remove/keep-and-temporary/', 'team remove: a temporary seat and --keep — team', '0.5', removeKeepAndTemporary(), REMOVE_FILES),
+      ]
     : [page(`/docs/commands/${name}/`, `team ${name} — team`, '0.8', commandPageContent(name), [`content/team/docs/commands/${name}.md`])]);
   return [...group, ...commands];
 }
@@ -1521,6 +1661,10 @@ const DESCRIPTIONS: Record<string, string> = {
   'watch/checks': 'The checks and timings the owner approves for team watch, and what a pass reports while an edit to the file is still unapproved.',
   add: 'Starts one declared seat, or a temporary one beside the team with --temporary --like <seat> --until <result:path|merged:branch>.',
   remove: 'Stops one seat and takes it out of the file; --keep leaves it stopped; --abandon is the owner’s, and types nothing.',
+  'remove/who': 'Who may run team remove: the owner, the orchestrator, the operator and the approved delegate — and the caller-role refusals shown.',
+  'remove/output': 'What team remove prints: a line per seat stopped and the file edit, the non-owner leave, and a seat that does not leave cleanly.',
+  'remove/refusals': 'Every message that refuses team remove and its exit — the caller gates, the owner-only flags, the busy-seat states, placement, and the shared lock.',
+  'remove/keep-and-temporary': 'Removing a temporary seat by the name add gave it, and --keep leaving the seat in the file as stopped for a later team add.',
   worktree: 'Creates a task worktree from an up-to-date base, or removes one; the branch is never deleted.',
   answer: 'Presses the one recorded key of a seat\'s folder-trust dialog when the file allows it; every check has to pass, and anything else sends nothing.',
   release: 'Checks a release on npm and GitHub. When the file has the pairs: Linear milestone, qualifying status update, and the release marker in the public activity file.',
