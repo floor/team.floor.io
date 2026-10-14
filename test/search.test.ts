@@ -37,6 +37,16 @@ describe('a query', () => {
     expect(searchSite('doctor').map(result => result.path)).toContain('/docs/commands/doctor/');
   });
 
+  test('a command hub ranks above its own deep reference sub-pages', () => {
+    // A split command's hub is where a reader starts; its reference sub-pages are the detail.
+    // For the command's own name the hub comes first, never a sub-page buried under it.
+    const paths = searchSite('approve', 50).map(result => result.path);
+    const hub = paths.indexOf('/docs/commands/approve/');
+    const sub = paths.indexOf('/docs/commands/approve/who/');
+    expect(hub).toBeGreaterThanOrEqual(0);
+    expect(sub).toBeGreaterThan(hub);
+  });
+
   test('a query with nothing in it answers nothing', () => {
     expect(searchSite('')).toEqual([]);
     expect(searchSite('   ')).toEqual([]);
