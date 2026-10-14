@@ -299,6 +299,248 @@ describe('the team doctor reference, in pages', () => {
   });
 });
 
+describe('the team status reference, in pages', () => {
+  const byPath = new Map(pages().map(page => [page.path, page]));
+  const status = byPath.get('/docs/commands/status/')!;
+  const words = (html: string) => html.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
+  const refPaths = ['/docs/commands/status/rows/', '/docs/commands/status/differences/', '/docs/commands/status/budgets/', '/docs/commands/status/json/'];
+
+  test('one hub page and four reference pages, each linked from the hub and linking back', () => {
+    expect([...byPath.keys()].filter(path => path.startsWith('/docs/commands/status/'))).toEqual([
+      '/docs/commands/status/', ...refPaths,
+    ]);
+    for (const path of refPaths) {
+      expect(status.html).toContain(`href="${path}"`);
+      expect(byPath.get(path)!.html).toContain('href="/docs/commands/status/"');
+    }
+  });
+
+  test('the hub holds the purpose, the flags, the base example, the machine check and the short behaviour', () => {
+    expect(status.toc.map(item => item.title)).toEqual(['Flags', 'Examples', 'Who may run it', 'What it reads and writes', 'The machine check', 'Refusals', 'Exit codes', 'The reference pages']);
+    expect((status.html.match(/<pre class="(?:example__code|term)"/g) ?? []).length).toBe(3);
+    // The purpose is the whole first paragraph: the repair-naming is hub material.
+    expect(status.html).toContain('It names the command that repairs each difference');
+    // The base reading and the machine-check note ride on the hub.
+    expect(status.html).toContain('difference: claude-keeper is in the file and is not running');
+    expect(status.html).toContain('would refuse now');
+    // The deep sections are not on the hub: they are on the reference pages.
+    expect(status.html).not.toContain('A pane is its seat only while the process');
+    expect(status.html).not.toContain('the agent in');
+    // The hub is a fraction of the whole set, not the whole on one page.
+    const set = [...byPath.values()].filter(page => page.path.startsWith('/docs/commands/status/')).map(page => words(page.html)).reduce((a, b) => a + b, 0);
+    expect(words(status.html) * 2).toBeLessThan(set);
+  });
+
+  test('the deep material is on the reference pages, in the reference\'s own words', () => {
+    expect(byPath.get('/docs/commands/status/rows/')!.html).toContain('A pane is its seat only while the process');
+    expect(byPath.get('/docs/commands/status/differences/')!.html).toContain('the agent in');
+    expect(byPath.get('/docs/commands/status/differences/')!.html).toContain('<span class="term__command">team add claude-keeper</span>');
+    expect(byPath.get('/docs/commands/status/budgets/')!.html).toContain('CODEX_HOME');
+    expect(byPath.get('/docs/commands/status/json/')!.html).toContain('team status --json');
+    // The rows prose sits on the rows page, not duplicated onto the differences page.
+    expect(byPath.get('/docs/commands/status/differences/')!.html).not.toContain('A pane is its seat only while the process');
+  });
+
+  test('the reference pages answer, each with its own title and description', async () => {
+    const expected: [string, string, string][] = [
+      ['/docs/commands/status/rows/', 'team status: the rows — team', 'One line per seat in team status'],
+      ['/docs/commands/status/differences/', 'team status: differences — team', 'Every way the file, the state and the live session disagree in team status'],
+      ['/docs/commands/status/budgets/', 'team status: budgets — team', 'The budgets table team status prints after the seats'],
+      ['/docs/commands/status/json/', 'team status: the JSON — team', 'team status --json: the same reading as one document'],
+    ];
+    for (const [path, title, description] of expected) {
+      const response = await handleRequest(new Request(`https://teamcli.io${path}`));
+      expect(response.status).toBe(200);
+      const body = await response.text();
+      expect(body).toContain(`<title>${title}</title>`);
+      expect(body).toContain(description);
+    }
+  });
+});
+
+describe('the team usage reference, in pages', () => {
+  const byPath = new Map(pages().map(page => [page.path, page]));
+  const usage = byPath.get('/docs/commands/usage/')!;
+  const words = (html: string) => html.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
+  const refPaths = ['/docs/commands/usage/reads-writes/', '/docs/commands/usage/report/', '/docs/commands/usage/restricted/', '/docs/commands/usage/json/', '/docs/commands/usage/refusals/'];
+
+  test('one hub page and five reference pages, each linked from the hub and linking back', () => {
+    expect([...byPath.keys()].filter(path => path.startsWith('/docs/commands/usage/'))).toEqual([
+      '/docs/commands/usage/', ...refPaths,
+    ]);
+    for (const path of refPaths) {
+      expect(usage.html).toContain(`href="${path}"`);
+      expect(byPath.get(path)!.html).toContain('href="/docs/commands/usage/"');
+    }
+  });
+
+  test('the hub holds the purpose, the worked example and the short behaviour', () => {
+    expect(usage.toc.map(item => item.title)).toEqual(['Examples', 'What it reads and writes', 'Who may run it', 'Exit codes', 'The reference pages']);
+    // The worked example: the team file and the restricted-view output.
+    expect((usage.html.match(/<pre class="(?:example__code|term)"/g) ?? []).length).toBe(2);
+    expect(usage.html).toContain('Shows what this machine holds');
+    expect(usage.html).toContain('usage on this machine, 1 team');
+    // The deep material is not on the hub: it is on the reference pages.
+    expect(usage.html).not.toContain('The header counts the machine');
+    expect(usage.html).not.toContain('The restricted view is a closed list of fields');
+    expect(usage.html).not.toContain('&quot;view&quot;: &quot;restricted&quot;');
+    // The hub is a fraction of the whole set, not the whole on one page.
+    const set = [...byPath.values()].filter(page => page.path.startsWith('/docs/commands/usage/')).map(page => words(page.html)).reduce((a, b) => a + b, 0);
+    expect(words(usage.html) * 2).toBeLessThan(set);
+  });
+
+  test('the deep material is on the reference pages, in the reference\'s own words', () => {
+    expect(byPath.get('/docs/commands/usage/reads-writes/')!.html).toContain('opens no lock, writes no state and logs no line');
+    expect(byPath.get('/docs/commands/usage/report/')!.html).toContain('The header counts the machine');
+    expect(byPath.get('/docs/commands/usage/restricted/')!.html).toContain('The restricted view is a closed list of fields');
+    expect(byPath.get('/docs/commands/usage/json/')!.html).toContain('&quot;view&quot;: &quot;restricted&quot;');
+    expect(byPath.get('/docs/commands/usage/refusals/')!.html).toContain('is a note line and exit 0');
+    // The report page does not carry the JSON document; that is the JSON page.
+    expect(byPath.get('/docs/commands/usage/report/')!.html).not.toContain('&quot;view&quot;: &quot;restricted&quot;');
+  });
+
+  test('the reference pages answer, each with its own title and description', async () => {
+    const expected: [string, string, string][] = [
+      ['/docs/commands/usage/reads-writes/', 'team usage: what it reads and writes — team', 'That team usage writes nothing'],
+      ['/docs/commands/usage/report/', 'team usage: the report — team', 'The team usage report'],
+      ['/docs/commands/usage/restricted/', 'team usage: the restricted view — team', 'Which caller reads the full or restricted view'],
+      ['/docs/commands/usage/json/', 'team usage: the JSON — team', 'What team usage --json prints'],
+      ['/docs/commands/usage/refusals/', 'team usage: refusals — team', 'The two things that refuse team usage'],
+    ];
+    for (const [path, title, description] of expected) {
+      const response = await handleRequest(new Request(`https://teamcli.io${path}`));
+      expect(response.status).toBe(200);
+      const body = await response.text();
+      expect(body).toContain(`<title>${title}</title>`);
+      expect(body).toContain(description);
+    }
+  });
+});
+
+describe('the team down reference, in pages', () => {
+  const byPath = new Map(pages().map(page => [page.path, page]));
+  const down = byPath.get('/docs/commands/down/')!;
+  const words = (html: string) => html.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
+  const refPaths = ['/docs/commands/down/delegate/', '/docs/commands/down/output/', '/docs/commands/down/edge-cases/', '/docs/commands/down/refusals/'];
+
+  test('one hub page and four reference pages, each linked from the hub and linking back', () => {
+    expect([...byPath.keys()].filter(path => path.startsWith('/docs/commands/down/'))).toEqual([
+      '/docs/commands/down/', ...refPaths,
+    ]);
+    for (const path of refPaths) {
+      expect(down.html).toContain(`href="${path}"`);
+      expect(byPath.get(path)!.html).toContain('href="/docs/commands/down/"');
+    }
+  });
+
+  test('the hub holds the purpose, the flags, the basic walkthrough and the short behaviour', () => {
+    expect(down.toc.map(item => item.title)).toEqual(['Flags', 'Examples', 'What it reads and writes', 'Who may run it', 'What it prints', 'Exit codes', 'The reference pages']);
+    // The walkthrough trio: the team file, the dry-run plan, the owner's stop.
+    expect((down.html.match(/<pre class="(?:example__code|term)"/g) ?? []).length).toBe(3);
+    expect(down.html).toContain('claude-keeper: stopped');
+    // The deep material is not on the hub: it is on the reference pages.
+    expect(down.html).not.toContain('A pane the team file');
+    expect(down.html).not.toContain('is working (');
+    expect(down.html).not.toContain('team.yaml is invalid');
+    expect(down.html).not.toContain('this call is claude-beacon');
+    // The hub is a fraction of the whole set, not the whole on one page.
+    const set = [...byPath.values()].filter(page => page.path.startsWith('/docs/commands/down/')).map(page => words(page.html)).reduce((a, b) => a + b, 0);
+    expect(words(down.html) * 2).toBeLessThan(set);
+  });
+
+  test('the deep material is on the reference pages, in the reference\'s own words', () => {
+    expect(byPath.get('/docs/commands/down/delegate/')!.html).toContain('A pane the team file');
+    expect(byPath.get('/docs/commands/down/delegate/')!.html).toContain('this call is claude-beacon');
+    expect(byPath.get('/docs/commands/down/output/')!.html).toContain('holds unsent text in its input box');
+    expect(byPath.get('/docs/commands/down/edge-cases/')!.html).toContain('team.yaml is invalid');
+    expect(byPath.get('/docs/commands/down/edge-cases/')!.html).toContain('claude-relay');
+    expect(byPath.get('/docs/commands/down/refusals/')!.html).toContain('another session-mutating run is holding session');
+    // The dry-run plan is fenced twice in the reference, so it shows on both the hub and the edge-cases page.
+    expect(down.html).toContain('wait until claude-keeper');
+    expect(byPath.get('/docs/commands/down/edge-cases/')!.html).toContain('wait until claude-keeper');
+  });
+
+  test('the reference pages answer, each with its own title and description', async () => {
+    const expected: [string, string, string][] = [
+      ['/docs/commands/down/delegate/', 'team down: the approved delegate — team', 'The approved delegate for team down'],
+      ['/docs/commands/down/output/', 'team down: what it prints — team', 'What team down prints'],
+      ['/docs/commands/down/edge-cases/', 'team down: a renamed seat and a broken file — team', 'Two team down runs'],
+      ['/docs/commands/down/refusals/', 'team down: refusals — team', 'Every message that refuses team down'],
+    ];
+    for (const [path, title, description] of expected) {
+      const response = await handleRequest(new Request(`https://teamcli.io${path}`));
+      expect(response.status).toBe(200);
+      const body = await response.text();
+      expect(body).toContain(`<title>${title}</title>`);
+      expect(body).toContain(description);
+    }
+  });
+});
+
+describe('the team approve reference, in pages', () => {
+  const byPath = new Map(pages().map(page => [page.path, page]));
+  const approve = byPath.get('/docs/commands/approve/')!;
+  const words = (html: string) => html.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
+  const refPaths = ['/docs/commands/approve/who/', '/docs/commands/approve/read-back/', '/docs/commands/approve/record/', '/docs/commands/approve/refusals/', '/docs/commands/approve/overrides/'];
+
+  test('one hub page and five reference pages, each linked from the hub and linking back', () => {
+    expect([...byPath.keys()].filter(path => path.startsWith('/docs/commands/approve/'))).toEqual([
+      '/docs/commands/approve/', ...refPaths,
+    ]);
+    for (const path of refPaths) {
+      expect(approve.html).toContain(`href="${path}"`);
+      expect(byPath.get(path)!.html).toContain('href="/docs/commands/approve/"');
+    }
+  });
+
+  test('the hub holds the purpose, the flags, the basic walkthrough and the short behaviour', () => {
+    expect(approve.toc.map(item => item.title)).toEqual(['Flags', 'Examples', 'Who may run it', 'What it reads and writes', 'What it prints', 'Exit codes', 'The reference pages']);
+    // The walkthrough trio: the team file, the --show read, the owner's approve.
+    expect((approve.html.match(/<pre class="(?:example__code|term)"/g) ?? []).length).toBe(3);
+    expect(approve.html).toContain('project: beacon');
+    expect(approve.html).toContain('Approved. The record is in');
+    // The deep material is not on the hub: it is on the reference pages.
+    expect(approve.html).not.toContain('The record this command writes is signed');
+    expect(approve.html).not.toContain('A delegate\'s approval is for ordinary changes');
+    expect(approve.html).not.toContain('lives in the approval store, beside the record');
+    expect(approve.html).not.toContain('Type the number of seats (2)');
+    // The hub is a fraction of the whole set, not the whole on one page.
+    const set = [...byPath.values()].filter(page => page.path.startsWith('/docs/commands/approve/')).map(page => words(page.html)).reduce((a, b) => a + b, 0);
+    expect(words(approve.html) * 2).toBeLessThan(set);
+  });
+
+  test('the deep material is on the reference pages, in the reference\'s own words', () => {
+    expect(byPath.get('/docs/commands/approve/who/')!.html).toContain('approval is for ordinary changes: the roster');
+    expect(byPath.get('/docs/commands/approve/who/')!.html).toContain('only the owner approves a team file, from a terminal outside herdr; this call is claude-keeper');
+    expect(byPath.get('/docs/commands/approve/read-back/')!.html).toContain('Then the ceilings the approval would fix');
+    expect(byPath.get('/docs/commands/approve/read-back/')!.html).toContain('Needs a new approval: `trust` changed.');
+    expect(byPath.get('/docs/commands/approve/record/')!.html).toContain('The record this command writes is signed');
+    expect(byPath.get('/docs/commands/approve/record/')!.html).toContain('approved before records were signed');
+    expect(byPath.get('/docs/commands/approve/refusals/')!.html).toContain('delegation needs a verified approval');
+    expect(byPath.get('/docs/commands/approve/refusals/')!.html).toContain('Type the number of seats (2) to approve this file');
+    expect(byPath.get('/docs/commands/approve/overrides/')!.html).toContain('lives in the approval store, beside the record');
+    // The read-back page does not carry the refusal walkthrough; that is the refusals page.
+    expect(byPath.get('/docs/commands/approve/read-back/')!.html).not.toContain('Type the number of seats (2)');
+  });
+
+  test('the reference pages answer, each with its own title and description', async () => {
+    const expected: [string, string, string][] = [
+      ['/docs/commands/approve/who/', 'team approve: who may run it — team', 'Who may run team approve'],
+      ['/docs/commands/approve/read-back/', 'team approve: the read-back — team', 'What team approve prints back'],
+      ['/docs/commands/approve/record/', 'team approve: the signed record — team', 'The signed approval record'],
+      ['/docs/commands/approve/refusals/', 'team approve: refusals — team', 'What refuses a team approve write'],
+      ['/docs/commands/approve/overrides/', 'team approve: the overrides file — team', 'overrides.yaml beside the approval record'],
+    ];
+    for (const [path, title, description] of expected) {
+      const response = await handleRequest(new Request(`https://teamcli.io${path}`));
+      expect(response.status).toBe(200);
+      const body = await response.text();
+      expect(body).toContain(`<title>${title}</title>`);
+      expect(body).toContain(description);
+    }
+  });
+});
+
 describe('the reference the site is built against', () => {
   test('the content was fetched, and it says which ref it is', () => {
     expect(contentReady()).toBe(true);
