@@ -1699,13 +1699,37 @@ export function safety(): Rendered {
     .render();
 }
 
-/** The four profiles the reference names, and the sign-in check it gives each. */
+/** The five profiles the reference names, and the sign-in check it gives each. */
 const PROFILES: { cli: string; check: string }[] = [
   { cli: 'claude-code', check: 'claude auth status' },
   { cli: 'codex', check: 'codex login status' },
   { cli: 'cursor', check: 'cursor-agent status' },
   { cli: 'antigravity', check: 'agy models' },
+  { cli: 'grok', check: 'grok models' },
 ];
+
+/**
+ * Grok's facts, read from its launch profile. The README names grok in the CLI list and in
+ * the sign-in paragraph, but carries no grok prose section the way it does for Codex,
+ * Antigravity and Cursor; so the page's grok lines are read by name from `grok.yaml` — the
+ * tested CLI version, and that the profile declares no `status_model`, which is why a grok
+ * seat's model is read from the file, not the screen. A value the profile no longer carries
+ * stops the build here, as a moved reference does everywhere else.
+ */
+function grokProfile(): { tested: string; unattended: string; rules: string; model: string; noStatusModel: boolean } {
+  const grok = read('src/profiles/grok.yaml');
+  const need = (value: string | undefined, what: string): string => {
+    if (!value) throw new ReferenceError(`grok.yaml no longer carries ${what}`);
+    return value;
+  };
+  return {
+    tested: need(/\n\s*tested:\s*\n\s*from:\s*'([^']+)'/.exec(grok)?.[1], 'a tested.from version'),
+    unattended: need(/\n\s*unattended:\s*\n\s*-\s*(--\S+)/.exec(grok)?.[1], 'an unattended flag'),
+    rules: need(/\n\s*rules:\s*\n\s*option:\s*(--\S+)/.exec(grok)?.[1], 'a rules option'),
+    model: need(/\n\s*models:\s*\n\s*option:\s*\n\s*-\s*(--\S+)/.exec(grok)?.[1], 'a model option'),
+    noStatusModel: !/^status_model:/m.test(grok),
+  };
+}
 
 /** /docs/clis/ — what `team` knows of each CLI, from the reference. */
 export function clis(): Rendered {
@@ -1714,6 +1738,7 @@ export function clis(): Rendered {
   for (const profile of PROFILES) {
     if (!login.includes(profile.check)) throw new ReferenceError(`the login paragraph no longer names "${profile.check}"`);
   }
+  const grok = grokProfile();
   return new Doc()
     .h1('Supported CLIs')
     .md(bullet(section(README, "The file's format"), '`seats[*].cli`'))
@@ -1721,12 +1746,21 @@ export function clis(): Rendered {
     .md(login)
     .block(fenceWith(doctor, 'console', 'team doctor --login'))
     .md(sentence(doctor, 'A login check that passed is'))
+    .heading('Claude Code')
+    // The alternative-model note: the owner runs Kimi, DeepSeek and GLM as Claude Code seats
+    // pointed at each provider's Anthropic-compatible endpoint. The off-screen-model line is the
+    // team's own documented limit: Claude Code reads only its own models off the screen, so
+    // another lab's model has no on-screen label and the seat's label is the file's.
+    .note('Claude Code runs a model from another lab by pointing it at that provider’s Anthropic-compatible endpoint: Kimi (Moonshot’s Kimi K3), DeepSeek (DeepSeek V4.1 Flash) and GLM (Zhipu/zai’s GLM 5.3) all run this way, as Claude Code seats. Claude Code reads only Opus, Sonnet, Haiku and Fable off its own screen, so for one of these models the seat’s label on <code>team status</code> comes from the team file’s <code>display</code>, not the screen.')
     .heading('Codex')
     .md(paragraph(README, 'The Codex profile is tested with CLI 0.157.0'))
     .heading('Antigravity')
     .md(paragraph(README, 'The Antigravity profile is tested with CLI 1.2.16'))
     .heading('Cursor')
     .md(paragraph(README, 'Launching a Cursor seat'))
+    .heading('Grok')
+    // Grok has no README prose section; its lines are read from grok.yaml by name (above).
+    .note(`The Grok profile is tested with CLI ${escapeHtml(grok.tested)}, signs in with <code>grok models</code>, and runs unattended with <code>${escapeHtml(grok.unattended)}</code>; its rules ride the launch line as <code>${escapeHtml(grok.rules)}</code> and its model is set with <code>${escapeHtml(grok.model)}</code>.${grok.noStatusModel ? ' Grok’s running model stands on the composer’s footer row, which is not a status row this version reads, so the profile declares no <code>status_model</code>: a Grok seat’s model and effort come from the team file’s <code>display</code>, not the screen — the same honest limit as a Claude Code seat on another lab’s model.' : ''}`)
     .render();
 }
 
@@ -1927,7 +1961,7 @@ const SITE_PAGES: Record<string, string> = {
   '/docs/file/': 'Seven sections of .agents/team.yaml — the head, identity, workspace, machine, seats, watch and budgets — then the other fields the README names.',
   '/docs/commands/': 'Every command of team: what each reads and writes, who may run it, its refusals, its exit codes and its examples.',
   '/docs/safety/': 'Why team is safe to run: the owner outside herdr, the approved copy, and dialogs.trust: owner sends no key, coordinator may press it from its own seat.',
-  '/docs/clis/': 'What team knows of claude-code, codex, cursor and antigravity: the launch profile, the sign-in check, and what it never writes.',
+  '/docs/clis/': 'What team knows of claude-code, codex, cursor, antigravity and grok: the launch profile, the sign-in check, and the models it reads off the screen.',
 };
 
 /** A description from the map above; a page that has none is a mistake, not a default. */
