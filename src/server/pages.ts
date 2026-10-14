@@ -1294,6 +1294,106 @@ export function approveOverrides(): Rendered {
     .render();
 }
 
+// ------------------------------------------- the `worktree` reference, in pages
+
+/**
+ * `worktree` renders a little over a screen (10.8k px at 1440 as one page), so it earns
+ * a split. Its hub holds what fits a screen — the purpose, the synopsis, the flags, the
+ * happy-path walkthrough, who may run it, and the exit codes — and the rest is split,
+ * whole and unretyped, into reference pages one topic each: what it reads and writes
+ * (the approved-copy rules and the drift example), and the refusals (the long table and
+ * the runs that trip it). Together the three pages hold every fence of the reference
+ * page exactly once (docs:check holds them to it), and each states its rule once.
+ */
+
+/** The reference pages of `team worktree`, as cards: one line each, in the site's own words. */
+const WORKTREE_REFERENCE: { path: string; name: string; summary: string }[] = [
+  { path: '/docs/commands/worktree/reads-writes/', name: 'What it reads and writes', summary: 'The approved copy the two subcommands read, the note when the file has unapproved changes, and how {repo} and {task} fill the folder and branch.' },
+  { path: '/docs/commands/worktree/refusals/', name: 'Refusals', summary: 'Every message that refuses it and the exit each carries, with the caller, --kind, task-name, already-recorded and remove-blocked runs shown.' },
+];
+
+/** The sources a `team worktree` page is read from — the reference page, and this assembly. */
+const WORKTREE_FILES = ['content/team/docs/commands/worktree.md', 'src/server/pages.ts'];
+
+/** A `team worktree` reference page's first line: where it belongs. */
+function worktreePart(html: string): string {
+  return `Part of <a href="/docs/commands/worktree/"><code>team worktree</code></a> — ${html}`;
+}
+
+/** /docs/commands/worktree/ — the command itself: purpose, synopsis, flags, the happy path, and the short behaviour. */
+export function worktreePage(): Rendered {
+  const wt = commandPage('worktree');
+  const examples = section(wt, 'Examples');
+  return new Doc()
+    .h1('team worktree')
+    .md(paragraph(wt, 'Creates and removes a task worktree'))
+    .md(section(wt, 'Synopsis'))
+    .heading('Flags')
+    .md(section(wt, 'Flags'))
+    .heading('Examples')
+    .note('The team file the examples read:')
+    .block(fenceWith(wt, 'yaml', 'project: beacon'))
+    .md(paragraph(examples, 'The project has a `main`'))
+    .block(fenceWith(wt, 'commit', 'Sketch the layout'))
+    .md(paragraph(examples, 'A good one creates the worktree'))
+    .block(fenceWith(wt, 'console', '../worktrees/beacon/select-width'))
+    .md(paragraph(examples, 'A worktree with nothing to lose'))
+    .block(fenceWith(wt, 'console', '../worktrees/beacon/tidy-logs'))
+    .block(fenceWith(wt, 'console', 'removed tidy-logs'))
+    .heading('Who may run it')
+    .md(section(wt, 'Who may run it'))
+    .heading('Exit codes')
+    .md(section(wt, 'Exit codes'))
+    .note('The rule <em>above</em> that exit 1 names — every message that refuses a run — is the table on <a href="/docs/commands/worktree/refusals/">the refusals page</a>.')
+    .heading('The reference pages')
+    .raw(`<div class="doc-grid">${WORKTREE_REFERENCE.map(card => `<a class="doc-entry" href="${card.path}"><span class="doc-entry__name">${escapeHtml(card.name)}</span><span class="doc-entry__summary">${escapeHtml(card.summary)}</span></a>`).join('')}</div>\n`)
+    .render();
+}
+
+/** /docs/commands/worktree/reads-writes/ — the approved copy the subcommands read, and the drift example. */
+export function worktreeReadsWrites(): Rendered {
+  const wt = commandPage('worktree');
+  const examples = section(wt, 'Examples');
+  return new Doc()
+    .h1('What it reads and writes')
+    .note(worktreePart('the approved copy the two subcommands read, the unapproved-change note, and how {repo} and {task} fill the folder and branch.'))
+    .md(section(wt, 'What it reads and writes'))
+    .heading('An unapproved change')
+    .md(paragraph(examples, 'An edit to an owner-controlled value'))
+    .block(fenceWith(wt, 'yaml', 'claude-later'))
+    .block(fenceWith(wt, 'console', 'read-back'))
+    .md(paragraph(examples, 'The seat the file added is refused'))
+    .block(fenceWith(wt, 'console', 'claude-later is not in the approved file'))
+    .render();
+}
+
+/** /docs/commands/worktree/refusals/ — every message that refuses it, and the runs that trip it. */
+export function worktreeRefusals(): Rendered {
+  const wt = commandPage('worktree');
+  const examples = section(wt, 'Examples');
+  return new Doc()
+    .h1('Refusals')
+    .note(worktreePart('every message that refuses it, the exit each carries, and the runs that trip them.'))
+    .md(section(wt, 'Refusals'))
+    .heading('A caller that cannot run it')
+    .md(paragraph(examples, 'A seat that isn\'t the orchestrator'))
+    .block(fenceWith(wt, 'console', 'only the owner, the orchestrator or the operator runs it'))
+    .heading('A kind the pattern needs')
+    .md(paragraph(examples, 'The branch pattern asks for a kind'))
+    .block(fenceWith(wt, 'console', '--kind is required: the branch pattern'))
+    .heading('A task name that is not one segment')
+    .md(paragraph(examples, 'The task name is one path segment'))
+    .block(fenceWith(wt, 'console', 'a task name is one segment'))
+    .heading('A task already open')
+    .md(paragraph(examples, 'The same task can\'t be open twice'))
+    .block(fenceWith(wt, 'console', 'is already recorded'))
+    .heading('A worktree with commits to lose')
+    .md(paragraph(examples, 'A commit that lives only in the worktree'))
+    .block(fenceWith(wt, 'git', 'Measure the pane'))
+    .block(fenceWith(wt, 'console', 'commits on no remote branch'))
+    .render();
+}
+
 // ------------------------------------------- the `add` reference, in pages
 
 /**
@@ -1729,6 +1829,12 @@ export function pages(): PageMeta[] {
         page('/docs/commands/approve/refusals/', 'team approve: refusals — team', '0.5', approveRefusals(), APPROVE_FILES),
         page('/docs/commands/approve/overrides/', 'team approve: the overrides file — team', '0.5', approveOverrides(), APPROVE_FILES),
       ]
+    : name === 'worktree'
+    ? [
+        page('/docs/commands/worktree/', 'team worktree — team', '0.8', worktreePage(), WORKTREE_FILES),
+        page('/docs/commands/worktree/reads-writes/', 'team worktree: what it reads and writes — team', '0.5', worktreeReadsWrites(), WORKTREE_FILES),
+        page('/docs/commands/worktree/refusals/', 'team worktree: refusals — team', '0.5', worktreeRefusals(), WORKTREE_FILES),
+      ]
     : name === 'add'
     ? [
         page('/docs/commands/add/', 'team add — team', '0.8', addPage(), ADD_FILES),
@@ -1804,6 +1910,8 @@ const DESCRIPTIONS: Record<string, string> = {
   'remove/refusals': 'Every message that refuses team remove and its exit — the caller gates, the owner-only flags, the busy-seat states, placement, and the shared lock.',
   'remove/keep-and-temporary': 'Removing a temporary seat by the name add gave it, and --keep leaving the seat in the file as stopped for a later team add.',
   worktree: 'Creates a task worktree from an up-to-date base, or removes one; the branch is never deleted.',
+  'worktree/reads-writes': 'What team worktree reads and writes: the approved-copy rules, the unapproved-change note, and how {repo} and {task} fill the folder and the branch.',
+  'worktree/refusals': 'Every message that refuses team worktree and its exit — the caller gates, the owner-only flags, the task name, the trust and limit checks, and git.',
   answer: 'Presses the one recorded key of a seat\'s folder-trust dialog when the file allows it; every check has to pass, and anything else sends nothing.',
   release: 'Checks a release on npm and GitHub. When the file has the pairs: Linear milestone, qualifying status update, and the release marker in the public activity file.',
   usage: 'Shows one project’s budget accounts, windows, remaining usage, and when each figure was last read.',

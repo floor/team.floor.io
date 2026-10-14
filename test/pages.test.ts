@@ -606,6 +606,62 @@ describe('the team approve reference, in pages', () => {
   });
 });
 
+describe('the team worktree reference, in pages', () => {
+  const byPath = new Map(pages().map(page => [page.path, page]));
+  const worktree = byPath.get('/docs/commands/worktree/')!;
+  const words = (html: string) => html.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
+  const refPaths = ['/docs/commands/worktree/reads-writes/', '/docs/commands/worktree/refusals/'];
+
+  test('one hub page and two reference pages, each linked from the hub and linking back', () => {
+    expect([...byPath.keys()].filter(path => path.startsWith('/docs/commands/worktree/'))).toEqual([
+      '/docs/commands/worktree/', ...refPaths,
+    ]);
+    for (const path of refPaths) {
+      expect(worktree.html).toContain(`href="${path}"`);
+      expect(byPath.get(path)!.html).toContain('href="/docs/commands/worktree/"');
+    }
+  });
+
+  test('the hub holds the purpose, the flags, the happy path and the short behaviour', () => {
+    expect(worktree.toc.map(item => item.title)).toEqual(['Flags', 'Examples', 'Who may run it', 'Exit codes', 'The reference pages']);
+    expect((worktree.html.match(/<pre class="(?:example__code|term)"/g) ?? []).length).toBe(5);
+    // The purpose is the whole first paragraph.
+    expect(worktree.html).toContain('Creates and removes a task worktree');
+    // The happy path rides on the hub.
+    expect(worktree.html).toContain('../worktrees/beacon/select-width');
+    expect(worktree.html).toContain('removed tidy-logs');
+    // The deep sections are not on the hub: they are on the reference pages.
+    expect(worktree.html).not.toContain('the worktree limit is 8');
+    expect(worktree.html).not.toContain('Every value the two subcommands read');
+    // The hub is a fraction of the whole set, not the whole on one page.
+    const set = [...byPath.values()].filter(page => page.path.startsWith('/docs/commands/worktree/')).map(page => words(page.html)).reduce((a, b) => a + b, 0);
+    expect(words(worktree.html) * 2).toBeLessThan(set);
+  });
+
+  test('the deep material is on the reference pages, in the reference\'s own words', () => {
+    expect(byPath.get('/docs/commands/worktree/reads-writes/')!.html).toContain('Every value the two subcommands read');
+    expect(byPath.get('/docs/commands/worktree/reads-writes/')!.html).toContain('claude-later is not in the approved file');
+    expect(byPath.get('/docs/commands/worktree/refusals/')!.html).toContain('the worktree limit is 8');
+    expect(byPath.get('/docs/commands/worktree/refusals/')!.html).toContain('commits on no remote branch');
+    // The refusals table sits on the refusals page, not on the reads-writes page.
+    expect(byPath.get('/docs/commands/worktree/reads-writes/')!.html).not.toContain('the worktree limit is 8');
+  });
+
+  test('the reference pages answer, each with its own title and description', async () => {
+    const expected: [string, string, string][] = [
+      ['/docs/commands/worktree/reads-writes/', 'team worktree: what it reads and writes — team', 'What team worktree reads and writes'],
+      ['/docs/commands/worktree/refusals/', 'team worktree: refusals — team', 'Every message that refuses team worktree and its exit'],
+    ];
+    for (const [path, title, description] of expected) {
+      const response = await handleRequest(new Request(`https://teamcli.io${path}`));
+      expect(response.status).toBe(200);
+      const body = await response.text();
+      expect(body).toContain(`<title>${title}</title>`);
+      expect(body).toContain(description);
+    }
+  });
+});
+
 describe('the team add reference, in pages', () => {
   const byPath = new Map(pages().map(page => [page.path, page]));
   const add = byPath.get('/docs/commands/add/')!;
