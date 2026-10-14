@@ -188,7 +188,11 @@ describe('the team up reference, in pages', () => {
 
   test('the hub holds the purpose, the flags, three examples and the short behaviour', () => {
     expect(up.toc.map(item => item.title)).toEqual(['Flags', 'Examples', 'Who may run it', 'What it reads and writes', 'What it prints', 'Exit codes', 'Known issues', 'The reference pages']);
-    expect((up.html.match(/<pre /g) ?? []).length).toBe(3);
+    expect((up.html.match(/<pre /g) ?? []).length).toBe(4);
+    // The opening is the whole first paragraph: the stopped-seat rule is hub material.
+    expect(up.html).toContain('left out until');
+    // The record sample the first "What it prints" sentence introduces rides with it.
+    expect(up.html).toContain('claude-keeper: ready\nclaude-beacon: ready');
     // The deep material is not on the hub: it is on the reference pages.
     expect(up.html).not.toContain('The records are what stdout gets');
     expect(up.html).not.toContain('[o] open pane');
@@ -203,6 +207,12 @@ describe('the team up reference, in pages', () => {
     expect(byPath.get('/docs/commands/up/waiting/')!.html).toContain('[o] open pane, [s] skip seat, [q] stop cleanly');
     expect(byPath.get('/docs/commands/up/limits/')!.html).toContain('The waiting proof is placement');
     expect(byPath.get('/docs/commands/up/refusals/')!.html).toContain('only the owner runs');
+    // The limits page is its five bullets alone: the records tail that follows them in the
+    // reference belongs to the records page, once.
+    const limits = byPath.get('/docs/commands/up/limits/')!.html;
+    expect(limits).not.toContain('The records are what stdout gets');
+    expect(limits).not.toContain('left out: timeout (no terminal for owner)');
+    expect(limits).not.toContain('[o] open pane');
   });
 
   test('the reference pages answer, each with its own title and description', async () => {

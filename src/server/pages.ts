@@ -321,7 +321,7 @@ export function upPage(): Rendered {
   const examples = section(up, 'Examples');
   return new Doc()
     .h1('team up')
-    .md(sentence(up, 'Starts the team:'))
+    .md(paragraph(up, 'Starts the team:'))
     .md(section(up, 'Synopsis'))
     .heading('Flags')
     .md(section(up, 'Flags'))
@@ -339,7 +339,7 @@ export function upPage(): Rendered {
     .md(section(up, 'What it reads and writes'))
     .note('The run-lock refusal that paragraph names is on <a href="/docs/commands/up/refusals/">the refusals page</a>.')
     .heading('What it prints')
-    .md(paragraph(section(up, 'What it prints'), 'One record per seat'))
+    .md(fromBlock(section(up, 'What it prints'), 'One record per seat', 'A seat that reaches its idle prompt'))
     .md(paragraph(section(up, 'What it prints'), 'A seat that reaches its idle prompt'))
     .note('Every line a run can print, and what each means, is on <a href="/docs/commands/up/records/">the records page</a>.')
     .heading('Exit codes')
@@ -397,7 +397,7 @@ export function upRecords(): Rendered {
     .md(fromBlock(prints, "A seat that doesn't get there", 'The records are what stdout gets'))
     .note('The pause that paragraph\'s <em>above</em> names is on <a href="/docs/commands/up/waiting/">the waiting page</a>.')
     .heading('Every line, and its meaning')
-    .note('Rows that name <em>the pause, above</em> mean the one on <a href="/docs/commands/up/waiting/">the waiting page</a>.')
+    .note('Rows that name <em>the pause, above</em>, <em>the same proof as every close above</em>, or an agent <code>team</code> cannot name <em>(above)</em> mean the waiting page\'s own: the pause, the close it proves, and the owner\'s by-hand answer.')
     .md(fromBlock(prints, 'The records are what stdout gets', 'A `version: "0"`'))
     .heading('The version placeholder')
     .md(fromBlock(prints, 'A `version: "0"`', '`<account>` in these lines'))
@@ -427,7 +427,7 @@ export function upLimits(): Rendered {
   return new Doc()
     .h1('Known limits')
     .note(upPart('the windows a process of the same user still has. The checks the bullets name are on <a href="/docs/commands/up/waiting/">the waiting page</a> and <a href="/docs/commands/up/records/">the records page</a>.'))
-    .md(fromBlock(section(up, 'What it prints'), '- The waiting proof is placement'))
+    .md(fromBlock(section(up, 'What it prints'), '- The waiting proof is placement', "A seat that doesn't get there"))
     .render();
 }
 
@@ -448,6 +448,7 @@ export function upRefusals(): Rendered {
     .md(paragraph(examples, 'A seat is not the owner'))
     .block(fenceWith(up, 'console', 'this call is claude-beacon'))
     .heading('Every refusal')
+    .note('The <em>MISS</em> row\'s <em>in the lines above</em> means the line table on <a href="/docs/commands/up/records/">the records page</a>.')
     .md(section(up, 'Refusals'))
     .heading('An approval that drifted')
     .md(paragraph(examples, 'An owner section changed in the file'))
