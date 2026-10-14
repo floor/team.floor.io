@@ -585,6 +585,152 @@ export function downRefusals(): Rendered {
     .render();
 }
 
+// ------------------------------------------- the `approve` reference, in pages
+
+/**
+ * `approve` is the third-longest command page, and the owner's first gate: every
+ * command that starts or changes a team reads the record it writes. Its hub holds
+ * what fits a screen — the purpose, the synopsis, the flags, the basic walkthrough,
+ * the short behaviour — and the rest is split, whole and unretyped, into reference
+ * pages one topic each: who may run it, the read-back, the signed record, the
+ * refusals, and the overrides file. Together the six pages hold every fence of the
+ * reference page exactly once (docs:check holds them to it), each in the reference's
+ * order, and each rule is stated once, linked where it shows.
+ */
+
+/** The reference pages of `team approve`, as cards: one line each, in the site's own words. */
+const APPROVE_REFERENCE: { path: string; name: string; summary: string }[] = [
+  { path: '/docs/commands/approve/who/', name: 'Who may run it', summary: 'The owner, the approved delegate, and what a delegated approval may change.' },
+  { path: '/docs/commands/approve/read-back/', name: 'The read-back', summary: 'What approve prints: the diff against the approved copy, the ceilings and seats, and what needs a new approval.' },
+  { path: '/docs/commands/approve/record/', name: 'The signed record', summary: 'The key and the counter, the record\'s strict shape, and a record from before signing.' },
+  { path: '/docs/commands/approve/refusals/', name: 'Refusals', summary: 'The refusals, --confirm, and a line waiting on the terminal that refuses the write.' },
+  { path: '/docs/commands/approve/overrides/', name: 'The overrides file', summary: 'overrides.yaml in the approval store: the patterns it may add, and when approve records it.' },
+];
+
+/** The sources a `team approve` page is read from — the reference page, and this assembly. */
+const APPROVE_FILES = ['content/team/docs/commands/approve.md', 'src/server/pages.ts'];
+
+/** A `team approve` reference page's first line: where it belongs. */
+function approvePart(html: string): string {
+  return `Part of <a href="/docs/commands/approve/"><code>team approve</code></a> — ${html}`;
+}
+
+/** /docs/commands/approve/ — the command itself: purpose, synopsis, flags, the basic walkthrough, and the short behaviour. */
+export function approvePage(): Rendered {
+  const approve = commandPage('approve');
+  const examples = section(approve, 'Examples');
+  const prints = section(approve, 'What it prints');
+  return new Doc()
+    .h1('team approve')
+    .md(paragraph(approve, 'The owner approves the team file:'))
+    .md(section(approve, 'Synopsis'))
+    .heading('Flags')
+    .md(section(approve, 'Flags'))
+    .heading('Examples')
+    .note('The team file the examples read:')
+    .block(fenceWith(approve, 'yaml', 'project: beacon'))
+    .md(paragraph(examples, 'The first run shows the whole file'))
+    .block(fenceWith(approve, 'console', 'never approved on this machine. The whole file:'))
+    .md(paragraph(examples, 'The owner approves it'))
+    .block(fenceWith(approve, 'console', 'Approved. The record is in'))
+    .heading('Who may run it')
+    .md(paragraph(section(approve, 'Who may run it'), 'The owner, from a terminal outside herdr'))
+    .note('The delegate\'s grant — the gate this names, which owner sections it admits, and a delegated run — is on <a href="/docs/commands/approve/who/">the who-may-run-it page</a>.')
+    .heading('What it reads and writes')
+    .md(section(approve, 'What it reads and writes'))
+    .note('How the record is signed — the key, the counter and its fingerprint — is on <a href="/docs/commands/approve/record/">the signed-record page</a>.')
+    .heading('What it prints')
+    .md(fromBlock(prints, 'With no record on this machine', 'Nothing at all changed is said plainly:'))
+    .note('When nothing changed, the ceilings and seats an approval fixes, what needs a new approval, and an unapproved section\'s drift are on <a href="/docs/commands/approve/read-back/">the read-back page</a>.')
+    .heading('Exit codes')
+    .md(section(approve, 'Exit codes'))
+    .note('The refusals these codes name — the write gate, and <code>--confirm</code> — are on <a href="/docs/commands/approve/refusals/">the refusals page</a>.')
+    .heading('The reference pages')
+    .raw(`<div class="doc-grid">${APPROVE_REFERENCE.map(card => `<a class="doc-entry" href="${card.path}"><span class="doc-entry__name">${escapeHtml(card.name)}</span><span class="doc-entry__summary">${escapeHtml(card.summary)}</span></a>`).join('')}</div>\n`)
+    .render();
+}
+
+/** /docs/commands/approve/who/ — the owner, the approved delegate, and what a delegated approval may change. */
+export function approveWho(): Rendered {
+  const approve = commandPage('approve');
+  const examples = section(approve, 'Examples');
+  return new Doc()
+    .h1('Who may run it')
+    .note(approvePart('the owner, the approved delegate, and what a delegated approval may change.'))
+    .heading('A delegate\'s grant')
+    .md(paragraph(section(approve, 'Who may run it'), 'A delegate\'s approval is for ordinary changes'))
+    .note('The ordinary rule this narrows — only the owner, from a terminal outside herdr — is on <a href="/docs/commands/approve/">the team approve page</a>.')
+    .heading('A delegated approval')
+    .md(section(approve, 'A delegated approval'))
+    .heading('A seat is not the owner')
+    .md(paragraph(examples, 'A seat can read the comparison'))
+    .block(fenceByInfo(approve, 'caller=claude-keeper'))
+    .render();
+}
+
+/** /docs/commands/approve/read-back/ — what approve prints, the ceilings and seats it fixes, and what needs a new approval. */
+export function approveReadBack(): Rendered {
+  const approve = commandPage('approve');
+  const examples = section(approve, 'Examples');
+  const prints = section(approve, 'What it prints');
+  return new Doc()
+    .h1('The read-back')
+    .note(approvePart('what approve prints against an existing record: when nothing changed, the ceilings and seats it fixes, and what needs a new approval.'))
+    .md(fromBlock(prints, 'Nothing at all changed is said plainly:'))
+    .note('When no record on this machine, the whole file is printed numbered — the example of that, and the basic walkthrough, are on <a href="/docs/commands/approve/">the team approve page</a>.')
+    .heading('An owner section changed')
+    .md(paragraph(examples, 'An owner section is the owner'))
+    .block(fenceWith(approve, 'yaml', '~/Code/worktrees/beacon'))
+    .block(fenceWith(approve, 'console', 'Needs a new approval: `trust` changed'))
+    .render();
+}
+
+/** /docs/commands/approve/record/ — the signed record: the key, the counter, its shape, and a record from before signing. */
+export function approveRecord(): Rendered {
+  const approve = commandPage('approve');
+  return new Doc()
+    .h1('The signed record')
+    .note(approvePart('the signed record approve writes: the key and the counter, its strict shape, and a record from before signing.'))
+    .md(section(approve, 'The signed record'))
+    .render();
+}
+
+/** /docs/commands/approve/refusals/ — what refuses a write, and the --confirm and input gates. */
+export function approveRefusals(): Rendered {
+  const approve = commandPage('approve');
+  const examples = section(approve, 'Examples');
+  return new Doc()
+    .h1('Refusals')
+    .note(approvePart('what refuses a write: a seat or the wrong delegate, a change that needs the owner, <code>--confirm</code>\'s answer, and a line waiting on the terminal.'))
+    .heading('Every refusal')
+    .md(section(approve, 'Refusals'))
+    .note('The exit codes these refusals carry are on <a href="/docs/commands/approve/">the team approve page</a>.')
+    .heading('A new seat, and the write gate')
+    .md(paragraph(examples, 'A new seat needs one too'))
+    .block(fenceWith(approve, 'yaml', 'claude-beacon'))
+    .md(paragraph(examples, '`--confirm` asks, and a wrong answer'))
+    .block(fenceByInfo(approve, 'answer="1"'))
+    .md(paragraph(examples, 'The same protection without `--confirm`'))
+    .block(fenceByInfo(approve, 'waiting="1"'))
+    .md(paragraph(examples, 'A terminal the check cannot read'))
+    .block(fenceByInfo(approve, 'waiting="unreadable"'))
+    .md(paragraph(examples, 'With `--confirm`, the answer is the number of seats'))
+    .block(fenceByInfo(approve, 'answer="2"'))
+    .md(paragraph(examples, 'The same file again is the same text'))
+    .block(fenceWith(approve, 'console', 'approval #3 for this project'))
+    .render();
+}
+
+/** /docs/commands/approve/overrides/ — overrides.yaml in the approval store, and when approve records it. */
+export function approveOverrides(): Rendered {
+  const approve = commandPage('approve');
+  return new Doc()
+    .h1('The overrides file')
+    .note(approvePart('overrides.yaml in the approval store: the patterns it may add to a shipped profile, and when approve records it.'))
+    .md(section(approve, 'The overrides file'))
+    .render();
+}
+
 // ---------------------------------------------------------------- safety and CLIs
 
 /**
@@ -718,6 +864,15 @@ export function pages(): PageMeta[] {
         page('/docs/commands/down/edge-cases/', 'team down: a renamed seat and a broken file — team', '0.5', downEdgeCases(), DOWN_FILES),
         page('/docs/commands/down/refusals/', 'team down: refusals — team', '0.5', downRefusals(), DOWN_FILES),
       ]
+    : name === 'approve'
+    ? [
+        page('/docs/commands/approve/', 'team approve — team', '0.8', approvePage(), APPROVE_FILES),
+        page('/docs/commands/approve/who/', 'team approve: who may run it — team', '0.5', approveWho(), APPROVE_FILES),
+        page('/docs/commands/approve/read-back/', 'team approve: the read-back — team', '0.5', approveReadBack(), APPROVE_FILES),
+        page('/docs/commands/approve/record/', 'team approve: the signed record — team', '0.5', approveRecord(), APPROVE_FILES),
+        page('/docs/commands/approve/refusals/', 'team approve: refusals — team', '0.5', approveRefusals(), APPROVE_FILES),
+        page('/docs/commands/approve/overrides/', 'team approve: the overrides file — team', '0.5', approveOverrides(), APPROVE_FILES),
+      ]
     : [page(`/docs/commands/${name}/`, `team ${name} — team`, '0.8', commandPageContent(name), [`content/team/docs/commands/${name}.md`])]);
   return [...group, ...commands];
 }
@@ -730,6 +885,11 @@ export function pages(): PageMeta[] {
 const DESCRIPTIONS: Record<string, string> = {
   init: 'Writes the team file: a skeleton for this project, or the copy you last approved, kept out of git.',
   approve: 'The owner reads the whole file back, then records it, its ceilings and its seats on this machine; --show prints it.',
+  'approve/who': 'Who may run team approve: the owner from a terminal outside herdr, and the approved delegate — the pane the file names — for the roster and rules alone.',
+  'approve/read-back': 'What team approve prints back: the per-section diff against the approved copy, the ceilings and seats it fixes, and which changes need a new approval.',
+  'approve/record': 'The signed approval record: the key and per-project counter outside the store, the record\'s strict shape, and a record written before signing.',
+  'approve/refusals': 'What refuses a team approve write: a seat or wrong delegate, a change needing the owner, --confirm\'s answer, and a line waiting on the terminal.',
+  'approve/overrides': 'overrides.yaml beside the approval record: the dialog and quota patterns it may add to a shipped profile, and when team approve records it.',
   check: 'One answer to one question: is anything wrong with this team that someone should act on? It reads the file, approval, state and herdr.',
   commits: 'Checks a commit, or a range of commits, against the signature rule and forbidden patterns; exit 1 when a commit is refused.',
   pr: 'Checks a pull request body against the signature rule and forbidden patterns, needing no repository; exit 1 when refused.',
