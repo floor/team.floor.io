@@ -233,6 +233,72 @@ describe('the team up reference, in pages', () => {
   });
 });
 
+describe('the team doctor reference, in pages', () => {
+  const byPath = new Map(pages().map(page => [page.path, page]));
+  const doctor = byPath.get('/docs/commands/doctor/')!;
+  const words = (html: string) => html.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
+  const refPaths = ['/docs/commands/doctor/report/', '/docs/commands/doctor/models/', '/docs/commands/doctor/clis/', '/docs/commands/doctor/login/', '/docs/commands/doctor/budgets/'];
+
+  test('one hub page and five reference pages, each linked from the hub and linking back', () => {
+    expect([...byPath.keys()].filter(path => path.startsWith('/docs/commands/doctor/'))).toEqual([
+      '/docs/commands/doctor/', ...refPaths,
+    ]);
+    for (const path of refPaths) {
+      expect(doctor.html).toContain(`href="${path}"`);
+      expect(byPath.get(path)!.html).toContain('href="/docs/commands/doctor/"');
+    }
+  });
+
+  test('the hub holds the purpose, the flags, the base example and the short behaviour', () => {
+    expect(doctor.toc.map(item => item.title)).toEqual(['Flags', 'Examples', 'Who may run it', 'What it reads and writes', 'What it prints', 'Refusals', 'Exit codes', 'The reference pages']);
+    expect((doctor.html.match(/<pre class="(?:example__code|term)"/g) ?? []).length).toBe(5);
+    // The purpose is the whole first paragraph: the refuse-until rule is hub material.
+    expect(doctor.html).toContain('refuse until the missing ones that block them are done');
+    // The base example and its canonical run ride on the hub.
+    expect(doctor.html).toContain('nothing missing, 2 warnings');
+    expect(doctor.html).toContain('the lobby ~/.config/team/lobby: verified');
+    // The short lead of what it prints is here; the ordered findings are not.
+    expect(doctor.html).toContain('One line per finding');
+    expect(doctor.html).not.toContain('The findings come in order');
+    expect(doctor.html).not.toContain('judged by two questions');
+    // The hub is a fraction of the whole set, not the whole on one page.
+    const set = [...byPath.values()].filter(page => page.path.startsWith('/docs/commands/doctor/')).map(page => words(page.html)).reduce((a, b) => a + b, 0);
+    expect(words(doctor.html) * 2).toBeLessThan(set);
+  });
+
+  test('the deep material is on the reference pages, in the reference\'s own words', () => {
+    expect(byPath.get('/docs/commands/doctor/report/')!.html).toContain('The findings come in order');
+    expect(byPath.get('/docs/commands/doctor/report/')!.html).toContain('asks for 2.0 GB free swap');
+    expect(byPath.get('/docs/commands/doctor/models/')!.html).toContain('the launch runs team-codex');
+    expect(byPath.get('/docs/commands/doctor/models/')!.html).toContain('the model is chosen by its launcher');
+    expect(byPath.get('/docs/commands/doctor/clis/')!.html).toContain('older than the tested 2.1.288');
+    expect(byPath.get('/docs/commands/doctor/login/')!.html).toContain('log in to codex');
+    expect(byPath.get('/docs/commands/doctor/budgets/')!.html).toContain('the budget checks were not run');
+    // The sign-in file sits on the login page, not duplicated onto the CLIs page as the
+    // install example repeats it: each page shows that file once.
+    const login = byPath.get('/docs/commands/doctor/login/')!.html;
+    expect(login).toContain('reads the logins alone');
+    expect(login).not.toContain('The findings come in order');
+  });
+
+  test('the reference pages answer, each with its own title and description', async () => {
+    const expected: [string, string, string][] = [
+      ['/docs/commands/doctor/report/', 'team doctor: the report — team', 'Every finding a team doctor run prints, in order'],
+      ['/docs/commands/doctor/models/', 'team doctor: models and launches — team', 'What team doctor says of a seat’s model'],
+      ['/docs/commands/doctor/clis/', 'team doctor: each CLI — team', 'herdr and each seat’s CLI in team doctor'],
+      ['/docs/commands/doctor/login/', 'team doctor: the sign-in checks — team', 'team doctor --login: one read-only sign-in check per CLI'],
+      ['/docs/commands/doctor/budgets/', 'team doctor: the budget checks — team', 'The owner’s budget checks in team doctor'],
+    ];
+    for (const [path, title, description] of expected) {
+      const response = await handleRequest(new Request(`https://teamcli.io${path}`));
+      expect(response.status).toBe(200);
+      const body = await response.text();
+      expect(body).toContain(`<title>${title}</title>`);
+      expect(body).toContain(description);
+    }
+  });
+});
+
 describe('the reference the site is built against', () => {
   test('the content was fetched, and it says which ref it is', () => {
     expect(contentReady()).toBe(true);
