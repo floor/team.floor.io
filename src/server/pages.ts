@@ -459,6 +459,117 @@ export function upRefusals(): Rendered {
     .render();
 }
 
+// ------------------------------------------- the `status` reference, in pages
+
+/**
+ * `status` is the reference's sixth-longest command page (442 md lines at team 0.3.5).
+ * Its hub holds what fits a screen — the purpose, the synopsis, the flags, the base
+ * example, the machine-check example, who may run it, what it reads and writes, the
+ * refusals and the exit codes — and the rest is split, whole and unretyped, into
+ * reference pages by the page's own sections: the rows, the differences, budgets, and
+ * the JSON. Together the five pages hold every fence of the reference page exactly once
+ * (docs:check holds them to it), and each states its rule once.
+ */
+
+/** The reference pages of `team status`, as cards: one line each, in the site's own words. */
+const STATUS_REFERENCE: { path: string; name: string; summary: string }[] = [
+  { path: '/docs/commands/status/rows/', name: 'The rows', summary: 'One line per seat — its state, its model and its pane — the pane-is-its-seat comparison, and the approval note.' },
+  { path: '/docs/commands/status/differences/', name: 'Differences', summary: 'Each way the file, the state and the live session disagree, the command that repairs each, and the one it orders first.' },
+  { path: '/docs/commands/status/budgets/', name: 'Budgets', summary: 'The budgets table that follows the seats: what is left and used, its source, how fresh it is, and the check wrapper.' },
+  { path: '/docs/commands/status/json/', name: 'The JSON', summary: 'team status --json: the same reading as one document, field by field, for a script to read.' },
+];
+
+/** The sources a `team status` page is read from — the reference page, and this assembly. */
+const STATUS_FILES = ['content/team/docs/commands/status.md', 'src/server/pages.ts'];
+
+/** A `team status` reference page's first line: where it belongs. */
+function statusRefPart(html: string): string {
+  return `Part of <a href="/docs/commands/status/"><code>team status</code></a> — ${html}`;
+}
+
+/** /docs/commands/status/ — the command itself: purpose, synopsis, flags, the base example, the machine check, and the short behaviour. */
+export function statusPage(): Rendered {
+  const status = commandPage('status');
+  const examples = section(status, 'Examples');
+  return new Doc()
+    .h1('team status')
+    .md(paragraph(status, 'Shows the team as it stands'))
+    .md(section(status, 'Synopsis'))
+    .heading('Flags')
+    .md(section(status, 'Flags'))
+    .heading('Examples')
+    .note('The team file the examples read:')
+    .block(fenceWith(status, 'yaml', 'project: beacon'))
+    .md(paragraph(examples, 'Only the implementer is up'))
+    .block(fenceWith(status, 'console', 'difference: claude-keeper is in the file and is not running'))
+    .note('Each column of a row, and the approval note, is on <a href="/docs/commands/status/rows/">the rows page</a>; every difference and its repair, on <a href="/docs/commands/status/differences/">the differences page</a>; the budgets table, on <a href="/docs/commands/status/budgets/">the budgets page</a>; the <code>--json</code> document, on <a href="/docs/commands/status/json/">the JSON page</a>.')
+    .heading('Who may run it')
+    .md(section(status, 'Who may run it'))
+    .heading('What it reads and writes')
+    .md(section(status, 'What it reads and writes'))
+    .heading('The machine check')
+    .md(paragraph(examples, 'The machine\'s own swap is read for one case only'))
+    .block(fenceWith(status, 'console', 'would refuse now'))
+    .md(paragraph(examples, 'A check that merely fails right now'))
+    .heading('Refusals')
+    .md(section(status, 'Refusals'))
+    .heading('Exit codes')
+    .md(section(status, 'Exit codes'))
+    .heading('The reference pages')
+    .raw(`<div class="doc-grid">${STATUS_REFERENCE.map(card => `<a class="doc-entry" href="${card.path}"><span class="doc-entry__name">${escapeHtml(card.name)}</span><span class="doc-entry__summary">${escapeHtml(card.summary)}</span></a>`).join('')}</div>\n`)
+    .render();
+}
+
+/** /docs/commands/status/rows/ — one line per seat, and the approval note. */
+export function statusRows(): Rendered {
+  const status = commandPage('status');
+  return new Doc()
+    .h1('The rows')
+    .note(statusRefPart('one line per seat: its state, its model, its pane — and the approval note.'))
+    .md(section(status, 'Rows'))
+    .render();
+}
+
+/** /docs/commands/status/differences/ — each disagreement, and the command that repairs it. */
+export function statusDifferences(): Rendered {
+  const status = commandPage('status');
+  const examples = section(status, 'Examples');
+  return new Doc()
+    .h1('Differences')
+    .note(statusRefPart('each way the file, the state and the live session disagree, and the command that repairs it.'))
+    .md(section(status, 'Differences'))
+    .heading('A difference, and its repair')
+    .md(paragraph(examples, 'The repair is the command `add` starts'))
+    .block(fenceWith(status, 'console', '$ team add claude-keeper'))
+    .md(paragraph(examples, 'Now nothing disagrees'))
+    .block(fenceWith(status, 'console', '0 difference(s)'))
+    .render();
+}
+
+/** /docs/commands/status/budgets/ — the budgets table that follows the seats, and the check wrapper. */
+export function statusBudgets(): Rendered {
+  const status = commandPage('status');
+  return new Doc()
+    .h1('Budgets')
+    .note(statusRefPart('the budgets table that follows the seats: what is left and used, its source, and how fresh it is.'))
+    .md(section(status, 'Budgets'))
+    .render();
+}
+
+/** /docs/commands/status/json/ — the --json document, field by field. */
+export function statusJson(): Rendered {
+  const status = commandPage('status');
+  const examples = section(status, 'Examples');
+  return new Doc()
+    .h1('The JSON')
+    .note(statusRefPart('--json: the same reading as one document, for a script to read.'))
+    .md(section(status, 'The JSON'))
+    .heading('A --json run')
+    .md(paragraph(examples, '`--json` prints that reading as one document'))
+    .block(fenceWith(status, 'console', 'team status --json'))
+    .render();
+}
+
 // ------------------------------------------- the `usage` reference, in pages
 
 /**
@@ -981,6 +1092,14 @@ export function pages(): PageMeta[] {
         page('/docs/commands/up/limits/', 'team up: known limits — team', '0.5', upLimits(), UP_FILES),
         page('/docs/commands/up/refusals/', 'team up: refusals — team', '0.5', upRefusals(), UP_FILES),
       ]
+    : name === 'status'
+    ? [
+        page('/docs/commands/status/', 'team status — team', '0.8', statusPage(), STATUS_FILES),
+        page('/docs/commands/status/rows/', 'team status: the rows — team', '0.5', statusRows(), STATUS_FILES),
+        page('/docs/commands/status/differences/', 'team status: differences — team', '0.5', statusDifferences(), STATUS_FILES),
+        page('/docs/commands/status/budgets/', 'team status: budgets — team', '0.5', statusBudgets(), STATUS_FILES),
+        page('/docs/commands/status/json/', 'team status: the JSON — team', '0.5', statusJson(), STATUS_FILES),
+      ]
     : name === 'usage'
     ? [
         page('/docs/commands/usage/', 'team usage — team', '0.8', usagePage(), USAGE_FILES),
@@ -1029,6 +1148,10 @@ const DESCRIPTIONS: Record<string, string> = {
   pr: 'Checks a pull request body against the signature rule and forbidden patterns, needing no repository; exit 1 when refused.',
   doctor: 'What this machine still needs: the approval, herdr, each CLI, its version and login, each launch’s model, and the watch.',
   status: 'The team as it stands: one line per seat, and every difference between the file, the state and the live session, with its repair.',
+  'status/rows': 'One line per seat in team status: its state, model and pane, the pane-is-its-seat comparison, and the approval note.',
+  'status/differences': 'Every way the file, the state and the live session disagree in team status, the command that repairs each, and the one it orders first.',
+  'status/budgets': 'The budgets table team status prints after the seats: what is left and used, its source, how fresh it is, and the check wrapper.',
+  'status/json': 'team status --json: the same reading as one document, field by field, for a script to read instead of the table.',
   up: 'Starts the session, a workspace and each seat the file has not stopped, plus the watch; a stopped seat waits for team add. --dry-run prints the plan.',
   'up/launch': 'What team up does before it creates anything: the stopped session it clears, the lobby gate it verifies, and the folder each seat starts in.',
   'up/records': 'Every line a team up run prints — ready and left out — the close proofs, the rules delivery, and the table that says what each line means.',
