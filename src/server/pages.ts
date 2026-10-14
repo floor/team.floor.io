@@ -514,7 +514,7 @@ export function watchPage(): Rendered {
     .note('Every report a pass can print, and when each is made, is on <a href="/docs/commands/watch/reports/">the reports page</a>; the nudge the operator\'s reports stand for, on <a href="/docs/commands/watch/nudge/">the nudge page</a>.')
     .heading('Refusals')
     .md(section(watch, 'Refusals'))
-    .note('`up` leaves a watch running in its own pane, so a second one refuses rather than reading the same session twice:')
+    .md(paragraph(examples, '`up` leaves a watch running'))
     .block(fenceWith(watch, 'console', 'a watch already runs for the session'))
     .heading('Exit codes')
     .md(section(watch, 'Exit codes'))
