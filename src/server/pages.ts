@@ -1749,7 +1749,7 @@ export function clis(): Rendered {
     .heading('Claude Code')
     // The alternative-model note: the owner runs Kimi, DeepSeek and GLM as Claude Code seats
     // pointed at each provider's Anthropic-compatible endpoint. The off-screen-model line is the
-    // reference's own limit (FLO-915): Claude Code reads only its own models off the screen, so
+    // team's own documented limit: Claude Code reads only its own models off the screen, so
     // another lab's model has no on-screen label and the seat's label is the file's.
     .note('Claude Code runs a model from another lab by pointing it at that provider’s Anthropic-compatible endpoint: Kimi (Moonshot’s Kimi K3), DeepSeek (DeepSeek V4.1 Flash) and GLM (Zhipu/zai’s GLM 5.3) all run this way, as Claude Code seats. Claude Code reads only Opus, Sonnet, Haiku and Fable off its own screen, so for one of these models the seat’s label on <code>team status</code> comes from the team file’s <code>display</code>, not the screen.')
     .heading('Codex')
