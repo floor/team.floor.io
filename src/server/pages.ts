@@ -613,6 +613,687 @@ export function watchChecks(): Rendered {
     .render();
 }
 
+// ------------------------------------------- the `doctor` reference, in pages
+
+/**
+ * `doctor` is the reference's longest command page, and the one that reads the whole
+ * machine. Its hub holds what fits a screen — the purpose, the synopsis, the flags, the
+ * base example, who may run it, what it reads and writes, the short lead of what it
+ * prints, the refusals and the exit codes — and the rest is split, whole and unretyped,
+ * into reference pages one topic each. Together the six pages hold every fence of the
+ * reference page exactly once (docs:check holds them to it), and each states its rule
+ * once, linked where it shows.
+ */
+
+/** The reference pages of `team doctor`, as cards: one line each, in the site's own words. */
+const DOCTOR_REFERENCE: { path: string; name: string; summary: string }[] = [
+  { path: '/docs/commands/doctor/report/', name: 'The report', summary: 'Every finding a run prints, in order — the file warnings, the approval, the seats, the watch — with the trust block and the key fingerprint.' },
+  { path: '/docs/commands/doctor/models/', name: 'Models and launches', summary: 'A launch that names no model, names another, or defers to its launcher, and the version "0" placeholder.' },
+  { path: '/docs/commands/doctor/clis/', name: 'Each CLI', summary: 'herdr and each seat\'s CLI: its version, whether it is installed, and a CLI outside the tested range.' },
+  { path: '/docs/commands/doctor/login/', name: 'The sign-in checks', summary: 'team doctor --login: one read-only login check per CLI the seats use, and nothing else.' },
+  { path: '/docs/commands/doctor/budgets/', name: 'The budget checks', summary: 'The owner\'s approved checks, run as the watch runs them, and what a non-owner caller or a changed check reads.' },
+];
+
+/** The sources a `team doctor` page is read from — the reference page, and this assembly. */
+const DOCTOR_FILES = ['content/team/docs/commands/doctor.md', 'src/server/pages.ts'];
+
+/** A `team doctor` reference page's first line: where it belongs. */
+function doctorPart(html: string): string {
+  return `Part of <a href="/docs/commands/doctor/"><code>team doctor</code></a> — ${html}`;
+}
+
+/** /docs/commands/doctor/ — the command itself: purpose, synopsis, flags, the base example, and the short behaviour. */
+export function doctorPage(): Rendered {
+  const doctor = commandPage('doctor');
+  const examples = section(doctor, 'Examples');
+  const prints = section(doctor, 'What it prints');
+  return new Doc()
+    .h1('team doctor')
+    .md(paragraph(doctor, 'Reads the machine and says what the team needs'))
+    .md(section(doctor, 'Synopsis'))
+    .heading('Flags')
+    .md(section(doctor, 'Flags'))
+    .heading('Examples')
+    .note('The team file the examples read:')
+    .block(fenceWith(doctor, 'yaml', 'project: beacon'))
+    .md(paragraph(examples, 'The account\'s check is a script'))
+    .block(fenceWith(doctor, 'file', 'weekly 40% used'))
+    .md(paragraph(examples, 'Everything here is as it should be'))
+    .block(fenceWith(doctor, 'console', 'nothing missing, 2 warnings'))
+    .md(paragraph(examples, 'The lobby line is the same closed-tree check'))
+    .block(fenceWith(doctor, 'console', 'lobby ~/.config/team/lobby: verified'))
+    .heading('Who may run it')
+    .md(section(doctor, 'Who may run it'))
+    .heading('What it reads and writes')
+    .md(section(doctor, 'What it reads and writes'))
+    .heading('What it prints')
+    .md(fromBlock(prints, 'One line per finding', 'The findings come in order'))
+    .note('Every finding a run prints, in the order they come, is on <a href="/docs/commands/doctor/report/">the report page</a>.')
+    .heading('Refusals')
+    .md(section(doctor, 'Refusals'))
+    .md(paragraph(examples, 'An option it doesn\'t know stops it before it reads anything'))
+    .block(fenceWith(doctor, 'console', 'unknown option --nope'))
+    .heading('Exit codes')
+    .md(section(doctor, 'Exit codes'))
+    .heading('The reference pages')
+    .raw(`<div class="doc-grid">${DOCTOR_REFERENCE.map(card => `<a class="doc-entry" href="${card.path}"><span class="doc-entry__name">${escapeHtml(card.name)}</span><span class="doc-entry__summary">${escapeHtml(card.summary)}</span></a>`).join('')}</div>\n`)
+    .render();
+}
+
+/** /docs/commands/doctor/report/ — every finding a run prints, in the order they come. */
+export function doctorReport(): Rendered {
+  const doctor = commandPage('doctor');
+  const prints = section(doctor, 'What it prints');
+  const examples = section(doctor, 'Examples');
+  return new Doc()
+    .h1('The report')
+    .note(doctorPart('every finding a run prints, in the order they come.'))
+    .heading('The order of findings')
+    .md(fromBlock(prints, 'The findings come in order', 'The `trust` note'))
+    .heading('The trust block')
+    .md(fromBlock(prints, 'The `trust` note is the one finding', 'A seat\'s model is judged'))
+    .heading('Waiting at trust')
+    .md(fromBlock(prints, 'A seat the state records waiting at', 'The key\'s fingerprint'))
+    .heading('The key fingerprint')
+    .md(paragraph(prints, 'The key\'s fingerprint'))
+    .heading('The watch')
+    .md(paragraph(prints, 'A watch that has not run'))
+    .heading('The machine check')
+    .md(paragraph(examples, 'The machine\'s own swap is read for one case only'))
+    .block(fenceWith(doctor, 'console', 'asks for 2.0 GB free swap'))
+    .md(paragraph(examples, 'A check that merely fails right now'))
+    .note('The model warnings the order above names are on <a href="/docs/commands/doctor/models/">the models page</a>; the budget checks, on <a href="/docs/commands/doctor/budgets/">the budget-checks page</a>; the logins, on <a href="/docs/commands/doctor/login/">the sign-in page</a>.')
+    .render();
+}
+
+/** /docs/commands/doctor/models/ — a launch that names no model, names another, or defers to its launcher. */
+export function doctorModels(): Rendered {
+  const doctor = commandPage('doctor');
+  const prints = section(doctor, 'What it prints');
+  const examples = section(doctor, 'Examples');
+  return new Doc()
+    .h1('Models and launches')
+    .note(doctorPart('a launch that names no model, names another, or defers to its launcher.'))
+    .heading('How a model is judged')
+    .md(fromBlock(prints, 'A seat\'s model is judged', 'The placeholder'))
+    .heading('The version placeholder')
+    .md(paragraph(prints, 'The placeholder `version: "0"`'))
+    .heading('A launch that names another model')
+    .md(paragraph(examples, 'A launch that names another model'))
+    .block(fenceWith(doctor, 'yaml', 'model: Claude Sonnet'))
+    .block(fenceWith(doctor, 'console', 'the file says Claude Sonnet 5.5'))
+    .heading('A launch that names no model')
+    .md(paragraph(examples, 'A launch that names no model is not warned'))
+    .block(fenceWith(doctor, 'yaml', 'launch: team-codex'))
+    .block(fenceWith(doctor, 'console', 'the launch runs team-codex'))
+    .md(paragraph(examples, 'The wrapper is told by the launch'))
+    .block(fenceWith(doctor, 'yaml', 'model_from: launcher'))
+    .block(fenceWith(doctor, 'console', 'the model is chosen by its launcher; checked'))
+    .md(paragraph(examples, '`model_from: launcher` wins over the launch'))
+    .render();
+}
+
+/** /docs/commands/doctor/clis/ — herdr and each seat's CLI: its version, install, and tested range. */
+export function doctorClis(): Rendered {
+  const doctor = commandPage('doctor');
+  const examples = section(doctor, 'Examples');
+  return new Doc()
+    .h1('Each CLI')
+    .note(doctorPart('herdr and each seat\'s CLI: its version, whether it is installed, and a CLI outside the tested range.'))
+    .heading('A CLI outside the tested range')
+    .md(paragraph(examples, 'A CLI outside the range this version was tested with'))
+    .block(fenceWith(doctor, 'console', 'older than the tested 2.1.288'))
+    .heading('A CLI that is not installed')
+    .md(paragraph(examples, 'A seat on a CLI that is not installed'))
+    .block(fenceWith(doctor, 'yaml', 'launch: codex --model gpt-5-codex'))
+    .block(fenceWith(doctor, 'console', '2 missing, 2 warnings'))
+    .render();
+}
+
+/** /docs/commands/doctor/login/ — team doctor --login: one read-only sign-in check per CLI. */
+export function doctorLogin(): Rendered {
+  const doctor = commandPage('doctor');
+  const prints = section(doctor, 'What it prints');
+  const examples = section(doctor, 'Examples');
+  return new Doc()
+    .h1('The sign-in checks')
+    .note(doctorPart('team doctor --login: one read-only login check per CLI the seats use.'))
+    .md(paragraph(prints, '`--login` reads the logins alone'))
+    .md(paragraph(examples, '`--login` answers the one question'))
+    .block(fenceWith(doctor, 'yaml', 'launch: codex --model gpt-5-codex'))
+    .block(fenceWith(doctor, 'console', 'log in to codex'))
+    .render();
+}
+
+/** /docs/commands/doctor/budgets/ — the owner's approved checks, run as the watch runs them. */
+export function doctorBudgets(): Rendered {
+  const doctor = commandPage('doctor');
+  const prints = section(doctor, 'What it prints');
+  const examples = section(doctor, 'Examples');
+  return new Doc()
+    .h1('The budget checks')
+    .note(doctorPart('the owner\'s approved checks, run as the watch runs them.'))
+    .md(paragraph(prints, 'The budget checks run from the approved'))
+    .note('The warning that paragraph\'s <em>above</em> names — an account whose check is unapproved or changed after approval reads unknown — is one of the findings on <a href="/docs/commands/doctor/report/">the report page</a>.')
+    .heading('A caller who is not the owner')
+    .md(paragraph(examples, 'A seat\'s `doctor` runs no check'))
+    .block(fenceWith(doctor, 'console', 'the budget checks were not run'))
+    .heading('A check changed after approval')
+    .md(paragraph(examples, 'A check that was edited after its approval'))
+    .block(fenceWith(doctor, 'yaml', 'project: beacon'))
+    .block(fenceWith(doctor, 'file', 'weekly 99% used'))
+    .block(fenceWith(doctor, 'console', 'changed after approval and was not run'))
+    .render();
+}
+
+// ------------------------------------------- the `status` reference, in pages
+
+/**
+ * `status` is the reference's sixth-longest command page (442 md lines at team 0.3.5).
+ * Its hub holds what fits a screen — the purpose, the synopsis, the flags, the base
+ * example, the machine-check example, who may run it, what it reads and writes, the
+ * refusals and the exit codes — and the rest is split, whole and unretyped, into
+ * reference pages by the page's own sections: the rows, the differences, budgets, and
+ * the JSON. Together the five pages hold every fence of the reference page exactly once
+ * (docs:check holds them to it), and each states its rule once.
+ */
+
+/** The reference pages of `team status`, as cards: one line each, in the site's own words. */
+const STATUS_REFERENCE: { path: string; name: string; summary: string }[] = [
+  { path: '/docs/commands/status/rows/', name: 'The rows', summary: 'One line per seat — its state, its model and its pane — the pane-is-its-seat comparison, and the approval note.' },
+  { path: '/docs/commands/status/differences/', name: 'Differences', summary: 'Each way the file, the state and the live session disagree, the command that repairs each, and the one it orders first.' },
+  { path: '/docs/commands/status/budgets/', name: 'Budgets', summary: 'The budgets table that follows the seats: what is left and used, its source, how fresh it is, and the check wrapper.' },
+  { path: '/docs/commands/status/json/', name: 'The JSON', summary: 'team status --json: the same reading as one document, field by field, for a script to read.' },
+];
+
+/** The sources a `team status` page is read from — the reference page, and this assembly. */
+const STATUS_FILES = ['content/team/docs/commands/status.md', 'src/server/pages.ts'];
+
+/** A `team status` reference page's first line: where it belongs. */
+function statusRefPart(html: string): string {
+  return `Part of <a href="/docs/commands/status/"><code>team status</code></a> — ${html}`;
+}
+
+/** /docs/commands/status/ — the command itself: purpose, synopsis, flags, the base example, the machine check, and the short behaviour. */
+export function statusPage(): Rendered {
+  const status = commandPage('status');
+  const examples = section(status, 'Examples');
+  return new Doc()
+    .h1('team status')
+    .md(paragraph(status, 'Shows the team as it stands'))
+    .md(section(status, 'Synopsis'))
+    .heading('Flags')
+    .md(section(status, 'Flags'))
+    .heading('Examples')
+    .note('The team file the examples read:')
+    .block(fenceWith(status, 'yaml', 'project: beacon'))
+    .md(paragraph(examples, 'Only the implementer is up'))
+    .block(fenceWith(status, 'console', 'difference: claude-keeper is in the file and is not running'))
+    .note('Each column of a row, and the approval note, is on <a href="/docs/commands/status/rows/">the rows page</a>; every difference and its repair, on <a href="/docs/commands/status/differences/">the differences page</a>; the budgets table, on <a href="/docs/commands/status/budgets/">the budgets page</a>; the <code>--json</code> document, on <a href="/docs/commands/status/json/">the JSON page</a>.')
+    .heading('Who may run it')
+    .md(section(status, 'Who may run it'))
+    .heading('What it reads and writes')
+    .md(section(status, 'What it reads and writes'))
+    .heading('The machine check')
+    .md(paragraph(examples, 'The machine\'s own swap is read for one case only'))
+    .block(fenceWith(status, 'console', 'would refuse now'))
+    .md(paragraph(examples, 'A check that merely fails right now'))
+    .heading('Refusals')
+    .md(section(status, 'Refusals'))
+    .heading('Exit codes')
+    .md(section(status, 'Exit codes'))
+    .heading('The reference pages')
+    .raw(`<div class="doc-grid">${STATUS_REFERENCE.map(card => `<a class="doc-entry" href="${card.path}"><span class="doc-entry__name">${escapeHtml(card.name)}</span><span class="doc-entry__summary">${escapeHtml(card.summary)}</span></a>`).join('')}</div>\n`)
+    .render();
+}
+
+/** /docs/commands/status/rows/ — one line per seat, and the approval note. */
+export function statusRows(): Rendered {
+  const status = commandPage('status');
+  return new Doc()
+    .h1('The rows')
+    .note(statusRefPart('one line per seat: its state, its model, its pane — and the approval note.'))
+    .md(section(status, 'Rows'))
+    .render();
+}
+
+/** /docs/commands/status/differences/ — each disagreement, and the command that repairs it. */
+export function statusDifferences(): Rendered {
+  const status = commandPage('status');
+  const examples = section(status, 'Examples');
+  return new Doc()
+    .h1('Differences')
+    .note(statusRefPart('each way the file, the state and the live session disagree, and the command that repairs it.'))
+    .md(section(status, 'Differences'))
+    .heading('A difference, and its repair')
+    .md(paragraph(examples, 'The repair is the command `add` starts'))
+    .block(fenceWith(status, 'console', '$ team add claude-keeper'))
+    .md(paragraph(examples, 'Now nothing disagrees'))
+    .block(fenceWith(status, 'console', '0 difference(s)'))
+    .render();
+}
+
+/** /docs/commands/status/budgets/ — the budgets table that follows the seats, and the check wrapper. */
+export function statusBudgets(): Rendered {
+  const status = commandPage('status');
+  return new Doc()
+    .h1('Budgets')
+    .note(statusRefPart('the budgets table that follows the seats: what is left and used, its source, and how fresh it is.'))
+    .md(section(status, 'Budgets'))
+    .render();
+}
+
+/** /docs/commands/status/json/ — the --json document, field by field. */
+export function statusJson(): Rendered {
+  const status = commandPage('status');
+  const examples = section(status, 'Examples');
+  return new Doc()
+    .h1('The JSON')
+    .note(statusRefPart('--json: the same reading as one document, for a script to read.'))
+    .md(section(status, 'The JSON'))
+    .heading('A --json run')
+    .md(paragraph(examples, '`--json` prints that reading as one document'))
+    .block(fenceWith(status, 'console', 'team status --json'))
+    .render();
+}
+
+// ------------------------------------------- the `usage` reference, in pages
+
+/**
+ * `usage` is the fifth-longest command page, and the one a reader scans to see
+ * what this machine holds. Its hub holds what fits a screen — the purpose, the
+ * synopsis, the worked example, and a short lead of each behaviour — and the rest
+ * is split, whole and unretyped, into reference pages one topic each: what it
+ * reads and writes, the report's shape, the restricted view, the JSON, and the
+ * refusals. Together the pages hold every fence of the reference page exactly once
+ * (docs:check holds them to it), each in the reference's order, and each rule is
+ * stated once, linked where it shows.
+ */
+
+/** The reference pages of `team usage`, as cards: one line each, in the site's own words. */
+const USAGE_REFERENCE: { path: string; name: string; summary: string }[] = [
+  { path: '/docs/commands/usage/reads-writes/', name: 'What it reads and writes', summary: 'That it writes nothing, which file\'s figures are in force, and what an unapproved or unreadable file shows.' },
+  { path: '/docs/commands/usage/report/', name: 'The report', summary: 'The header counts, each account and window line, pace and ages, the rows, and the why-lines.' },
+  { path: '/docs/commands/usage/restricted/', name: 'The restricted view', summary: 'Which caller reads which view, and the closed list of fields the restricted view carries.' },
+  { path: '/docs/commands/usage/json/', name: 'The JSON', summary: 'What --json prints: the document\'s keys in both views, and the whole example document.' },
+  { path: '/docs/commands/usage/refusals/', name: 'Refusals', summary: 'The two refusals at exit 2; everything else is a note line at exit 0.' },
+];
+
+/** The sources a `team usage` page is read from — the reference page, and this assembly. */
+const USAGE_FILES = ['content/team/docs/commands/usage.md', 'src/server/pages.ts'];
+
+/** A `team usage` reference page's first line: where it belongs. */
+function usagePart(html: string): string {
+  return `Part of <a href="/docs/commands/usage/"><code>team usage</code></a> — ${html}`;
+}
+
+/** /docs/commands/usage/ — the command itself: purpose, synopsis, the worked example, and the short behaviour. */
+export function usagePage(): Rendered {
+  const usage = commandPage('usage');
+  const examples = section(usage, 'Examples');
+  return new Doc()
+    .h1('team usage')
+    .md(paragraph(usage, 'Shows what this machine holds:'))
+    .md(paragraph(usage, 'Two views are printed from the one placement'))
+    .md(section(usage, 'Synopsis'))
+    .heading('Examples')
+    .md(paragraph(examples, 'The file below names one account'))
+    .block(fenceWith(usage, 'yaml', 'project: beacon'))
+    .md(paragraph(examples, 'The state holds one reading for the'))
+    .block(fenceWith(usage, 'console', 'usage on this machine, 1 team'))
+    .note('The same report as a JSON document, and what every key means, is on <a href="/docs/commands/usage/json/">the JSON page</a>.')
+    .heading('What it reads and writes')
+    .md(paragraph(section(usage, 'What it reads and writes'), 'Reads this machine\'s approval store folder'))
+    .note('The rest — that it writes nothing, which file\'s figures are in force, and the one refusal its “(below)” names — is on <a href="/docs/commands/usage/reads-writes/">the reads-and-writes page</a> and <a href="/docs/commands/usage/refusals/">the refusals page</a>.')
+    .heading('Who may run it')
+    .md(paragraph(section(usage, 'Who may run it, and which view they read'), 'Anyone: a seat, an unplaced agent'))
+    .note('Which caller reads the full or the restricted view, and what the restricted view carries, are on <a href="/docs/commands/usage/restricted/">the restricted-view page</a>.')
+    .heading('Exit codes')
+    .md(section(usage, 'Exit codes'))
+    .heading('The reference pages')
+    .raw(`<div class="doc-grid">${USAGE_REFERENCE.map(card => `<a class="doc-entry" href="${card.path}"><span class="doc-entry__name">${escapeHtml(card.name)}</span><span class="doc-entry__summary">${escapeHtml(card.summary)}</span></a>`).join('')}</div>\n`)
+    .render();
+}
+
+/** /docs/commands/usage/reads-writes/ — that it writes nothing, the in-force rule, and an unreadable file. */
+export function usageReadsWrites(): Rendered {
+  const usage = commandPage('usage');
+  return new Doc()
+    .h1('What it reads and writes')
+    .note(usagePart('that it writes nothing, which file\'s figures are in force, and what an unapproved or unreadable file shows.'))
+    .md(fromBlock(section(usage, 'What it reads and writes'), 'It writes **nothing at all**'))
+    .note('What it reads — the stores and the files — is on <a href="/docs/commands/usage/">the team usage page</a>; the one refusal the stores folder can raise is on <a href="/docs/commands/usage/refusals/">the refusals page</a>.')
+    .render();
+}
+
+/** /docs/commands/usage/report/ — the report's shape: counts, lines, pace, ages, rows, why-lines. */
+export function usageReport(): Rendered {
+  const usage = commandPage('usage');
+  return new Doc()
+    .h1('The report')
+    .note(usagePart('the header counts, each account and window line, the pace and ages, the per-team rows, and the why-lines.'))
+    .md(section(usage, 'The report'))
+    .note('The why-line for a file never approved — the “one above” this names — is on <a href="/docs/commands/usage/reads-writes/">the reads-and-writes page</a>.')
+    .render();
+}
+
+/** /docs/commands/usage/restricted/ — who reads which view, and the closed list the restricted view carries. */
+export function usageRestricted(): Rendered {
+  const usage = commandPage('usage');
+  const examples = section(usage, 'Examples');
+  return new Doc()
+    .h1('The restricted view')
+    .note(usagePart('which caller reads the full or the restricted view, and the closed list of fields the restricted view carries.'))
+    .heading('Which view a caller reads')
+    .md(fromBlock(section(usage, 'Who may run it, and which view they read'), 'One function decides the view'))
+    .note('The rule that anyone may run it, from any folder, is on <a href="/docs/commands/usage/">the team usage page</a>.')
+    .heading('What the restricted view carries')
+    .md(section(usage, 'What the restricted view carries'))
+    .note('The earlier <code>note:</code> lines this names are on <a href="/docs/commands/usage/reads-writes/">the reads-and-writes page</a> and <a href="/docs/commands/usage/report/">the report page</a>.')
+    .heading('The two faces, by example')
+    .md(paragraph(examples, 'The same command run by the owner at a terminal'))
+    .md(paragraph(examples, 'A machine that holds other teams'))
+    .note('The restricted text and the JSON these name are on <a href="/docs/commands/usage/">the team usage page</a> and <a href="/docs/commands/usage/json/">the JSON page</a>.')
+    .render();
+}
+
+/** /docs/commands/usage/json/ — what --json prints, and the whole example document. */
+export function usageJson(): Rendered {
+  const usage = commandPage('usage');
+  const examples = section(usage, 'Examples');
+  return new Doc()
+    .h1('The JSON')
+    .note(usagePart('what <code>--json</code> prints: the document\'s keys in both views, and the whole example document.'))
+    .md(section(usage, 'The JSON'))
+    .heading('The document')
+    .md(paragraph(examples, '`--json` prints the same report as one document'))
+    .block(fenceWith(usage, 'console', '"format": 1'))
+    .render();
+}
+
+/** /docs/commands/usage/refusals/ — the two refusals, and that everything else is a note at exit 0. */
+export function usageRefusals(): Rendered {
+  const usage = commandPage('usage');
+  return new Doc()
+    .h1('Refusals')
+    .note(usagePart('the two things that refuse it at exit 2; everything else is a note line at exit 0.'))
+    .md(section(usage, 'Refusals'))
+    .note('The exit codes these carry are on <a href="/docs/commands/usage/">the team usage page</a>.')
+    .render();
+}
+
+// ------------------------------------------- the `down` reference, in pages
+
+/**
+ * `down` is a long command page: the stop, who may run it, the delegate gate, the
+ * lines it prints, the refusals, and a walkthrough of ten fenced examples. Its hub
+ * holds what fits a screen — the purpose, the synopsis, the flags, the basic
+ * walkthrough, what it reads and writes, who may run it, the exit codes — and the
+ * rest is split, whole and unretyped, into reference pages one topic each: the
+ * approved delegate, what it prints, a renamed seat and a broken file, and the
+ * refusals. Together the pages hold every fence of the reference page exactly once
+ * (docs:check holds them to it) — the dry-run plan is fenced twice in the
+ * reference, so it shows twice — each in the reference's order, and each rule once.
+ */
+
+/** The reference pages of `team down`, as cards: one line each, in the site's own words. */
+const DOWN_REFERENCE: { path: string; name: string; summary: string }[] = [
+  { path: '/docs/commands/down/delegate/', name: 'The approved delegate', summary: 'The pane the delegates section lists for down, the gate it passes, and the caller-role refusals shown.' },
+  { path: '/docs/commands/down/output/', name: 'What it prints', summary: 'Every line a stop prints, the skip lines for a seat left running, and the idle “nothing to stop”.' },
+  { path: '/docs/commands/down/edge-cases/', name: 'A renamed seat, and a broken file', summary: 'Two runs: a seat renamed after up, and a team file that no longer validates.' },
+  { path: '/docs/commands/down/refusals/', name: 'Refusals', summary: 'Every message that refuses team down, and the exit each one carries.' },
+];
+
+/** The sources a `team down` page is read from — the reference page, and this assembly. */
+const DOWN_FILES = ['content/team/docs/commands/down.md', 'src/server/pages.ts'];
+
+/** A `team down` reference page's first line: where it belongs. */
+function downPart(html: string): string {
+  return `Part of <a href="/docs/commands/down/"><code>team down</code></a> — ${html}`;
+}
+
+/** /docs/commands/down/ — the command itself: purpose, synopsis, flags, the basic walkthrough, and the short behaviour. */
+export function downPage(): Rendered {
+  const down = commandPage('down');
+  const examples = section(down, 'Examples');
+  return new Doc()
+    .h1('team down')
+    .md(paragraph(down, 'Stops the team:'))
+    .md(section(down, 'Synopsis'))
+    .heading('Flags')
+    .md(section(down, 'Flags'))
+    .heading('Examples')
+    .note('The team file the examples read:')
+    .block(fenceWith(down, 'yaml', 'claude-beacon'))
+    .md(paragraph(examples, 'Two seats idle, a watch running'))
+    .block(fenceWith(down, 'console', 'pane run w1:p1 /exit'))
+    .md(paragraph(examples, 'For the owner, running that plan stops everything'))
+    .block(fenceWith(down, 'console', 'claude-keeper: stopped'))
+    .note('The caller-role and the renamed-seat examples are on <a href="/docs/commands/down/delegate/">the delegate page</a> and <a href="/docs/commands/down/edge-cases/">the renamed-seat-and-broken-file page</a>.')
+    .heading('What it reads and writes')
+    .md(section(down, 'What it reads and writes'))
+    .note('A seat the file renamed, and a team file that no longer validates, are shown on <a href="/docs/commands/down/edge-cases/">the renamed-seat-and-broken-file page</a>.')
+    .heading('Who may run it')
+    .md(section(down, 'Who may run it'))
+    .note('The approved delegate this names — the “(below)” — and the caller-role refusals shown are on <a href="/docs/commands/down/delegate/">the delegate page</a>.')
+    .heading('What it prints')
+    .note('Every line a stop prints, the skip lines for a seat left running, and the idle “nothing to stop”, are on <a href="/docs/commands/down/output/">the what-it-prints page</a>.')
+    .heading('Exit codes')
+    .md(section(down, 'Exit codes'))
+    .note('The refusals these codes name are on <a href="/docs/commands/down/refusals/">the refusals page</a>.')
+    .heading('The reference pages')
+    .raw(`<div class="doc-grid">${DOWN_REFERENCE.map(card => `<a class="doc-entry" href="${card.path}"><span class="doc-entry__name">${escapeHtml(card.name)}</span><span class="doc-entry__summary">${escapeHtml(card.summary)}</span></a>`).join('')}</div>\n`)
+    .render();
+}
+
+/** /docs/commands/down/delegate/ — the approved delegate, and the caller-role refusals shown. */
+export function downDelegate(): Rendered {
+  const down = commandPage('down');
+  const examples = section(down, 'Examples');
+  return new Doc()
+    .h1('The approved delegate')
+    .note(downPart('the pane the delegates section lists for down, the gate it passes, and the caller-role refusals shown.'))
+    .md(section(down, 'The approved delegate'))
+    .note('The ordinary rule this gate defers to — who may run it, from where — is on <a href="/docs/commands/down/">the team down page</a>.')
+    .heading('The caller rules, shown')
+    .md(paragraph(examples, 'An implementer'))
+    .block(fenceByInfo(down, 'caller=claude-beacon'))
+    .md(paragraph(examples, 'The orchestrator'))
+    .block(fenceByInfo(down, 'caller=claude-keeper'))
+    .render();
+}
+
+/** /docs/commands/down/output/ — every line a stop prints, the skip lines, and the idle return. */
+export function downOutput(): Rendered {
+  const down = commandPage('down');
+  const examples = section(down, 'Examples');
+  return new Doc()
+    .h1('What it prints')
+    .note(downPart('every line a stop prints, the skip lines for a seat left running, and the idle “nothing to stop”.'))
+    .md(section(down, 'What it prints'))
+    .heading('Nothing to stop')
+    .md(paragraph(examples, 'Once the session is down there is nothing to stop'))
+    .block(fenceWith(down, 'console', 'nothing to stop'))
+    .render();
+}
+
+/** /docs/commands/down/edge-cases/ — a seat the file renamed, and a team file that no longer validates. */
+export function downEdgeCases(): Rendered {
+  const down = commandPage('down');
+  const examples = section(down, 'Examples');
+  return new Doc()
+    .h1('A renamed seat, and a broken file')
+    .note(downPart('two runs: a seat the file renamed after up, and a team file that no longer validates.'))
+    .heading('A renamed seat')
+    .md(paragraph(down, 'A seat the file renamed after'))
+    .md(paragraph(examples, 'The file renamed claude-beacon after'))
+    .block(fenceWith(down, 'yaml', 'claude-relay'))
+    .block(fenceWith(down, 'console', 'pane run w1:p1 /exit'))
+    .heading('A broken file')
+    .md(paragraph(examples, 'Even with the team file broken'))
+    .block(fenceWith(down, 'yaml', 'seats: ['))
+    .block(fenceWith(down, 'console', 'team.yaml is invalid'))
+    .note('The rule that a broken file is replaced by the last copy that validated is on <a href="/docs/commands/down/">the team down page</a>.')
+    .render();
+}
+
+/** /docs/commands/down/refusals/ — every message that refuses team down, and its exit. */
+export function downRefusals(): Rendered {
+  const down = commandPage('down');
+  return new Doc()
+    .h1('Refusals')
+    .note(downPart('every message that refuses it, and the exit each one carries.'))
+    .md(section(down, 'Refusals'))
+    .note('The exit codes these refusals carry are on <a href="/docs/commands/down/">the team down page</a>.')
+    .render();
+}
+
+// ------------------------------------------- the `approve` reference, in pages
+
+/**
+ * `approve` is the third-longest command page, and the owner's first gate: every
+ * command that starts or changes a team reads the record it writes. Its hub holds
+ * what fits a screen — the purpose, the synopsis, the flags, the basic walkthrough,
+ * the short behaviour — and the rest is split, whole and unretyped, into reference
+ * pages one topic each: who may run it, the read-back, the signed record, the
+ * refusals, and the overrides file. Together the six pages hold every fence of the
+ * reference page exactly once (docs:check holds them to it), each in the reference's
+ * order, and each rule is stated once, linked where it shows.
+ */
+
+/** The reference pages of `team approve`, as cards: one line each, in the site's own words. */
+const APPROVE_REFERENCE: { path: string; name: string; summary: string }[] = [
+  { path: '/docs/commands/approve/who/', name: 'Who may run it', summary: 'The owner, the approved delegate, and what a delegated approval may change.' },
+  { path: '/docs/commands/approve/read-back/', name: 'The read-back', summary: 'What approve prints: the diff against the approved copy, the ceilings and seats, and what needs a new approval.' },
+  { path: '/docs/commands/approve/record/', name: 'The signed record', summary: 'The key and the counter, the record\'s strict shape, and a record from before signing.' },
+  { path: '/docs/commands/approve/refusals/', name: 'Refusals', summary: 'The refusals, --confirm, and a line waiting on the terminal that refuses the write.' },
+  { path: '/docs/commands/approve/overrides/', name: 'The overrides file', summary: 'overrides.yaml in the approval store: the patterns it may add, and when approve records it.' },
+];
+
+/** The sources a `team approve` page is read from — the reference page, and this assembly. */
+const APPROVE_FILES = ['content/team/docs/commands/approve.md', 'src/server/pages.ts'];
+
+/** A `team approve` reference page's first line: where it belongs. */
+function approvePart(html: string): string {
+  return `Part of <a href="/docs/commands/approve/"><code>team approve</code></a> — ${html}`;
+}
+
+/** /docs/commands/approve/ — the command itself: purpose, synopsis, flags, the basic walkthrough, and the short behaviour. */
+export function approvePage(): Rendered {
+  const approve = commandPage('approve');
+  const examples = section(approve, 'Examples');
+  const prints = section(approve, 'What it prints');
+  return new Doc()
+    .h1('team approve')
+    .md(paragraph(approve, 'The owner approves the team file:'))
+    .md(section(approve, 'Synopsis'))
+    .heading('Flags')
+    .md(section(approve, 'Flags'))
+    .heading('Examples')
+    .note('The team file the examples read:')
+    .block(fenceWith(approve, 'yaml', 'project: beacon'))
+    .md(paragraph(examples, 'The first run shows the whole file'))
+    .block(fenceWith(approve, 'console', 'never approved on this machine. The whole file:'))
+    .md(paragraph(examples, 'The owner approves it'))
+    .block(fenceWith(approve, 'console', 'Approved. The record is in'))
+    .heading('Who may run it')
+    .md(paragraph(section(approve, 'Who may run it'), 'The owner, from a terminal outside herdr'))
+    .note('The delegate\'s grant — the gate this names, which owner sections it admits, and a delegated run — is on <a href="/docs/commands/approve/who/">the who-may-run-it page</a>.')
+    .heading('What it reads and writes')
+    .md(section(approve, 'What it reads and writes'))
+    .note('How the record is signed — the key, the counter and its fingerprint — is on <a href="/docs/commands/approve/record/">the signed-record page</a>.')
+    .heading('What it prints')
+    .md(fromBlock(prints, 'With no record on this machine', 'Nothing at all changed is said plainly:'))
+    .note('When nothing changed, the ceilings and seats an approval fixes, what needs a new approval, and an unapproved section\'s drift are on <a href="/docs/commands/approve/read-back/">the read-back page</a>.')
+    .heading('Exit codes')
+    .md(section(approve, 'Exit codes'))
+    .note('The refusals these codes name — the write gate, and <code>--confirm</code> — are on <a href="/docs/commands/approve/refusals/">the refusals page</a>.')
+    .heading('The reference pages')
+    .raw(`<div class="doc-grid">${APPROVE_REFERENCE.map(card => `<a class="doc-entry" href="${card.path}"><span class="doc-entry__name">${escapeHtml(card.name)}</span><span class="doc-entry__summary">${escapeHtml(card.summary)}</span></a>`).join('')}</div>\n`)
+    .render();
+}
+
+/** /docs/commands/approve/who/ — the owner, the approved delegate, and what a delegated approval may change. */
+export function approveWho(): Rendered {
+  const approve = commandPage('approve');
+  const examples = section(approve, 'Examples');
+  return new Doc()
+    .h1('Who may run it')
+    .note(approvePart('the owner, the approved delegate, and what a delegated approval may change.'))
+    .heading('A delegate\'s grant')
+    .md(paragraph(section(approve, 'Who may run it'), 'A delegate\'s approval is for ordinary changes'))
+    .note('The ordinary rule this narrows — only the owner, from a terminal outside herdr — is on <a href="/docs/commands/approve/">the team approve page</a>.')
+    .heading('A delegated approval')
+    .md(section(approve, 'A delegated approval'))
+    .heading('A seat is not the owner')
+    .md(paragraph(examples, 'A seat can read the comparison'))
+    .block(fenceByInfo(approve, 'caller=claude-keeper'))
+    .render();
+}
+
+/** /docs/commands/approve/read-back/ — what approve prints, the ceilings and seats it fixes, and what needs a new approval. */
+export function approveReadBack(): Rendered {
+  const approve = commandPage('approve');
+  const examples = section(approve, 'Examples');
+  const prints = section(approve, 'What it prints');
+  return new Doc()
+    .h1('The read-back')
+    .note(approvePart('what approve prints against an existing record: when nothing changed, the ceilings and seats it fixes, and what needs a new approval.'))
+    .md(fromBlock(prints, 'Nothing at all changed is said plainly:'))
+    .note('When no record on this machine, the whole file is printed numbered — the example of that, and the basic walkthrough, are on <a href="/docs/commands/approve/">the team approve page</a>.')
+    .heading('An owner section changed')
+    .md(paragraph(examples, 'An owner section is the owner'))
+    .block(fenceWith(approve, 'yaml', '~/Code/worktrees/beacon'))
+    .block(fenceWith(approve, 'console', 'Needs a new approval: `trust` changed'))
+    .render();
+}
+
+/** /docs/commands/approve/record/ — the signed record: the key, the counter, its shape, and a record from before signing. */
+export function approveRecord(): Rendered {
+  const approve = commandPage('approve');
+  return new Doc()
+    .h1('The signed record')
+    .note(approvePart('the signed record approve writes: the key and the counter, its strict shape, and a record from before signing.'))
+    .md(section(approve, 'The signed record'))
+    .render();
+}
+
+/** /docs/commands/approve/refusals/ — what refuses a write, and the --confirm and input gates. */
+export function approveRefusals(): Rendered {
+  const approve = commandPage('approve');
+  const examples = section(approve, 'Examples');
+  return new Doc()
+    .h1('Refusals')
+    .note(approvePart('what refuses a write: a seat or the wrong delegate, a change that needs the owner, <code>--confirm</code>\'s answer, and a line waiting on the terminal.'))
+    .heading('Every refusal')
+    .md(section(approve, 'Refusals'))
+    .note('The exit codes these refusals carry are on <a href="/docs/commands/approve/">the team approve page</a>.')
+    .heading('A new seat, and the write gate')
+    .md(paragraph(examples, 'A new seat needs one too'))
+    .block(fenceWith(approve, 'yaml', 'claude-beacon'))
+    .md(paragraph(examples, '`--confirm` asks, and a wrong answer'))
+    .block(fenceByInfo(approve, 'answer="1"'))
+    .md(paragraph(examples, 'The same protection without `--confirm`'))
+    .block(fenceByInfo(approve, 'waiting="1"'))
+    .md(paragraph(examples, 'A terminal the check cannot read'))
+    .block(fenceByInfo(approve, 'waiting="unreadable"'))
+    .md(paragraph(examples, 'With `--confirm`, the answer is the number of seats'))
+    .block(fenceByInfo(approve, 'answer="2"'))
+    .md(paragraph(examples, 'The same file again is the same text'))
+    .block(fenceWith(approve, 'console', 'approval #3 for this project'))
+    .render();
+}
+
+/** /docs/commands/approve/overrides/ — overrides.yaml in the approval store, and when approve records it. */
+export function approveOverrides(): Rendered {
+  const approve = commandPage('approve');
+  return new Doc()
+    .h1('The overrides file')
+    .note(approvePart('overrides.yaml in the approval store: the patterns it may add to a shipped profile, and when approve records it.'))
+    .md(section(approve, 'The overrides file'))
+    .render();
+}
+
 // ---------------------------------------------------------------- safety and CLIs
 
 /**
@@ -747,6 +1428,49 @@ export function pages(): PageMeta[] {
         page('/docs/commands/watch/budgets/', 'team watch: budgets — team', '0.5', watchBudgets(), WATCH_FILES),
         page('/docs/commands/watch/checks/', 'team watch: the approved checks and timings — team', '0.5', watchChecks(), WATCH_FILES),
       ]
+    : name === 'doctor'
+    ? [
+        page('/docs/commands/doctor/', 'team doctor — team', '0.8', doctorPage(), DOCTOR_FILES),
+        page('/docs/commands/doctor/report/', 'team doctor: the report — team', '0.5', doctorReport(), DOCTOR_FILES),
+        page('/docs/commands/doctor/models/', 'team doctor: models and launches — team', '0.5', doctorModels(), DOCTOR_FILES),
+        page('/docs/commands/doctor/clis/', 'team doctor: each CLI — team', '0.5', doctorClis(), DOCTOR_FILES),
+        page('/docs/commands/doctor/login/', 'team doctor: the sign-in checks — team', '0.5', doctorLogin(), DOCTOR_FILES),
+        page('/docs/commands/doctor/budgets/', 'team doctor: the budget checks — team', '0.5', doctorBudgets(), DOCTOR_FILES),
+      ]
+    : name === 'status'
+    ? [
+        page('/docs/commands/status/', 'team status — team', '0.8', statusPage(), STATUS_FILES),
+        page('/docs/commands/status/rows/', 'team status: the rows — team', '0.5', statusRows(), STATUS_FILES),
+        page('/docs/commands/status/differences/', 'team status: differences — team', '0.5', statusDifferences(), STATUS_FILES),
+        page('/docs/commands/status/budgets/', 'team status: budgets — team', '0.5', statusBudgets(), STATUS_FILES),
+        page('/docs/commands/status/json/', 'team status: the JSON — team', '0.5', statusJson(), STATUS_FILES),
+      ]
+    : name === 'usage'
+    ? [
+        page('/docs/commands/usage/', 'team usage — team', '0.8', usagePage(), USAGE_FILES),
+        page('/docs/commands/usage/reads-writes/', 'team usage: what it reads and writes — team', '0.5', usageReadsWrites(), USAGE_FILES),
+        page('/docs/commands/usage/report/', 'team usage: the report — team', '0.5', usageReport(), USAGE_FILES),
+        page('/docs/commands/usage/restricted/', 'team usage: the restricted view — team', '0.5', usageRestricted(), USAGE_FILES),
+        page('/docs/commands/usage/json/', 'team usage: the JSON — team', '0.5', usageJson(), USAGE_FILES),
+        page('/docs/commands/usage/refusals/', 'team usage: refusals — team', '0.5', usageRefusals(), USAGE_FILES),
+      ]
+    : name === 'down'
+    ? [
+        page('/docs/commands/down/', 'team down — team', '0.8', downPage(), DOWN_FILES),
+        page('/docs/commands/down/delegate/', 'team down: the approved delegate — team', '0.5', downDelegate(), DOWN_FILES),
+        page('/docs/commands/down/output/', 'team down: what it prints — team', '0.5', downOutput(), DOWN_FILES),
+        page('/docs/commands/down/edge-cases/', 'team down: a renamed seat and a broken file — team', '0.5', downEdgeCases(), DOWN_FILES),
+        page('/docs/commands/down/refusals/', 'team down: refusals — team', '0.5', downRefusals(), DOWN_FILES),
+      ]
+    : name === 'approve'
+    ? [
+        page('/docs/commands/approve/', 'team approve — team', '0.8', approvePage(), APPROVE_FILES),
+        page('/docs/commands/approve/who/', 'team approve: who may run it — team', '0.5', approveWho(), APPROVE_FILES),
+        page('/docs/commands/approve/read-back/', 'team approve: the read-back — team', '0.5', approveReadBack(), APPROVE_FILES),
+        page('/docs/commands/approve/record/', 'team approve: the signed record — team', '0.5', approveRecord(), APPROVE_FILES),
+        page('/docs/commands/approve/refusals/', 'team approve: refusals — team', '0.5', approveRefusals(), APPROVE_FILES),
+        page('/docs/commands/approve/overrides/', 'team approve: the overrides file — team', '0.5', approveOverrides(), APPROVE_FILES),
+      ]
     : [page(`/docs/commands/${name}/`, `team ${name} — team`, '0.8', commandPageContent(name), [`content/team/docs/commands/${name}.md`])]);
   return [...group, ...commands];
 }
@@ -759,11 +1483,25 @@ export function pages(): PageMeta[] {
 const DESCRIPTIONS: Record<string, string> = {
   init: 'Writes the team file: a skeleton for this project, or the copy you last approved, kept out of git.',
   approve: 'The owner reads the whole file back, then records it, its ceilings and its seats on this machine; --show prints it.',
+  'approve/who': 'Who may run team approve: the owner from a terminal outside herdr, and the approved delegate — the pane the file names — for the roster and rules alone.',
+  'approve/read-back': 'What team approve prints back: the per-section diff against the approved copy, the ceilings and seats it fixes, and which changes need a new approval.',
+  'approve/record': 'The signed approval record: the key and per-project counter outside the store, the record\'s strict shape, and a record written before signing.',
+  'approve/refusals': 'What refuses a team approve write: a seat or wrong delegate, a change needing the owner, --confirm\'s answer, and a line waiting on the terminal.',
+  'approve/overrides': 'overrides.yaml beside the approval record: the dialog and quota patterns it may add to a shipped profile, and when team approve records it.',
   check: 'One answer to one question: is anything wrong with this team that someone should act on? It reads the file, approval, state and herdr.',
   commits: 'Checks a commit, or a range of commits, against the signature rule and forbidden patterns; exit 1 when a commit is refused.',
   pr: 'Checks a pull request body against the signature rule and forbidden patterns, needing no repository; exit 1 when refused.',
   doctor: 'What this machine still needs: the approval, herdr, each CLI, its version and login, each launch’s model, and the watch.',
+  'doctor/report': 'Every finding a team doctor run prints, in order — the file warnings, the approval, the seats, the watch — with the trust block and the key fingerprint.',
+  'doctor/models': 'What team doctor says of a seat’s model: a launch that names none, names another, or defers to its launcher, and the version “0” placeholder.',
+  'doctor/clis': 'herdr and each seat’s CLI in team doctor: its version, whether it is installed, and what a CLI outside the tested range means.',
+  'doctor/login': 'team doctor --login: one read-only sign-in check per CLI the seats use, in the order they first name them, and nothing else.',
+  'doctor/budgets': 'The owner’s budget checks in team doctor, run as the watch runs them, and what a non-owner caller or a check changed after approval reads.',
   status: 'The team as it stands: one line per seat, and every difference between the file, the state and the live session, with its repair.',
+  'status/rows': 'One line per seat in team status: its state, model and pane, the pane-is-its-seat comparison, and the approval note.',
+  'status/differences': 'Every way the file, the state and the live session disagree in team status, the command that repairs each, and the one it orders first.',
+  'status/budgets': 'The budgets table team status prints after the seats: what is left and used, its source, how fresh it is, and the check wrapper.',
+  'status/json': 'team status --json: the same reading as one document, field by field, for a script to read instead of the table.',
   up: 'Starts the session, a workspace and each seat the file has not stopped, plus the watch; a stopped seat waits for team add. --dry-run prints the plan.',
   'up/launch': 'What team up does before it creates anything: the stopped session it clears, the lobby gate it verifies, and the folder each seat starts in.',
   'up/records': 'Every line a team up run prints — ready and left out — the close proofs, the rules delivery, and the table that says what each line means.',
@@ -771,6 +1509,10 @@ const DESCRIPTIONS: Record<string, string> = {
   'up/limits': 'The windows a process of the same user still has in a team up launch: the waiting proof, the read-back and Enter, the rules folder chain.',
   'up/refusals': 'What stops a team up run before its first step: the owner and delegate gates, the approval, the lobby, the load — with the refused runs shown.',
   down: 'Stops the team: asks every free seat to exit, closes its workspace, stops the watch, and stops the session.',
+  'down/delegate': 'The approved delegate for team down: the pane the delegates section lists, the gate it passes only where the ordinary rule refused, and the role refusals.',
+  'down/output': 'What team down prints: a line per seat, watch and session stopped, the skip lines for a seat left running, and the idle “nothing to stop”.',
+  'down/edge-cases': 'Two team down runs: a seat the file renamed after up, stopped under its launched name, and a team file that no longer validates, using the last good copy.',
+  'down/refusals': 'Every message that refuses team down and its exit — the caller-role gates, the owner-only flags, placement, the delegate gate, and the shared lock.',
   watch: 'Watches a running team: reports idle seats and nudges the operator, in one fixed line, into an empty idle prompt only.',
   'watch/reports': 'Every line a team watch pass can print and when each is made: the seat, approval, machine and account reports, and what the log holds beyond them.',
   'watch/nudge': 'The one fixed line team watch types into the operator’s pane when a report is theirs to act on, the lines around it, and --no-nudge.',
@@ -783,6 +1525,11 @@ const DESCRIPTIONS: Record<string, string> = {
   answer: 'Presses the one recorded key of a seat\'s folder-trust dialog when the file allows it; every check has to pass, and anything else sends nothing.',
   release: 'Checks a release on npm and GitHub. When the file has the pairs: Linear milestone, qualifying status update, and the release marker in the public activity file.',
   usage: 'Shows one project’s budget accounts, windows, remaining usage, and when each figure was last read.',
+  'usage/reads-writes': 'That team usage writes nothing, which file\'s figures are in force — the approved copy — and what a file that is unapproved, differs, or cannot be read shows.',
+  'usage/report': 'The team usage report: the header counts, each account and window line, the pace and ages, the per-team rows, and the why-lines.',
+  'usage/restricted': 'Which caller reads the full or restricted view, and the closed list of fields the restricted view carries — never another team\'s name, root or rows.',
+  'usage/json': 'What team usage --json prints: format 1, the counts, labs, accounts and notes — every key in both views, with the whole example document.',
+  'usage/refusals': 'The two things that refuse team usage at exit 2 — a bad invocation, or an unreadable stores folder; everything else is a note at exit 0.',
 };
 const SITE_PAGES: Record<string, string> = {
   '/privacy/': 'How teamcli.io reaches you, and what stays in your browser.',
