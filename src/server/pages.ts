@@ -1394,6 +1394,132 @@ export function worktreeRefusals(): Rendered {
     .render();
 }
 
+// ------------------------------------------- the `add` reference, in pages
+
+/**
+ * `add` is a long command page: starting one seat, who may run it, the delegate
+ * gate, the lines it prints, the refusals, and a walkthrough of nine fenced
+ * examples. Its hub holds what fits a screen — the purpose, the synopsis, the
+ * flags, the basic add, what it reads and writes, who may run it, the exit codes
+ * — and the rest is split, whole and unretyped, into reference pages one topic
+ * each: who may run it, what it prints, the refusals, and a stopped seat and a
+ * temporary seat. Together the pages hold every fence of the reference page
+ * exactly once (docs:check holds them to it), and each states its rule once.
+ */
+
+/** The reference pages of `team add`, as cards: one line each, in the site's own words. */
+const ADD_REFERENCE: { path: string; name: string; summary: string }[] = [
+  { path: '/docs/commands/add/who/', name: 'Who may run it', summary: 'The owner, the orchestrator, the operator and the approved delegate — and the caller-role refusals shown.' },
+  { path: '/docs/commands/add/output/', name: 'What it prints', summary: 'Every line a launch prints — ready and left out — a dialog, a bad launch line, and a dry run.' },
+  { path: '/docs/commands/add/refusals/', name: 'Refusals', summary: 'Every message that refuses team add, with the already-running, name and flag refusals shown.' },
+  { path: '/docs/commands/add/stopped-and-temporary/', name: 'A stopped seat, and a temporary seat', summary: 'add clearing a seat left stopped by remove --keep, and starting a temporary seat beside the team.' },
+];
+
+/** The sources a `team add` page is read from — the reference page, and this assembly. */
+const ADD_FILES = ['content/team/docs/commands/add.md', 'src/server/pages.ts'];
+
+/** A `team add` reference page's first line: where it belongs. */
+function addRefPart(html: string): string {
+  return `Part of <a href="/docs/commands/add/"><code>team add</code></a> — ${html}`;
+}
+
+/** /docs/commands/add/ — the command itself: purpose, synopsis, flags, the basic add, and the short behaviour. */
+export function addPage(): Rendered {
+  const add = commandPage('add');
+  const examples = section(add, 'Examples');
+  return new Doc()
+    .h1('team add')
+    .md(paragraph(add, 'Starts one seat of a running team:'))
+    .md(paragraph(add, 'The one seat starts where'))
+    // The synopsis is the reference's own indented block; section() trims the first
+    // line's indent, so re-add it to keep the block a code block — otherwise Marked
+    // reads `<result:path|merged:branch>` as an autolink and the placeholders vanish.
+    .md('    ' + section(add, 'Synopsis'))
+    .heading('Flags')
+    .md(section(add, 'Flags'))
+    .heading('Examples')
+    .note('The team file the examples read:')
+    .block(fenceWith(add, 'yaml', 'project: beacon'))
+    .md(paragraph(examples, 'The orchestrator\'s seat is in the file and nothing runs'))
+    .block(fenceWith(add, 'console', 'claude-keeper: ready'))
+    .note('A seat clearing a stopped mark and a temporary seat, every line a launch prints, and the caller-role refusals are on the reference pages below.')
+    .heading('What it reads and writes')
+    .md(section(add, 'What it reads and writes'))
+    .heading('Who may run it')
+    .md(paragraph(section(add, 'Who may run it'), 'The owner, the orchestrator'))
+    .note('The approved delegate, and the caller-role refusals shown, are on <a href="/docs/commands/add/who/">the who-may-run-it page</a>.')
+    .heading('Exit codes')
+    .md(section(add, 'Exit codes'))
+    .note('Every line a launch prints is on <a href="/docs/commands/add/output/">the what-it-prints page</a>; every refusal is on <a href="/docs/commands/add/refusals/">the refusals page</a>.')
+    .heading('The reference pages')
+    .raw(`<div class="doc-grid">${ADD_REFERENCE.map(card => `<a class="doc-entry" href="${card.path}"><span class="doc-entry__name">${escapeHtml(card.name)}</span><span class="doc-entry__summary">${escapeHtml(card.summary)}</span></a>`).join('')}</div>\n`)
+    .render();
+}
+
+/** /docs/commands/add/who/ — the approved delegate, and the caller-role refusals shown. */
+export function addWho(): Rendered {
+  const add = commandPage('add');
+  const examples = section(add, 'Examples');
+  return new Doc()
+    .h1('Who may run it')
+    .note(addRefPart('the owner, the orchestrator, the operator and the approved delegate — and the caller-role refusals shown.'))
+    .md(paragraph(section(add, 'Who may run it'), 'A file with a `delegates` section'))
+    .note('The ordinary rule this delegate gate defers to — the owner, the orchestrator and the operator, and the placement it proves — is on <a href="/docs/commands/add/">the team add page</a>.')
+    .heading('The caller rules, shown')
+    .md(paragraph(examples, 'Only the implementer is up'))
+    .block(fenceByInfo(add, 'caller=claude-keeper'))
+    .md(paragraph(examples, 'An implementer\'s seat is neither the orchestrator'))
+    .block(fenceByInfo(add, 'caller=claude-beacon'))
+    .render();
+}
+
+/** /docs/commands/add/output/ — every line a launch prints, a dialog, a bad launch line, and a dry run. */
+export function addOutput(): Rendered {
+  const add = commandPage('add');
+  return new Doc()
+    .h1('What it prints')
+    .note(addRefPart('every line a launch prints — ready and left out — a dialog kept for the owner, a launch line that cannot run, and a dry run.'))
+    .md(section(add, 'What it prints'))
+    .render();
+}
+
+/** /docs/commands/add/refusals/ — every message that refuses it, with the already-running, name and flag refusals. */
+export function addRefusals(): Rendered {
+  const add = commandPage('add');
+  const examples = section(add, 'Examples');
+  return new Doc()
+    .h1('Refusals')
+    .note(addRefPart('every message that refuses it, with the already-running, name and flag refusals shown.'))
+    .md(section(add, 'Refusals'))
+    .note('The exit codes these refusals carry are on <a href="/docs/commands/add/">the team add page</a>.')
+    .heading('A seat already running')
+    .md(paragraph(examples, 'The seat that is already running is never touched'))
+    .block(fenceWith(add, 'console', 'is already running'))
+    .heading('A name the file does not have')
+    .md(paragraph(examples, 'The seat\'s name must be one the approved file has'))
+    .block(fenceWith(add, 'console', 'has no seat "scratch"'))
+    .heading('The temporary flags, and a missing name')
+    .md(paragraph(examples, 'The flags that describe a temporary seat are refused'))
+    .block(fenceWith(add, 'console', 'are for --temporary'))
+    .render();
+}
+
+/** /docs/commands/add/stopped-and-temporary/ — clearing a stopped mark, and a temporary seat. */
+export function addStoppedAndTemporary(): Rendered {
+  const add = commandPage('add');
+  const examples = section(add, 'Examples');
+  return new Doc()
+    .h1('A stopped seat, and a temporary seat')
+    .note(addRefPart('clearing a seat left stopped by remove --keep, and starting a temporary seat beside the team.'))
+    .heading('A seat left stopped')
+    .md(paragraph(examples, '`team remove --keep` leaves a seat in the file'))
+    .block(fenceWith(add, 'console', 'stopped claude-beacon'))
+    .heading('A temporary seat')
+    .md(paragraph(examples, 'A temporary seat is not in the file at all'))
+    .block(fenceWith(add, 'console', 'claude-beacon-tmp-1'))
+    .render();
+}
+
 // ------------------------------------------- the `remove` reference, in pages
 
 /**
@@ -1709,6 +1835,14 @@ export function pages(): PageMeta[] {
         page('/docs/commands/worktree/reads-writes/', 'team worktree: what it reads and writes — team', '0.5', worktreeReadsWrites(), WORKTREE_FILES),
         page('/docs/commands/worktree/refusals/', 'team worktree: refusals — team', '0.5', worktreeRefusals(), WORKTREE_FILES),
       ]
+    : name === 'add'
+    ? [
+        page('/docs/commands/add/', 'team add — team', '0.8', addPage(), ADD_FILES),
+        page('/docs/commands/add/who/', 'team add: who may run it — team', '0.5', addWho(), ADD_FILES),
+        page('/docs/commands/add/output/', 'team add: what it prints — team', '0.5', addOutput(), ADD_FILES),
+        page('/docs/commands/add/refusals/', 'team add: refusals — team', '0.5', addRefusals(), ADD_FILES),
+        page('/docs/commands/add/stopped-and-temporary/', 'team add: a stopped seat and a temporary seat — team', '0.5', addStoppedAndTemporary(), ADD_FILES),
+      ]
     : name === 'remove'
     ? [
         page('/docs/commands/remove/', 'team remove — team', '0.8', removePage(), REMOVE_FILES),
@@ -1766,6 +1900,10 @@ const DESCRIPTIONS: Record<string, string> = {
   'watch/budgets': 'The figures a team watch pass reads off the seats and the check commands, and when a mark crossing, a reserve or a floor is reported.',
   'watch/checks': 'The checks and timings the owner approves for team watch, and what a pass reports while an edit to the file is still unapproved.',
   add: 'Starts one declared seat, or a temporary one beside the team with --temporary --like <seat> --until <result:path|merged:branch>.',
+  'add/who': 'Who may run team add: the owner, the orchestrator, the operator and the approved delegate — and the caller-role refusals shown.',
+  'add/output': 'What team add prints: one record per seat — ready or left out — a dialog kept for the owner, a launch line that cannot run, and a dry run.',
+  'add/refusals': 'Every message that refuses team add and its exit — the caller gates, the owner-only flags, the ceilings and budgets, placement, and the lock.',
+  'add/stopped-and-temporary': 'team add clearing a seat left stopped by remove --keep, and starting a temporary seat beside the team until a result or a merge.',
   remove: 'Stops one seat and takes it out of the file; --keep leaves it stopped; --abandon is the owner’s, and types nothing.',
   'remove/who': 'Who may run team remove: the owner, the orchestrator, the operator and the approved delegate — and the caller-role refusals shown.',
   'remove/output': 'What team remove prints: a line per seat stopped and the file edit, the non-owner leave, and a seat that does not leave cleanly.',
