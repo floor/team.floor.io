@@ -233,6 +233,70 @@ describe('the team up reference, in pages', () => {
   });
 });
 
+describe('the team approve reference, in pages', () => {
+  const byPath = new Map(pages().map(page => [page.path, page]));
+  const approve = byPath.get('/docs/commands/approve/')!;
+  const words = (html: string) => html.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
+  const refPaths = ['/docs/commands/approve/who/', '/docs/commands/approve/read-back/', '/docs/commands/approve/record/', '/docs/commands/approve/refusals/', '/docs/commands/approve/overrides/'];
+
+  test('one hub page and five reference pages, each linked from the hub and linking back', () => {
+    expect([...byPath.keys()].filter(path => path.startsWith('/docs/commands/approve/'))).toEqual([
+      '/docs/commands/approve/', ...refPaths,
+    ]);
+    for (const path of refPaths) {
+      expect(approve.html).toContain(`href="${path}"`);
+      expect(byPath.get(path)!.html).toContain('href="/docs/commands/approve/"');
+    }
+  });
+
+  test('the hub holds the purpose, the flags, the basic walkthrough and the short behaviour', () => {
+    expect(approve.toc.map(item => item.title)).toEqual(['Flags', 'Examples', 'Who may run it', 'What it reads and writes', 'What it prints', 'Exit codes', 'The reference pages']);
+    // The walkthrough trio: the team file, the --show read, the owner's approve.
+    expect((approve.html.match(/<pre class="(?:example__code|term)"/g) ?? []).length).toBe(3);
+    expect(approve.html).toContain('project: beacon');
+    expect(approve.html).toContain('Approved. The record is in');
+    // The deep material is not on the hub: it is on the reference pages.
+    expect(approve.html).not.toContain('The record this command writes is signed');
+    expect(approve.html).not.toContain('A delegate\'s approval is for ordinary changes');
+    expect(approve.html).not.toContain('lives in the approval store, beside the record');
+    expect(approve.html).not.toContain('Type the number of seats (2)');
+    // The hub is a fraction of the whole set, not the whole on one page.
+    const set = [...byPath.values()].filter(page => page.path.startsWith('/docs/commands/approve/')).map(page => words(page.html)).reduce((a, b) => a + b, 0);
+    expect(words(approve.html) * 2).toBeLessThan(set);
+  });
+
+  test('the deep material is on the reference pages, in the reference\'s own words', () => {
+    expect(byPath.get('/docs/commands/approve/who/')!.html).toContain('approval is for ordinary changes: the roster');
+    expect(byPath.get('/docs/commands/approve/who/')!.html).toContain('only the owner approves a team file, from a terminal outside herdr; this call is claude-keeper');
+    expect(byPath.get('/docs/commands/approve/read-back/')!.html).toContain('Then the ceilings the approval would fix');
+    expect(byPath.get('/docs/commands/approve/read-back/')!.html).toContain('Needs a new approval: `trust` changed.');
+    expect(byPath.get('/docs/commands/approve/record/')!.html).toContain('The record this command writes is signed');
+    expect(byPath.get('/docs/commands/approve/record/')!.html).toContain('approved before records were signed');
+    expect(byPath.get('/docs/commands/approve/refusals/')!.html).toContain('delegation needs a verified approval');
+    expect(byPath.get('/docs/commands/approve/refusals/')!.html).toContain('Type the number of seats (2) to approve this file');
+    expect(byPath.get('/docs/commands/approve/overrides/')!.html).toContain('lives in the approval store, beside the record');
+    // The read-back page does not carry the refusal walkthrough; that is the refusals page.
+    expect(byPath.get('/docs/commands/approve/read-back/')!.html).not.toContain('Type the number of seats (2)');
+  });
+
+  test('the reference pages answer, each with its own title and description', async () => {
+    const expected: [string, string, string][] = [
+      ['/docs/commands/approve/who/', 'team approve: who may run it — team', 'Who may run team approve'],
+      ['/docs/commands/approve/read-back/', 'team approve: the read-back — team', 'What team approve prints back'],
+      ['/docs/commands/approve/record/', 'team approve: the signed record — team', 'The signed approval record'],
+      ['/docs/commands/approve/refusals/', 'team approve: refusals — team', 'What refuses a team approve write'],
+      ['/docs/commands/approve/overrides/', 'team approve: the overrides file — team', 'overrides.yaml beside the approval record'],
+    ];
+    for (const [path, title, description] of expected) {
+      const response = await handleRequest(new Request(`https://teamcli.io${path}`));
+      expect(response.status).toBe(200);
+      const body = await response.text();
+      expect(body).toContain(`<title>${title}</title>`);
+      expect(body).toContain(description);
+    }
+  });
+});
+
 describe('the reference the site is built against', () => {
   test('the content was fetched, and it says which ref it is', () => {
     expect(contentReady()).toBe(true);
