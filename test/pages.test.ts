@@ -276,7 +276,7 @@ describe('the team usage reference, in pages', () => {
 
   test('the reference pages answer, each with its own title and description', async () => {
     const expected: [string, string, string][] = [
-      ['/docs/commands/usage/reads-writes/', 'team usage: what it reads and writes — team', 'What team usage reads'],
+      ['/docs/commands/usage/reads-writes/', 'team usage: what it reads and writes — team', 'That team usage writes nothing'],
       ['/docs/commands/usage/report/', 'team usage: the report — team', 'The team usage report'],
       ['/docs/commands/usage/restricted/', 'team usage: the restricted view — team', 'Which caller reads the full or restricted view'],
       ['/docs/commands/usage/json/', 'team usage: the JSON — team', 'What team usage --json prints'],

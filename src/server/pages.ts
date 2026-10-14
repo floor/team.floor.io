@@ -474,7 +474,7 @@ export function upRefusals(): Rendered {
 
 /** The reference pages of `team usage`, as cards: one line each, in the site's own words. */
 const USAGE_REFERENCE: { path: string; name: string; summary: string }[] = [
-  { path: '/docs/commands/usage/reads-writes/', name: 'What it reads and writes', summary: 'The stores and files it reads, that it writes nothing, and which file\'s figures are in force.' },
+  { path: '/docs/commands/usage/reads-writes/', name: 'What it reads and writes', summary: 'That it writes nothing, which file\'s figures are in force, and what an unapproved or unreadable file shows.' },
   { path: '/docs/commands/usage/report/', name: 'The report', summary: 'The header counts, each account and window line, pace and ages, the rows, and the why-lines.' },
   { path: '/docs/commands/usage/restricted/', name: 'The restricted view', summary: 'Which caller reads which view, and the closed list of fields the restricted view carries.' },
   { path: '/docs/commands/usage/json/', name: 'The JSON', summary: 'What --json prints: the document\'s keys in both views, and the whole example document.' },
@@ -517,12 +517,12 @@ export function usagePage(): Rendered {
     .render();
 }
 
-/** /docs/commands/usage/reads-writes/ — the stores and files it reads, that it writes nothing, and the in-force rule. */
+/** /docs/commands/usage/reads-writes/ — that it writes nothing, the in-force rule, and an unreadable file. */
 export function usageReadsWrites(): Rendered {
   const usage = commandPage('usage');
   return new Doc()
     .h1('What it reads and writes')
-    .note(usagePart('the stores and files it reads, that it writes nothing, and which file\'s figures are in force.'))
+    .note(usagePart('that it writes nothing, which file\'s figures are in force, and what an unapproved or unreadable file shows.'))
     .md(fromBlock(section(usage, 'What it reads and writes'), 'It writes **nothing at all**'))
     .note('What it reads — the stores and the files — is on <a href="/docs/commands/usage/">the team usage page</a>; the one refusal the stores folder can raise is on <a href="/docs/commands/usage/refusals/">the refusals page</a>.')
     .render();
@@ -749,7 +749,7 @@ const DESCRIPTIONS: Record<string, string> = {
   answer: 'Presses the one recorded key of a seat\'s folder-trust dialog when the file allows it; every check has to pass, and anything else sends nothing.',
   release: 'Checks a release on npm and GitHub. When the file has the pairs: Linear milestone, qualifying status update, and the release marker in the public activity file.',
   usage: 'Shows one project’s budget accounts, windows, remaining usage, and when each figure was last read.',
-  'usage/reads-writes': 'What team usage reads — the approval stores, each team file, state and record — that it writes nothing, and which file\'s figures are in force.',
+  'usage/reads-writes': 'That team usage writes nothing, which file\'s figures are in force — the approved copy — and what a file that is unapproved, differs, or cannot be read shows.',
   'usage/report': 'The team usage report: the header counts, each account and window line, the pace and ages, the per-team rows, and the why-lines.',
   'usage/restricted': 'Which caller reads the full or restricted view, and the closed list of fields the restricted view carries — never another team\'s name, root or rows.',
   'usage/json': 'What team usage --json prints: format 1, the counts, labs, accounts and notes — every key in both views, with the whole example document.',
