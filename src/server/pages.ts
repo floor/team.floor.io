@@ -459,6 +459,160 @@ export function upRefusals(): Rendered {
     .render();
 }
 
+// ------------------------------------------- the `watch` reference, in pages
+
+/**
+ * `watch` is the reference's fourth-longest command page (529 md lines at team 0.3.5).
+ * Its hub holds what fits a screen — the purpose, the synopsis, the flags, the base
+ * example, who may run it, what it reads and writes, the short lead of what it prints,
+ * the refusals and the exit codes — and the rest is split, whole and unretyped, into
+ * reference pages one topic each, by the page's own sections: the reports, the nudge,
+ * how a screen is read, budgets, and the approved checks and timings. Together the six
+ * pages hold every fence of the reference page exactly once (docs:check holds them to
+ * it), and each states its rule once.
+ */
+
+/** The reference pages of `team watch`, as cards: one line each, in the site's own words. */
+const WATCH_REFERENCE: { path: string; name: string; summary: string }[] = [
+  { path: '/docs/commands/watch/reports/', name: 'The reports', summary: 'Every line a pass can print and when each is made — the seat, approval, machine and account reports — and what the log holds beyond them.' },
+  { path: '/docs/commands/watch/nudge/', name: 'The nudge', summary: 'The one fixed line the watch types into the operator\'s pane, the lines around it, and --no-nudge.' },
+  { path: '/docs/commands/watch/screens/', name: 'How a screen is read', summary: 'The idle frame that tells a prompt from a dialog, a question or a vendor notice, and the live-agent check.' },
+  { path: '/docs/commands/watch/budgets/', name: 'Budgets', summary: 'The figures a pass reads off the seats and the check commands, and when a mark, a reserve or a floor is reported.' },
+  { path: '/docs/commands/watch/checks/', name: 'Checks and timings', summary: 'The checks and timings the owner approves, and what a pass reports while an edit to the file is still unapproved.' },
+];
+
+/** The sources a `team watch` page is read from — the reference page, and this assembly. */
+const WATCH_FILES = ['content/team/docs/commands/watch.md', 'src/server/pages.ts'];
+
+/** A `team watch` reference page's first line: where it belongs. */
+function watchRefPart(html: string): string {
+  return `Part of <a href="/docs/commands/watch/"><code>team watch</code></a> — ${html}`;
+}
+
+/** /docs/commands/watch/ — the command itself: purpose, synopsis, flags, the base example, and the short behaviour. */
+export function watchPage(): Rendered {
+  const watch = commandPage('watch');
+  const examples = section(watch, 'Examples');
+  const prints = section(watch, 'What it prints');
+  return new Doc()
+    .h1('team watch')
+    .md(paragraph(watch, 'Watches a running team'))
+    .md(section(watch, 'Synopsis'))
+    .heading('Flags')
+    .md(section(watch, 'Flags'))
+    .heading('Examples')
+    .note('The team file the examples read:')
+    .block(fenceWith(watch, 'yaml', 'project: beacon'))
+    .md(paragraph(examples, 'Two seats at their prompts'))
+    .block(fenceWith(watch, 'console', 'every 120s'))
+    .heading('Who may run it')
+    .md(section(watch, 'Who may run it'))
+    .heading('What it reads and writes')
+    .md(section(watch, 'What it reads and writes'))
+    .heading('What it prints')
+    .md(fromBlock(prints, 'Every line carries its time', 'A report is printed'))
+    .note('Every report a pass can print, and when each is made, is on <a href="/docs/commands/watch/reports/">the reports page</a>; the nudge the operator\'s reports stand for, on <a href="/docs/commands/watch/nudge/">the nudge page</a>.')
+    .heading('Refusals')
+    .md(section(watch, 'Refusals'))
+    .note('`up` leaves a watch running in its own pane, so a second one refuses rather than reading the same session twice:')
+    .block(fenceWith(watch, 'console', 'a watch already runs for the session'))
+    .heading('Exit codes')
+    .md(section(watch, 'Exit codes'))
+    .heading('The reference pages')
+    .raw(`<div class="doc-grid">${WATCH_REFERENCE.map(card => `<a class="doc-entry" href="${card.path}"><span class="doc-entry__name">${escapeHtml(card.name)}</span><span class="doc-entry__summary">${escapeHtml(card.summary)}</span></a>`).join('')}</div>\n`)
+    .render();
+}
+
+/** /docs/commands/watch/reports/ — every line a pass can print, and when each is made. */
+export function watchReports(): Rendered {
+  const watch = commandPage('watch');
+  const prints = section(watch, 'What it prints');
+  const examples = section(watch, 'Examples');
+  return new Doc()
+    .h1('The reports')
+    .note(watchRefPart('every line a pass can print, and when each is made.'))
+    .md(fromBlock(prints, 'A report is printed when it starts', 'Each report is addressed'))
+    .md(paragraph(prints, 'Each report is addressed to the owner or to the operator'))
+    .note('What the nudge stands for, and the lines around it, is on <a href="/docs/commands/watch/nudge/">the nudge page</a>.')
+    .heading('A report for the owner')
+    .md(paragraph(examples, 'A permission prompt is the owner'))
+    .block(fenceWith(watch, 'console', 'waits at a permission prompt'))
+    .heading('A machine report')
+    .md(paragraph(examples, 'The machine is watched the same way'))
+    .block(fenceWith(watch, 'console', 'free memory is 8%, below 15%'))
+    .render();
+}
+
+/** /docs/commands/watch/nudge/ — the one fixed line the watch types into the operator's pane. */
+export function watchNudge(): Rendered {
+  const watch = commandPage('watch');
+  const prints = section(watch, 'What it prints');
+  const examples = section(watch, 'Examples');
+  return new Doc()
+    .h1('The nudge')
+    .note(watchRefPart('the one fixed line the operator reads, and when the watch types it.'))
+    .md(paragraph(prints, 'A report that is the operator\'s to act on is also what the nudge stands for'))
+    .md(fromBlock(prints, '| Line | Made when |'))
+    .heading('A question nudges the operator')
+    .md(paragraph(examples, 'A question is the operator'))
+    .block(fenceWith(watch, 'console', 'claude-beacon asked a question'))
+    .heading('--no-nudge keeps the reports')
+    .md(paragraph(examples, '`--no-nudge` keeps the reports'))
+    .block(fenceWith(watch, 'console', 'nudge not typed (--no-nudge)'))
+    .render();
+}
+
+/** /docs/commands/watch/screens/ — how a pane's screen is read. */
+export function watchScreens(): Rendered {
+  const watch = commandPage('watch');
+  return new Doc()
+    .h1('How a screen is read')
+    .note(watchRefPart('the reading that tells an idle prompt from a dialog, a question or a vendor notice.'))
+    .md(section(watch, 'How a screen is read'))
+    .render();
+}
+
+/** /docs/commands/watch/budgets/ — the figures a pass reads, and when a mark or reserve is reported. */
+export function watchBudgets(): Rendered {
+  const watch = commandPage('watch');
+  return new Doc()
+    .h1('Budgets')
+    .note(watchRefPart('the figures a pass reads off the seats and the check commands, and when a mark or a reserve is reported.'))
+    .md(section(watch, 'Budgets'))
+    .render();
+}
+
+/** /docs/commands/watch/checks/ — the checks and timings the owner approves, and the drift a pass reports. */
+export function watchChecks(): Rendered {
+  const watch = commandPage('watch');
+  const examples = section(watch, 'Examples');
+  return new Doc()
+    .h1('The approved checks and timings')
+    .note(watchRefPart('the checks and timings the owner approves, and what a pass reports while an edit is unapproved.'))
+    .heading('A file that no longer validates')
+    .md(paragraph(examples, 'A file that no longer validates'))
+    .block(fenceWith(watch, 'yaml', 'seats: ['))
+    .block(fenceWith(watch, 'console', 'team.yaml is invalid'))
+    .heading('An approval that drifted')
+    .md(paragraph(examples, 'The file is part of the same pass'))
+    .block(fenceWith(watch, 'yaml', '~/Code/other'))
+    .block(fenceWith(watch, 'console', 'differs from the approved one: `trust`'))
+    .heading('The timings')
+    .md(paragraph(examples, 'The watch\'s own timings are the owner'))
+    .heading('Turning a check off')
+    .md(paragraph(examples, 'A check the team doesn\'t want'))
+    .block(fenceWith(watch, 'yaml', 'memory: off'))
+    .block(fenceWith(watch, 'console', 'differs from the approved one: `watch.checks`'))
+    .md(paragraph(examples, 'The owner approves it, and the next pass runs without'))
+    .block(fenceWith(watch, 'console', 'Ceilings this approval fixes'))
+    .block(fenceWith(watch, 'console', 'every 120s'))
+    .heading('Checks that cannot be turned off')
+    .md(paragraph(examples, 'The four that can\'t be turned off'))
+    .block(fenceWith(watch, 'yaml', 'disks: off'))
+    .block(fenceWith(watch, 'console', 'watch.checks can\'t turn off attention'))
+    .render();
+}
+
 // ---------------------------------------------------------------- safety and CLIs
 
 /**
@@ -584,6 +738,15 @@ export function pages(): PageMeta[] {
         page('/docs/commands/up/limits/', 'team up: known limits — team', '0.5', upLimits(), UP_FILES),
         page('/docs/commands/up/refusals/', 'team up: refusals — team', '0.5', upRefusals(), UP_FILES),
       ]
+    : name === 'watch'
+    ? [
+        page('/docs/commands/watch/', 'team watch — team', '0.8', watchPage(), WATCH_FILES),
+        page('/docs/commands/watch/reports/', 'team watch: the reports — team', '0.5', watchReports(), WATCH_FILES),
+        page('/docs/commands/watch/nudge/', 'team watch: the nudge — team', '0.5', watchNudge(), WATCH_FILES),
+        page('/docs/commands/watch/screens/', 'team watch: how a screen is read — team', '0.5', watchScreens(), WATCH_FILES),
+        page('/docs/commands/watch/budgets/', 'team watch: budgets — team', '0.5', watchBudgets(), WATCH_FILES),
+        page('/docs/commands/watch/checks/', 'team watch: the approved checks and timings — team', '0.5', watchChecks(), WATCH_FILES),
+      ]
     : [page(`/docs/commands/${name}/`, `team ${name} — team`, '0.8', commandPageContent(name), [`content/team/docs/commands/${name}.md`])]);
   return [...group, ...commands];
 }
@@ -609,6 +772,11 @@ const DESCRIPTIONS: Record<string, string> = {
   'up/refusals': 'What stops a team up run before its first step: the owner and delegate gates, the approval, the lobby, the load — with the refused runs shown.',
   down: 'Stops the team: asks every free seat to exit, closes its workspace, stops the watch, and stops the session.',
   watch: 'Watches a running team: reports idle seats and nudges the operator, in one fixed line, into an empty idle prompt only.',
+  'watch/reports': 'Every line a team watch pass can print and when each is made: the seat, approval, machine and account reports, and what the log holds beyond them.',
+  'watch/nudge': 'The one fixed line team watch types into the operator’s pane when a report is theirs to act on, the lines around it, and --no-nudge.',
+  'watch/screens': 'How team watch reads a pane: the idle frame that tells a prompt from a dialog, a question or a vendor notice, with the live-agent check.',
+  'watch/budgets': 'The figures a team watch pass reads off the seats and the check commands, and when a mark crossing, a reserve or a floor is reported.',
+  'watch/checks': 'The checks and timings the owner approves for team watch, and what a pass reports while an edit to the file is still unapproved.',
   add: 'Starts one declared seat, or a temporary one beside the team with --temporary --like <seat> --until <result:path|merged:branch>.',
   remove: 'Stops one seat and takes it out of the file; --keep leaves it stopped; --abandon is the owner’s, and types nothing.',
   worktree: 'Creates a task worktree from an up-to-date base, or removes one; the branch is never deleted.',

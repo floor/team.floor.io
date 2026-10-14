@@ -233,6 +233,71 @@ describe('the team up reference, in pages', () => {
   });
 });
 
+describe('the team watch reference, in pages', () => {
+  const byPath = new Map(pages().map(page => [page.path, page]));
+  const watch = byPath.get('/docs/commands/watch/')!;
+  const words = (html: string) => html.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
+  const refPaths = ['/docs/commands/watch/reports/', '/docs/commands/watch/nudge/', '/docs/commands/watch/screens/', '/docs/commands/watch/budgets/', '/docs/commands/watch/checks/'];
+
+  test('one hub page and five reference pages, each linked from the hub and linking back', () => {
+    expect([...byPath.keys()].filter(path => path.startsWith('/docs/commands/watch/'))).toEqual([
+      '/docs/commands/watch/', ...refPaths,
+    ]);
+    for (const path of refPaths) {
+      expect(watch.html).toContain(`href="${path}"`);
+      expect(byPath.get(path)!.html).toContain('href="/docs/commands/watch/"');
+    }
+  });
+
+  test('the hub holds the purpose, the flags, the base example and the short behaviour', () => {
+    expect(watch.toc.map(item => item.title)).toEqual(['Flags', 'Examples', 'Who may run it', 'What it reads and writes', 'What it prints', 'Refusals', 'Exit codes', 'The reference pages']);
+    expect((watch.html.match(/<pre class="(?:example__code|term)"/g) ?? []).length).toBe(3);
+    // The purpose is the whole first paragraph: the temporary-seat close is hub material.
+    expect(watch.html).toContain('closes a temporary seat or');
+    // The base run and the second-watch refusal ride on the hub.
+    expect(watch.html).toContain('the watch of &quot;beacon&quot; stopped');
+    expect(watch.html).toContain('a watch already runs for the session');
+    // The short lead of what it prints is here; the report table is not.
+    expect(watch.html).toContain('Every line carries its time');
+    expect(watch.html).not.toContain('is in the file and is not running');
+    expect(watch.html).not.toContain('nudged the operator (its own unsent line');
+    // The hub is a fraction of the whole set, not the whole on one page.
+    const set = [...byPath.values()].filter(page => page.path.startsWith('/docs/commands/watch/')).map(page => words(page.html)).reduce((a, b) => a + b, 0);
+    expect(words(watch.html) * 2).toBeLessThan(set);
+  });
+
+  test('the deep material is on the reference pages, in the reference\'s own words', () => {
+    expect(byPath.get('/docs/commands/watch/reports/')!.html).toContain('is in the file and is not running');
+    expect(byPath.get('/docs/commands/watch/reports/')!.html).toContain('free memory is 8%, below 15%');
+    expect(byPath.get('/docs/commands/watch/nudge/')!.html).toContain('nudged the operator (its own unsent line');
+    expect(byPath.get('/docs/commands/watch/nudge/')!.html).toContain('nudge not typed (--no-nudge)');
+    expect(byPath.get('/docs/commands/watch/screens/')!.html).toContain('the live-agent check is the second layer');
+    expect(byPath.get('/docs/commands/watch/budgets/')!.html).toContain('The budget reports read the figures');
+    expect(byPath.get('/docs/commands/watch/checks/')!.html).toContain('team.yaml is invalid');
+    expect(byPath.get('/docs/commands/watch/checks/')!.html).toContain("watch.checks can't turn off attention");
+    // The reports table sits on the reports page, not duplicated onto the nudge page.
+    const nudge = byPath.get('/docs/commands/watch/nudge/')!.html;
+    expect(nudge).not.toContain('is in the file and is not running');
+  });
+
+  test('the reference pages answer, each with its own title and description', async () => {
+    const expected: [string, string, string][] = [
+      ['/docs/commands/watch/reports/', 'team watch: the reports — team', 'Every line a team watch pass can print and when each is made'],
+      ['/docs/commands/watch/nudge/', 'team watch: the nudge — team', 'The one fixed line team watch types into the operator’s pane'],
+      ['/docs/commands/watch/screens/', 'team watch: how a screen is read — team', 'How team watch reads a pane'],
+      ['/docs/commands/watch/budgets/', 'team watch: budgets — team', 'The figures a team watch pass reads off the seats'],
+      ['/docs/commands/watch/checks/', 'team watch: the approved checks and timings — team', 'The checks and timings the owner approves for team watch'],
+    ];
+    for (const [path, title, description] of expected) {
+      const response = await handleRequest(new Request(`https://teamcli.io${path}`));
+      expect(response.status).toBe(200);
+      const body = await response.text();
+      expect(body).toContain(`<title>${title}</title>`);
+      expect(body).toContain(description);
+    }
+  });
+});
+
 describe('the reference the site is built against', () => {
   test('the content was fetched, and it says which ref it is', () => {
     expect(contentReady()).toBe(true);
