@@ -475,7 +475,7 @@ export function upRefusals(): Rendered {
 /** The reference pages of `team approve`, as cards: one line each, in the site's own words. */
 const APPROVE_REFERENCE: { path: string; name: string; summary: string }[] = [
   { path: '/docs/commands/approve/who/', name: 'Who may run it', summary: 'The owner, the approved delegate, and what a delegated approval may change.' },
-  { path: '/docs/commands/approve/read-back/', name: 'The read-back', summary: 'What approve prints: the whole file or a diff, the ceilings and seats, and what needs a new approval.' },
+  { path: '/docs/commands/approve/read-back/', name: 'The read-back', summary: 'What approve prints: the diff against the approved copy, the ceilings and seats, and what needs a new approval.' },
   { path: '/docs/commands/approve/record/', name: 'The signed record', summary: 'The key and the counter, the record\'s strict shape, and a record from before signing.' },
   { path: '/docs/commands/approve/refusals/', name: 'Refusals', summary: 'The refusals, --confirm, and a line waiting on the terminal that refuses the write.' },
   { path: '/docs/commands/approve/overrides/', name: 'The overrides file', summary: 'overrides.yaml in the approval store: the patterns it may add, and when approve records it.' },
@@ -549,7 +549,7 @@ export function approveReadBack(): Rendered {
   const prints = section(approve, 'What it prints');
   return new Doc()
     .h1('The read-back')
-    .note(approvePart('what approve prints in full: when nothing changed, the ceilings and seats it fixes, and what needs a new approval.'))
+    .note(approvePart('what approve prints against an existing record: when nothing changed, the ceilings and seats it fixes, and what needs a new approval.'))
     .md(fromBlock(prints, 'Nothing at all changed is said plainly:'))
     .note('When no record on this machine, the whole file is printed numbered — the example of that, and the basic walkthrough, are on <a href="/docs/commands/approve/">the team approve page</a>.')
     .heading('An owner section changed')
@@ -752,7 +752,7 @@ const DESCRIPTIONS: Record<string, string> = {
   init: 'Writes the team file: a skeleton for this project, or the copy you last approved, kept out of git.',
   approve: 'The owner reads the whole file back, then records it, its ceilings and its seats on this machine; --show prints it.',
   'approve/who': 'Who may run team approve: the owner from a terminal outside herdr, and the approved delegate — the pane the file names — for the roster and rules alone.',
-  'approve/read-back': 'What team approve prints back: the whole file or a per-section diff, the ceilings and seats it fixes, and which changes need a new approval.',
+  'approve/read-back': 'What team approve prints back: the per-section diff against the approved copy, the ceilings and seats it fixes, and which changes need a new approval.',
   'approve/record': 'The signed approval record: the key and per-project counter outside the store, the record\'s strict shape, and a record written before signing.',
   'approve/refusals': 'What refuses a team approve write: a seat or wrong delegate, a change needing the owner, --confirm\'s answer, and a line waiting on the terminal.',
   'approve/overrides': 'overrides.yaml beside the approval record: the dialog and quota patterns it may add to a shipped profile, and when team approve records it.',
