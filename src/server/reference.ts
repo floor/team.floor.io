@@ -131,6 +131,12 @@ export function commandPage(name: string): string {
   return need(commandNames().includes(name) ? read(`docs/commands/${name}.md`) : undefined, `a page for the "${name}" command`);
 }
 
+/** The launch profiles the reference ships: every `src/profiles/*.yaml`, under its `cli` name. */
+export function profileNames(): string[] {
+  const files = readdirSync(resolve(contentDir, 'src/profiles')).filter(name => name.endsWith('.yaml')).map(name => name.slice(0, -'.yaml'.length)).sort();
+  return need(files.length ? files : undefined, 'its launch profiles');
+}
+
 /** The first fence of a page whose text holds this, by language. */
 export function fenceWith(page: string, lang: string, contains: string): Fence {
   return need(fences(page).find(fence => fence.lang === lang && fence.text.includes(contains)), `a ${lang} block holding "${contains}"`);
