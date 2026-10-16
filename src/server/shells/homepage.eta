@@ -19,6 +19,6 @@
   <div class="landing-next">
     <a class="doc-entry" href="/docs/file/"><span class="doc-entry__name">The team file</span><span class="doc-entry__summary">Seven sections of <code>.agents/team.yaml</code>, then the other fields.</span></a>
     <a class="doc-entry" href="/docs/safety/"><span class="doc-entry__name">Safety</span><span class="doc-entry__summary">The owner, the approved copy, and dialogs.trust: owner sends no key, or the coordinator may.</span></a>
-    <a class="doc-entry" href="/docs/clis/"><span class="doc-entry__name">Supported CLIs</span><span class="doc-entry__summary">claude-code, codex, cursor and antigravity.</span></a>
+    <a class="doc-entry" href="/docs/clis/"><span class="doc-entry__name">Supported CLIs</span><span class="doc-entry__summary">claude-code, codex, cursor, antigravity, grok, gemini and muse.</span></a>
   </div>
 </div>

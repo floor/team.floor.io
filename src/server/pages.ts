@@ -5,7 +5,7 @@
 // row, a fenced block — and reference.ts throws when the reference no longer has one. So
 // a ref that moved fails loudly here, in `bun test` and in docs:check, instead of quietly
 // shipping a page that says something the package no longer does.
-import { bullet, commandNames, commandPage, commandTable, fenceByInfo, fenceWith, fromBlock, paragraph, section, sentence, README, ReferenceError } from './reference';
+import { bullet, commandNames, commandPage, commandTable, fenceByInfo, fenceWith, fromBlock, paragraph, profileNames, section, sentence, README, ReferenceError } from './reference';
 import { escapeHtml, fenceHtml, renderMarkdown, slug, type Fence, type Rendered } from './markdown';
 import { contentReady, packageVersion, read, refInfo } from './team';
 
@@ -1699,34 +1699,213 @@ export function safety(): Rendered {
     .render();
 }
 
-/** The four profiles the reference names, and the sign-in check it gives each. */
-const PROFILES: { cli: string; check: string }[] = [
-  { cli: 'claude-code', check: 'claude auth status' },
-  { cli: 'codex', check: 'codex login status' },
-  { cli: 'cursor', check: 'cursor-agent status' },
-  { cli: 'antigravity', check: 'agy models' },
+/**
+ * Every launch profile the build ships, and what the page shows of its screen. A profile's
+ * commands and flags — its binary, its `unattended` list, its sign-in check or hint, its
+ * tested range — are read from `src/profiles/<cli>.yaml` and never retyped. The ready and
+ * working words are the page's spelling of what the profile's own matchers carry, and each
+ * of them is checked against its matcher, so a profile that stops painting them stops the
+ * build. The list is the whole set, both ways: a profile the build ships and the page does
+ * not describe stops the build, as does a line for a CLI the build no longer ships.
+ */
+interface LaunchProfile {
+  cli: string;
+  /** How the profile reads a ready seat, and a fragment of its composer's prompt pattern. */
+  ready: string;
+  promptNeedle: string;
+  /** The words of the profile's working frame, and a fragment of the matcher that reads it. */
+  working: string;
+  workingNeedle: string;
+}
+
+const PROFILES: LaunchProfile[] = [
+  { cli: 'claude-code', ready: 'at its <code>❯</code> prompt box', promptNeedle: '❯', working: '<code>esc to interrupt</code>', workingNeedle: 'esc to interrupt' },
+  { cli: 'codex', ready: 'at its <code>›</code> prompt', promptNeedle: '›', working: '<code>esc to interrupt</code>', workingNeedle: 'esc to interrupt' },
+  { cli: 'cursor', ready: 'at its <code>→</code> prompt', promptNeedle: '→', working: '<code>ctrl+c to stop</code>', workingNeedle: 'ctrl\\+c to stop' },
+  { cli: 'antigravity', ready: 'at its <code>&gt;</code> prompt', promptNeedle: '>', working: '<code>Generating...</code>', workingNeedle: 'Generating' },
+  { cli: 'grok', ready: 'at its boxed <code>❯</code>', promptNeedle: '❯', working: '<code>[stop]</code>', workingNeedle: '\\[stop\\]' },
+  { cli: 'gemini', ready: 'at its <code>*</code> or <code>&gt;</code> prompt in the box', promptNeedle: '[>*]', working: '<code>esc to cancel</code>', workingNeedle: 'esc to cancel' },
+  { cli: 'muse', ready: 'at its <code>❯</code> prompt', promptNeedle: '❯', working: '<code>esc to interrupt</code>', workingNeedle: 'esc to interrupt' },
 ];
+
+/**
+ * A block of a profile's YAML: the lines under `key:` where it sits at `indent`, up to the
+ * next key at that indent or shallower. Blank lines and comments stay in the block, so a
+ * field a run documented reads as a bare one does.
+ */
+function profileBlock(profile: string, cli: string, key: string, indent: number): string {
+  const lines = profile.split('\n');
+  const start = lines.findIndex(line => new RegExp(`^ {${indent}}${key}:`).test(line));
+  if (start < 0) throw new ReferenceError(`src/profiles/${cli}.yaml no longer carries "${key}:"`);
+  const stop = new RegExp(`^ {0,${indent}}(?!#)\\S`);
+  const end = lines.findIndex((line, index) => index > start && stop.test(line));
+  return lines.slice(start, end < 0 ? lines.length : end).join('\n');
+}
+
+/** The `- item` lines of a YAML block: the flags of an `unattended` list, the words of a `login.check`. */
+function profileList(block: string): string[] {
+  return block.split('\n').map(line => /^[ \t]*-[ \t]+(\S.*?)[ \t]*$/.exec(line)?.[1]).filter((item): item is string => item !== undefined);
+}
+
+/**
+ * One profile's facts, read by name from `src/profiles/<cli>.yaml`: the binary it launches,
+ * the flags its `unattended` list adds, its tested range, how its rules reach the seat (a
+ * flag, or the first message), the flag that sets its model, and its sign-in — the check, run
+ * as `<binary> <login.check>`, or, for a profile that carries none, the `login.hint` alone. A
+ * value the profile stops carrying stops the build, as a moved reference does everywhere else.
+ */
+function launchFacts(profile: LaunchProfile): { binary: string; unattended: string[]; tested: string; check: string | null; hint: string; rules: string | null; model: string | null } {
+  const { cli } = profile;
+  let yaml: string;
+  try {
+    yaml = read(`src/profiles/${cli}.yaml`);
+  } catch {
+    throw new ReferenceError(`src/profiles/${cli}.yaml is gone: the page describes every profile the build ships`);
+  }
+  const need = (value: string | undefined, what: string): string => {
+    if (!value) throw new ReferenceError(`src/profiles/${cli}.yaml no longer carries ${what}`);
+    return value;
+  };
+  const binary = need(/^binary:[ \t]+(\S+)[ \t]*$/m.exec(yaml)?.[1], 'a binary:');
+  const unattended = profileList(profileBlock(yaml, cli, 'unattended', 0));
+  if (!unattended.length) throw new ReferenceError(`src/profiles/${cli}.yaml's unattended: list is empty`);
+  const tested = profileBlock(yaml, cli, 'tested', 0);
+  const from = need(/^[ \t]+from:[ \t]*'?([^'\n]+?)'?[ \t]*$/m.exec(tested)?.[1], 'a tested.from version');
+  const to = need(/^[ \t]+to:[ \t]*'?([^'\n]+?)'?[ \t]*$/m.exec(tested)?.[1], 'a tested.to version');
+  const login = profileBlock(yaml, cli, 'login', 0);
+  const hint = need(/^[ \t]+hint:[ \t]*(.+?)[ \t]*$/m.exec(login)?.[1], 'a login.hint');
+  const check = /^[ \t]+check:/m.test(login) ? `${binary} ${profileList(profileBlock(login, cli, 'check', 2)).join(' ')}` : null;
+  const rulesBlock = profileBlock(yaml, cli, 'rules', 0);
+  const rules = /^[ \t]+option:[ \t]*(\S+)[ \t]*$/m.exec(rulesBlock)?.[1] ?? null;
+  if (rules === null && !/^rules:[ \t]*first-message[ \t]*$/m.test(rulesBlock)) throw new ReferenceError(`src/profiles/${cli}.yaml's rules: is neither a flag nor first-message`);
+  const model = profileList(profileBlock(profileBlock(yaml, cli, 'models', 0), cli, 'option', 2))[0] ?? null;
+  const screen = profileBlock(yaml, cli, 'screen', 0);
+  if (!profileBlock(screen, cli, 'composer', 2).includes(profile.promptNeedle)) throw new ReferenceError(`src/profiles/${cli}.yaml's composer no longer paints "${profile.promptNeedle}"`);
+  if (!profileBlock(screen, cli, 'working', 2).includes(profile.workingNeedle)) throw new ReferenceError(`src/profiles/${cli}.yaml's working frame no longer carries "${profile.workingNeedle}"`);
+  return { binary, unattended, tested: from === to ? to : `${from} to ${to}`, check, hint, rules, model };
+}
 
 /** /docs/clis/ — what `team` knows of each CLI, from the reference. */
 export function clis(): Rendered {
   const doctor = commandPage('doctor');
+  const watch = commandPage('watch');
   const login = paragraph(README, '`team doctor --login` checks read-only');
-  for (const profile of PROFILES) {
-    if (!login.includes(profile.check)) throw new ReferenceError(`the login paragraph no longer names "${profile.check}"`);
+  const facts = PROFILES.map(profile => ({ profile, ...launchFacts(profile) }));
+  for (const { check } of facts) {
+    if (check && !login.includes(check)) throw new ReferenceError(`the login paragraph no longer names "${check}"`);
   }
+  // The table is the whole set of launch profiles the build ships, and only those: this stops
+  // on a profile the page misses, on a line for one the build dropped, and on the two CLIs the
+  // section at the bottom says are not seat kinds, should one of them ever ship a profile.
+  const shipped = profileNames();
+  for (const { profile } of facts) {
+    if (!shipped.includes(profile.cli)) throw new ReferenceError(`the build no longer ships a launch profile for "${profile.cli}": the page describes a CLI it cannot launch`);
+  }
+  for (const cli of shipped) {
+    if (!facts.some(fact => fact.profile.cli === cli)) throw new ReferenceError(`the build ships a launch profile for "${cli}" the page does not describe: give it a line in PROFILES and a section of its own`);
+    if (/jules|kimi/.test(cli)) throw new ReferenceError(`the build now ships a launch profile for "${cli}": the "Not seat kinds yet" section is stale`);
+  }
+  // The two pieces of the README the "Other labs" note leans on: its own example of a launcher
+  // on the PATH, and the field that says the launcher picks the model.
+  for (const piece of ['a launcher on the PATH', 'model_from: launcher']) {
+    if (!README.includes(piece)) throw new ReferenceError(`the README no longer says "${piece}"`);
+  }
+  const factOf = (cli: string): (typeof facts)[number] => {
+    const found = facts.find(fact => fact.profile.cli === cli);
+    if (!found) throw new ReferenceError(`the page has no line for "${cli}"`);
+    return found;
+  };
+  // The three facts a note below shows by name, each read from its profile: the flag that sets a
+  // model, the flag that carries the rules, and a value a note leans on. The build stops if the
+  // profile drops one, the same way it stops on a moved reference.
+  const modelFlag = (cli: string): string => {
+    const flag = factOf(cli).model;
+    if (!flag) throw new ReferenceError(`src/profiles/${cli}.yaml no longer carries a model option: the page shows it`);
+    return flag;
+  };
+  const ruleFlag = (cli: string): string => {
+    const flag = factOf(cli).rules;
+    if (!flag) throw new ReferenceError(`src/profiles/${cli}.yaml no longer carries a rules option: the page shows it`);
+    return flag;
+  };
+  // Grok's models as Cursor seats (below): Cursor's own model list carries one, with the flag
+  // that selects it, and Cursor reads the running model off its own status row. Read from
+  // cursor.yaml by name, like every other profile fact.
+  const cursor = read('src/profiles/cursor.yaml');
+  const grokInCursor = /model: Grok\n[ \t]+version: '([^']+)'\n[ \t]+flag: (\S+)/.exec(cursor);
+  if (!grokInCursor) throw new ReferenceError('src/profiles/cursor.yaml no longer carries a Grok model in its ids: list');
+  if (!profileBlock(cursor, 'cursor', 'status_model', 0).includes('Grok')) throw new ReferenceError('src/profiles/cursor.yaml no longer reads a Grok model off its status row');
+  // Grok's own model reading (below): the profile reads it off the composer's footer, and where
+  // no rule reads one the seat's model comes from the launch line.
+  const grok = read('src/profiles/grok.yaml');
+  if (!profileBlock(grok, 'grok', 'status_model', 0).includes('Grok')) throw new ReferenceError('src/profiles/grok.yaml no longer reads its model off the composer footer');
+  if (!/^unread_model:[ \t]*launch[ \t]*$/m.test(grok)) throw new ReferenceError('src/profiles/grok.yaml no longer falls back to the launch line\'s model when none is read');
+  // The "Other labs" note says Claude Code reads only Opus, Sonnet, Haiku and Fable off its own
+  // screen: the profile's own status_model is the list of every name it can spell.
+  // Gemini and Muse take their rules as a first message (their notes below say so): a profile
+  // that gains a rules flag must not keep the sentence. And the two notes quote what the
+  // doctor prints for a profile with no check, so the build stops if the doctor rewords it.
+  for (const cli of ['gemini', 'muse']) {
+    if (factOf(cli).rules) throw new ReferenceError(`src/profiles/${cli}.yaml now carries a rules option: the page says its rules ride the first message`);
+  }
+  const noCheck = 'the login is not checked in this version';
+  if (!read('src/commands/doctor.ts').includes(noCheck)) throw new ReferenceError(`the doctor no longer prints "${noCheck}": the Gemini and Muse notes quote it`);
+  const claudeYields = /yields: \[([^\]]*)\]/.exec(profileBlock(read('src/profiles/claude-code.yaml'), 'claude-code', 'status_model', 0))?.[1]?.split(',').map(name => name.trim()) ?? [];
+  const families = ['Opus', 'Sonnet', 'Haiku', 'Fable'];
+  if (claudeYields.length !== families.length || !families.every(family => claudeYields.includes(`Claude ${family}`))) {
+    throw new ReferenceError('src/profiles/claude-code.yaml\'s status_model no longer names exactly Opus, Sonnet, Haiku and Fable: the "Other labs" note says it does');
+  }
+  const flags = (cli: string): string => factOf(cli).unattended.map(flag => `<code>${escapeHtml(flag)}</code>`).join(' ');
   return new Doc()
     .h1('Supported CLIs')
     .md(bullet(section(README, "The file's format"), '`seats[*].cli`'))
-    .table('The CLIs and their sign-in checks', ['CLI', 'Sign-in check'], PROFILES.map(profile => [`<code>${profile.cli}</code>`, `<code>${profile.check}</code>`]))
+    .table(
+      'Every launch profile the build ships: the command, the flags the profile adds, the words it reads on the pane, and the sign-in check',
+      ['CLI', 'Binary', 'Unattended', 'Reads the screen', 'Sign-in check'],
+      facts.map(({ profile, binary, unattended, check, hint }) => [
+        `<code>${escapeHtml(profile.cli)}</code>`,
+        `<code>${escapeHtml(binary)}</code>`,
+        unattended.map(flag => `<code>${escapeHtml(flag)}</code>`).join(' '),
+        `ready ${profile.ready}; working on ${profile.working}`,
+        check ? `<code>${escapeHtml(check)}</code>` : `none — the hint is <code>${escapeHtml(hint)}</code>`,
+      ]),
+    )
+    // How the pane is read at all, in the watch page's own words; the per-CLI words above are
+    // the profile's, and the two sentences hold for every profile the table lists.
+    .md(sentence(watch, "A pane's screen is read by the profile's own expressions"))
+    .md(sentence(watch, 'A screen that reproduces a CLI'))
     .md(login)
     .block(fenceWith(doctor, 'console', 'team doctor --login'))
-    .md(sentence(doctor, 'A login check that passed is'))
     .heading('Codex')
     .md(paragraph(README, 'The Codex profile is tested with CLI 0.157.0'))
     .heading('Antigravity')
     .md(paragraph(README, 'The Antigravity profile is tested with CLI 1.2.16'))
+    // The pool line is the owner's, from the docs task: the antigravity CLI's own model flag
+    // carries Claude and GPT models too, and they spend the Google plan's pool.
+    .note(`The antigravity CLI also serves Claude and GPT models, through its own <code>${escapeHtml(modelFlag('antigravity'))}</code>: they are spent from the same Google plan’s pool as the Gemini models.`)
     .heading('Cursor')
     .md(paragraph(README, 'Launching a Cursor seat'))
+    .heading('Grok')
+    // Grok has no README prose section; its lines are read from grok.yaml by name (above), and
+    // the Cursor alternative from cursor.yaml, so the page cannot claim a model it does not read.
+    .note(`The Grok profile is tested with CLI ${escapeHtml(factOf('grok').tested)}, runs unattended with ${flags('grok')}, rides its rules on the launch line as <code>${escapeHtml(ruleFlag('grok'))}</code>, and sets its model with <code>${escapeHtml(modelFlag('grok'))}</code>. It reads the running model off the composer’s footer line — the model’s name, <code>Grok Fast</code> for the fast one, and the version the footer carries — and a screen that names no model, as behind a question widget, falls back to the launch line’s own model, labelled. Grok’s models also run as Cursor seats: Cursor’s own model list carries the Grok model — <code>${escapeHtml(grokInCursor[2]!)}</code> is <code>Grok ${escapeHtml(grokInCursor[1]!)}</code> — and Cursor reads the running model off its own status row.`)
+    .heading('Gemini')
+    // The account rule and the hint-only login are the owner's, from the docs task; the profile
+    // carries no line for the accounts, and its login has a hint and no check.
+    .note(`The Gemini profile is tested with CLI ${escapeHtml(factOf('gemini').tested)}, runs unattended with ${flags('gemini')}, and takes its rules as the seat’s first message. A Gemini CLI needs a Google Workspace account or an API-key account: a personal Google account cannot use it — run <code>antigravity</code> there instead. It has no non-interactive login check, so <code>team doctor --login</code> notes <code>gemini: the login is not checked in this version</code>, and the profile’s sign-in hint is <code>${escapeHtml(factOf('gemini').hint)}</code>.`)
+    .heading('Muse')
+    // Experimental, by the owner's docs task: a Muse seat cannot be fully adopted yet. The
+    // profile's own account: Meta, and its login is the same hint-only shape as Gemini's.
+    .note(`<strong>Experimental:</strong> Meta Muse Code seats cannot be fully adopted yet. The profile is tested with CLI ${escapeHtml(factOf('muse').tested)}, runs unattended with ${flags('muse')}, and takes its rules as the seat’s first message. Like Gemini it has no non-interactive login check — <code>team doctor --login</code> notes <code>muse: the login is not checked in this version</code> — and its account shows inside the CLI’s own <code>/status</code>; the sign-in hint is <code>${escapeHtml(factOf('muse').hint)}</code>.`)
+    .heading('Other labs through Claude Code')
+    // The one way another lab runs here, in the owner's docs task's words: any Anthropic-compatible
+    // endpoint as a claude-code seat whose `launch:` is a small launcher on the PATH. The example
+    // is generic on purpose — no script name, path, account or key name of anybody's.
+    .note(`Any Anthropic-compatible endpoint runs as a Claude Code seat — DeepSeek, Z.ai GLM and Kimi Coding are examples. The seat’s <code>launch:</code> names a small launcher script on the PATH instead of the CLI: it points the CLI at the lab’s base URL, reads that account’s API key from the OS keychain — never from the team file — and hands the CLI the arguments it was given. One line is the whole difference, beside <code>cli: claude-code</code>: <code>launch: my-lab-claude</code>. The team file’s own example carries this shape, and <code>model_from: launcher</code> says the launcher picks the model — nothing on the screen can, since Claude Code reads only Opus, Sonnet, Haiku and Fable off its own screen: the seat’s label on <code>team status</code> comes from the file’s <code>display</code>, not the screen.`)
+    .heading('Not seat kinds yet')
+    // The two the page deliberately leaves out, from the owner's docs task; the loop above stops
+    // the build the day either one ships a launch profile.
+    .note(`Jules, Google’s remote agent, and the native Kimi CLI are not seat kinds in this build: neither has a launch profile, so neither can be a seat. A Jules task runs on Google’s machines through Jules itself, and Kimi’s models run here as Claude Code seats, through an Anthropic-compatible endpoint.`)
     .render();
 }
 
@@ -1927,7 +2106,7 @@ const SITE_PAGES: Record<string, string> = {
   '/docs/file/': 'Seven sections of .agents/team.yaml — the head, identity, workspace, machine, seats, watch and budgets — then the other fields the README names.',
   '/docs/commands/': 'Every command of team: what each reads and writes, who may run it, its refusals, its exit codes and its examples.',
   '/docs/safety/': 'Why team is safe to run: the owner outside herdr, the approved copy, and dialogs.trust: owner sends no key, coordinator may press it from its own seat.',
-  '/docs/clis/': 'What team knows of claude-code, codex, cursor and antigravity: the launch profile, the sign-in check, and what it never writes.',
+  '/docs/clis/': 'claude-code, codex, cursor, antigravity, grok, gemini and muse: the binary, the unattended flags, the words it reads on the pane, and the sign-in check.',
 };
 
 /** A description from the map above; a page that has none is a mistake, not a default. */
