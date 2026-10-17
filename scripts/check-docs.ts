@@ -2,8 +2,10 @@
 //
 //   1. Every named piece of the reference still resolves: importing the pages throws
 //      with the name of the piece that is gone.
-//   2. Every YAML block the site shows is a file `team`'s own validator accepts — the
-//      validator built from the same ref (content/team/src/file/validate.ts), not npm.
+//   2. Every YAML block the site shows of the team file is a file `team`'s own validator
+//      accepts — the validator built from the same ref (content/team/src/file/validate.ts),
+//      not npm. A block its `file=` label marks as another file — a tasks file, a project
+//      registry — is that file, whose shape is its own.
 //   3. Every block on a page is a fenced block of the reference, text for text: a
 //      command page shows exactly the console and YAML fences of its own page — across
 //      the reference pages under it too, when a long page is split, each fence exactly
@@ -18,7 +20,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import { handleRequest } from '../server';
-import { decodeEntities, fences, type Fence } from '../src/server/markdown';
+import { attribute, decodeEntities, fences, type Fence } from '../src/server/markdown';
 import { commandNames, commandPage, commandTable, README } from '../src/server/reference';
 import { homeSamples, installLine, pages, descriptionFor } from '../src/server/pages';
 import { SITE, sitemapPages } from '../src/server/seo';
@@ -46,17 +48,28 @@ const normalise = (markdown: string) => markdown.replace(/\n$/, '').replace(/\r\
 
 const yamlSources: { where: string; page: string; paragraph: string; yaml: string }[] = [];
 const sources = new Map<string, Fence[]>([['README.md', fences(README)], ['examples/team.yaml', []]]);
+/** The team file is the one file this check owns: a YAML block's `file=` label says which
+ *  file it is, and a block labelled as another file — the tasks file, a project registry —
+ *  is that file, with its own shape, which team's team-file validator would refuse. */
+const isTeamFile = (fence: Fence): boolean => {
+  const file = attribute(fence, 'file');
+  return file === '' || file.endsWith('/team.yaml') || file === 'team.yaml';
+};
 for (const name of commandNames()) {
   const markdown = commandPage(name);
   sources.set(`docs/commands/${name}.md`, fences(markdown));
   for (const fence of fences(markdown)) {
-    if (fence.lang !== 'yaml') continue;
+    if (fence.lang !== 'yaml' || !isTeamFile(fence)) continue;
     // The last paragraph above the fence, for a fence that is a file that does not parse.
     const above = markdown.slice(0, fence.start).split(/\n\s*\n/).filter(part => part.trim()).at(-1) ?? '';
     yamlSources.push({ where: `docs/commands/${name}.md:${fence.line}`, page: name, paragraph: above, yaml: fence.text });
   }
 }
 yamlSources.push({ where: 'examples/team.yaml', page: 'the example', paragraph: '', yaml: read('examples/team.yaml') });
+// The docs pages beside the command reference: /docs/file/ and its sections show
+// docs/team-file.md's own fences, and the registry page is that page whole.
+sources.set('docs/team-file.md', fences(read('docs/team-file.md')));
+sources.set('docs/concepts/registry.md', fences(read('docs/concepts/registry.md')));
 /**
  * A fence is allowed not to parse only where the reference says so in the sentence
  * above it: both pages that carry one broken say what the command does with it. The

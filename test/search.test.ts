@@ -30,21 +30,19 @@ describe('a query', () => {
     const results = searchSite('seat');
     expect(results.length).toBeGreaterThan(0);
     expect(results.every(result => routes.has(result.path))).toBe(true);
-    expect(results.map(result => result.path)).toContain('/docs/file/');
+    expect(results.map(result => result.path)).toContain('/docs/file/seats/');
   });
 
   test("a command's own name finds its page", () => {
     expect(searchSite('doctor').map(result => result.path)).toContain('/docs/commands/doctor/');
   });
 
-  test('a command hub ranks above its own deep reference sub-pages', () => {
-    // A split command's hub is where a reader starts; its reference sub-pages are the detail.
-    // For the command's own name the hub comes first, never a sub-page buried under it.
-    const paths = searchSite('approve', 50).map(result => result.path);
-    const hub = paths.indexOf('/docs/commands/approve/');
-    const sub = paths.indexOf('/docs/commands/approve/who/');
-    expect(hub).toBeGreaterThanOrEqual(0);
-    expect(sub).toBeGreaterThan(hub);
+  test('a command page ranks first for its own name, and no page serves a command the reference dropped', () => {
+    expect(searchSite('doctor', 50)[0]?.path).toBe('/docs/commands/doctor/');
+    // The reference has no approve command, so nothing may answer for it — not even the
+    // file pages that still name the act of approving.
+    expect(documents.some(document => document.id === '/docs/commands/approve/')).toBe(false);
+    expect(searchSite('approve', 50).map(result => result.path)).not.toContain('/docs/commands/approve/');
   });
 
   test('a query with nothing in it answers nothing', () => {
