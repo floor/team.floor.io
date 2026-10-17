@@ -73,10 +73,11 @@ describe('the commands table', () => {
     const down = commandTable().find(row => row.name === 'down');
     expect(up?.summary).toContain('starts');
     expect(down?.summary).toBe(up?.summary);
-    // The README's cell is "`up`: the owner; `down`: the owner, the coordinator or the
-    // operator seat": each row shows its own half, never the pair.
-    expect(up?.who).toBe('the owner');
-    expect(down?.who).toBe('the owner, the coordinator or the operator seat');
+    // The README's cell is "`up`: the owner …; a verified grant admits …; `down`: the
+    // owner …": each row shows its own part, the unlabelled part joining the one before
+    // it, never the pair.
+    expect(up?.who).toBe("the owner or the team's lead seat, or a delegate entry naming `up`; a verified grant admits the orchestrator's seat where the map's row does not");
+    expect(down?.who).toBe("the owner or the team's lead seat, or a delegate entry");
   });
 
   test('a cell that is one rule for the row is shown whole, on every row it names', () => {

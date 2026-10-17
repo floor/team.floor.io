@@ -273,8 +273,9 @@ describe('the safety page, from the reference', () => {
 
   test('the who-may-run-what table gives each command its own rule', () => {
     const row = (name: string) => new RegExp(`<td><code>team ${name}</code></td><td>([\\s\\S]*?)</td>`).exec(safety.html)?.[1] ?? '';
-    expect(row('up')).toBe('the owner');
-    expect(row('down')).toContain('the coordinator');
+    expect(row('up')).toContain("the owner or the team's lead seat, or a delegate entry naming <code>up</code>");
+    expect(row('up')).toContain("a verified grant admits the orchestrator's seat");
+    expect(row('down')).toBe("the owner or the team's lead seat, or a delegate entry");
     expect(row('up')).not.toBe(row('down'));
     expect([...safety.html.matchAll(/<td><code>team [a-z-]+<\/code><\/td><td>/g)].length).toBe(commandTable().length);
   });

@@ -86,14 +86,23 @@ export function sentence(markdown: string, startsWith: string): string {
  * that names more than one: "`up`: the owner; `down`: the owner, the coordinator or the
  * operator seat". That spelling is the row's shorthand for two rules, not one rule for
  * both — shown whole, the row for `team up` hands its reader who may run `team down`.
- * A cell that labels every command it names is split; any other cell is the row's, whole.
+ * A part with no label continues the rule named before it ("`up`: …; a verified grant
+ * admits …; `down`: …"), as a cell that labels every command it names is split; a part
+ * before any label leaves the cell the row's, whole.
  */
 function whoPerCommand(who: string, names: string[]): Map<string, string> | undefined {
   const parts = new Map<string, string>();
+  let current: string | undefined;
   for (const part of who.split(';').map(text => text.trim())) {
     const match = /^`([a-z]+)`:\s*(.+)$/.exec(part);
-    if (!match || !names.includes(match[1]!)) return undefined;
-    parts.set(match[1]!, match[2]!);
+    if (!match) {
+      if (!current || !part) return undefined;
+      parts.set(current, `${parts.get(current)}; ${part}`);
+      continue;
+    }
+    if (!names.includes(match[1]!)) return undefined;
+    current = match[1]!;
+    parts.set(current, match[2]!);
   }
   return names.every(name => parts.has(name)) ? parts : undefined;
 }
