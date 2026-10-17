@@ -189,15 +189,28 @@ export function renderMarkdown(markdown: string, options: { skip?: (fence: Fence
 }
 
 /**
- * A link of a reference page as the site serves it: a sibling command page is
- * `/docs/commands/<name>/`, the docs' index is `/docs/commands/`, and anything else
- * is left as it is. A link that runs code is dropped.
+ * A link of a reference page as the site serves it: a command page — a sibling, one
+ * under `commands/` or one under `../commands/` — is `/docs/commands/<name>/`, the
+ * docs' index is `/docs/commands/`, the docs beside the command pages are their own
+ * pages here, and a link into the repository a page cannot serve is its GitHub file.
+ * Anything else is left as it is, and a link that runs code is dropped.
  */
 export function localHref(href: string): string {
   if (/^(?:javascript|data|vbscript):/i.test(href)) return '';
-  const command = /^(?:\.\/)?([a-z-]+)\.md(#[\w-]+)?$/.exec(href);
+  const command = /^(?:\.\/)?([a-z-]+)\.md(#[\w-]+)?$/.exec(href)
+    ?? /^(?:\.\.\/commands|commands)\/([a-z-]+)\.md(#[\w-]+)?$/.exec(href);
   if (command) return `/docs/commands/${command[1]}/${command[2] ?? ''}`;
   if (href === 'docs/commands/' || href === 'docs/commands' || /^https:\/\/github\.com\/floor\/teamcli\/tree\/main\/docs\/commands\/?$/.test(href)) return '/docs/commands/';
+  if (href === '../concepts/registry.md') return '/docs/concepts/registry/';
+  // The team file's format section is the hub's "The format, by example"; its sections
+  // are pages of their own, and the delivery order's is the one linked by name.
+  if (href === '../README.md#the-files-format') return '/docs/file/#the-format-by-example';
+  if (href === '../team-file.md#delivery_order' || href === '#delivery_order') return '/docs/file/delivery-order/';
   if (href === '../README.md') return '/docs/';
+  // A file the site does not serve: the reference's own page in the repository.
+  if (href === '../src/profiles/efforts.json') return 'https://github.com/floor/teamcli/blob/main/src/profiles/efforts.json';
+  const design = /^\.\.\/design\/([a-z-]+)\.md$/.exec(href);
+  if (design) return `https://github.com/floor/teamcli/blob/main/docs/design/${design[1]}.md`;
+  if (href === 'CHANGELOG.md') return 'https://github.com/floor/teamcli/blob/main/CHANGELOG.md';
   return href;
 }

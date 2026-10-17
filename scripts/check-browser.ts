@@ -331,7 +331,7 @@ try {
   const PROSE: { id: string; what: string; path: string; selector?: string; container?: string; box?: string; boxClass?: string }[] = [
     { id: 'paragraph', what: 'a paragraph of the reference', path: '/docs/', selector: '.md p a' },
     { id: 'privacy', what: 'the privacy article', path: '/privacy/', selector: '.md p a' },
-    { id: 'cell', what: 'a table cell', path: '/docs/commands/up/refusals/', selector: '.md td a' },
+    { id: 'cell', what: 'a table cell', path: '/docs/commands/add/', selector: '.md td a' },
     { id: 'foot', what: 'the samples foot', path: '/', selector: '.samples__foot a' },
     { id: 'list', what: 'a list-item probe', path: '/docs/safety/', container: '.md ul li' },
     { id: 'quote', what: 'a blockquote probe', path: '/docs/safety/', container: '.md', box: 'blockquote' },
@@ -515,8 +515,8 @@ try {
   // ── 6. the code blocks: no chip in a pre, and the block scrolls its long lines ──────────
   // The inline-code chip once reached the code inside a pre: a background and a border around
   // every line, padding on the lines' ends. It belongs to inline code alone, and a block wider
-  // than its box has to scroll inside it — the file page carries the team.yaml example and a
-  // comment line longer than the column.
+  // than its box has to scroll inside it — the team list page carries several transcripts and
+  // a session line longer than the column.
   // The chip rule must also keep its old weight where it applies: a card title and a heading
   // are names, and the styles de-chip them with a rule of their own that the chip has to lose
   // to — which it only does at 0-1-1 (`.md :where(:not(pre)) > code`). The commands index's
@@ -524,7 +524,7 @@ try {
   for (const mode of ['light', 'dark'] as const) {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: mode });
     const page = await context.newPage();
-    await page.goto(`${origin}/docs/file/`, { waitUntil: 'load' });
+    await page.goto(`${origin}/docs/commands/list/`, { waitUntil: 'load' });
     const facts = await page.evaluate(() => {
       const blocks = [...document.querySelectorAll<HTMLElement>('#content pre')].map(block => ({
         overflowX: getComputedStyle(block).overflowX,
@@ -542,7 +542,7 @@ try {
         inline: inlineCss ? { background: inlineCss.backgroundColor, padding: inlineCss.padding } : null,
       };
     });
-    const where = `file ${mode}`;
+    const where = `list ${mode}`;
     check(facts.blocks.length > 2, `${where}: ${facts.blocks.length} code blocks, not the page's several`);
     check(facts.blocks.some(block => !block.fits), `${where}: no block is wider than its box, so scrolling is untested`);
     for (const [index, block] of facts.blocks.entries()) {
