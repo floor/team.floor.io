@@ -74,11 +74,15 @@ export function bullet(markdown: string, startsWith: string): string {
  * next word starts lowercase.
  */
 export function sentence(markdown: string, startsWith: string): string {
-  const at = markdown.indexOf(startsWith);
+  // Match against whitespace-normalized text so an anchor that spans a soft-wrapped line
+  // break still resolves (v0.5.0 reflowed some reference prose mid-sentence). The returned
+  // sentence was already whitespace-collapsed, so this changes no currently-matching anchor.
+  const text = markdown.replace(/\s+/g, ' ');
+  const at = text.indexOf(startsWith);
   need(at < 0 ? undefined : at, `a sentence starting "${startsWith}"`);
-  const rest = markdown.slice(at);
+  const rest = text.slice(at);
   const end = /[.!?](?=\s+(?![a-z])|\s*$)/.exec(rest);
-  return (end ? rest.slice(0, end.index + 1) : rest).replace(/\s+/g, ' ').trim();
+  return (end ? rest.slice(0, end.index + 1) : rest).trim();
 }
 
 /**
