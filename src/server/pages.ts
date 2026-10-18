@@ -8,7 +8,7 @@
 import { bullet, commandNames, commandPage, commandTable, fenceWith, paragraph, profileNames, section, sentence, README, ReferenceError } from './reference';
 import { escapeHtml, fenceHtml, renderMarkdown, slug, type Fence, type Rendered } from './markdown';
 import { contentReady, packageVersion, read, refInfo } from './team';
-import { guideIndex, LABS, labHref, labPage, modelAnchorHref, modelsOverview, MODELS, setUp } from './models';
+import { familiesOf, familyHref, familyPage, guideIndex, LABS, labHref, labPage, modelsOverview, setUp } from './models';
 
 if (!contentReady()) throw new Error('content/team is missing: run `bun run content` (scripts/content.ts) first.');
 
@@ -673,7 +673,8 @@ export function navFor(section: Section): NavGroup[] {
       ...LABS.map(lab => ({
         label: lab.name,
         href: labHref(lab.slug),
-        items: MODELS.filter(model => model.vendor === lab.vendor).map(model => ({ name: model.name, href: modelAnchorHref(model) })),
+        // The sidebar names families, never versions — the version detail lives on each family's page.
+        items: familiesOf(lab.vendor).map(family => ({ name: family.name, href: familyHref(lab.slug, family.slug) })),
       })),
     ];
   }
@@ -709,13 +710,17 @@ export function pages(): PageMeta[] {
     const section = sectionOf(path);
     return { path, title, description: descriptionFor(path), priority, section, nav: navFor(section), files, ...content };
   };
-  // Models: the overview matrix, "Set up your agents", and one page per lab, each holding its
-  // models as sections. All read from the one data file.
-  const modelFiles = ['src/server/models.ts', 'src/data/models.json'];
+  // Models: the overview matrix, "Set up your agents", one page per lab — the overview of its
+  // families and routes — and one page per family, holding the versions with their figures.
+  // All read from the catalog and the dated figures file beside it.
+  const modelFiles = ['src/server/models.ts', 'src/data/models.json', 'src/data/model-figures.json', 'scripts/refresh-model-figures.ts'];
   const models = [
     page('/models/', 'Models — team', '0.9', modelsOverview(), modelFiles),
     page('/models/set-up/', 'Set up your agents — team', '0.9', setUp(), modelFiles),
-    ...LABS.map(lab => page(labHref(lab.slug), `${lab.name} — team`, '0.7', labPage(lab.slug), modelFiles)),
+    ...LABS.flatMap(lab => [
+      page(labHref(lab.slug), `${lab.name} — team`, '0.7', labPage(lab.slug), modelFiles),
+      ...familiesOf(lab.vendor).map(family => page(familyHref(lab.slug, family.slug), `${family.name} — team`, '0.6', familyPage(lab.slug, family.slug), modelFiles)),
+    ]),
   ];
   const group = [
     page('/docs/', 'Getting started — team', '0.9', gettingStarted(), ['src/server/pages.ts']),
@@ -784,12 +789,16 @@ const DESCRIPTIONS: Record<string, string> = {
 };
 /** A lab page's description: the site's own one line, built from the lab's name. */
 const LAB_DESCRIPTIONS: Record<string, string> = Object.fromEntries(
-  LABS.map(lab => [lab.slug, `${lab.name} with TeamCLI: its models, the ways in, how to subscribe or get an API key, and its known quirks.`]),
+  LABS.map(lab => [lab.slug, `${lab.name} with TeamCLI: its families, the ways in, how to subscribe or get an API key, and its known quirks.`]),
+);
+/** A family page's description: the family's own tagline, which already names its lab. */
+const FAMILY_DESCRIPTIONS: Record<string, string> = Object.fromEntries(
+  LABS.flatMap(lab => familiesOf(lab.vendor).map(family => [`${lab.slug}/${family.slug}`, family.tagline])),
 );
 
 const SITE_PAGES: Record<string, string> = {
   '/privacy/': 'How teamcli.io reaches you, and what stays in your browser.',
-  '/models/': 'The models the team runs and the ways in: a matrix of lab and model against each route — own CLI, Antigravity, Cursor, endpoint, API — verified or listed.',
+  '/models/': 'The model families of every lab against each way in — own CLI, Antigravity, Cursor, endpoint, API — verified or listed, each row linking to its family page.',
   '/models/set-up/': 'Set up your agents: install each CLI or app, get the subscription or API key, and log in — set a route up once and it serves every model on it.',
   '/guide/': 'Task guides for running a team with TeamCLI — your first team, and running a release — with an index now and the first guides coming soon.',
   '/docs/': 'Your first team in five minutes: install team, write .agents/team.yaml, and start the session from the owner’s terminal.',
@@ -813,7 +822,7 @@ export function descriptionFor(path: string): string {
     : path.startsWith('/docs/commands/') && path !== '/docs/commands/'
     ? DESCRIPTIONS[path.slice('/docs/commands/'.length, -1)]
     : path.startsWith('/models/') && path !== '/models/' && path !== '/models/set-up/'
-    ? LAB_DESCRIPTIONS[path.slice('/models/'.length, -1)]
+    ? FAMILY_DESCRIPTIONS[path.slice('/models/'.length, -1)] ?? LAB_DESCRIPTIONS[path.slice('/models/'.length, -1)]
     : SITE_PAGES[path];
   if (!description) throw new ReferenceError(`no description for ${path}`);
   return description;

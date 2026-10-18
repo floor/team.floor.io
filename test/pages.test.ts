@@ -7,7 +7,7 @@ import { commandNames, commandPage, commandTable } from '../src/server/reference
 import { handleRequest } from '../server';
 import { contentReady, read, refInfo } from '../src/server/team';
 import { descriptionFor, headline, headlineAccent, headlineLead, homePoints, homeSamples, homeTitle, info, INSTALL_PACKAGE, installCommands, installLine, installMarkup, nav, pages, readingOrder, SECTIONS, versionLine } from '../src/server/pages';
-import { LABS } from '../src/server/models';
+import { FAMILIES, LABS } from '../src/server/models';
 
 /** The text a page shows of a block: the tags out, the entities decoded, as docs:check reads it. */
 function blockText(html: string): string {
@@ -44,9 +44,13 @@ describe('the page list', () => {
       expect(byPath.has(path), path).toBe(true);
     }
     for (const lab of LABS) expect(byPath.has(`/models/${lab.slug}/`), lab.slug).toBe(true);
-    // 12 documentation pages + the Guide index + the Models overview and set-up + one page per lab
-    // (each lab page holds its models as sections, so there are no per-model pages).
-    expect(list.length).toBe(commandNames().length + 12 + 1 + 2 + LABS.length);
+    for (const family of FAMILIES) {
+      const lab = LABS.find(entry => entry.vendor === family.vendor)!;
+      expect(byPath.has(`/models/${lab.slug}/${family.slug}/`), family.slug).toBe(true);
+    }
+    // 12 documentation pages + the Guide index + the Models overview and set-up + one page per
+    // lab + one page per family (each family page holds the versions, so there are no per-version pages).
+    expect(list.length).toBe(commandNames().length + 12 + 1 + 2 + LABS.length + FAMILIES.length);
   });
 
   test('every page is reached — its section navigation, or a link from a page — and the reading order is the documentation navigation\'s own', () => {
