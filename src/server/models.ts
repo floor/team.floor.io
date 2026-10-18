@@ -110,28 +110,25 @@ const setupHref = (transportId: string): string => `${SET_UP}#${setupAnchor(tran
 
 const labByVendor = (vendor: string): Lab | undefined => LABS.find(lab => lab.vendor === vendor);
 const labBySlug = (slug: string): Lab | undefined => LABS.find(lab => lab.slug === slug);
-/** The lab's display name for a model's vendor key. */
-const labName = (vendor: string): string => labByVendor(vendor)?.name ?? vendor;
 /** The models a lab holds, in the catalog's order. */
 const modelsOfLab = (vendor: string): Model[] => MODELS.filter(model => model.vendor === vendor);
+/** A model's section anchor on its lab page: /models/<lab>/#<model-slug>. Each model lives as a
+ *  section of its lab's page, not a page of its own, so this is where every link to a model goes. */
+export function modelAnchorHref(model: Model): string {
+  const lab = labByVendor(model.vendor);
+  return lab ? `${labHref(lab.slug)}#${model.slug}` : `#${model.slug}`;
+}
+/** The 301s from the old per-model URLs to the new lab-page anchors, so no old link breaks. */
+export function modelRedirects(): Record<string, string> {
+  const map: Record<string, string> = {};
+  for (const model of MODELS) if (labByVendor(model.vendor)) map[modelHref(model.slug)] = modelAnchorHref(model);
+  return map;
+}
 /** A route's status in words. */
 const statusLabel = (status: Route['status']): string => (status === 'verified' ? 'Verified' : 'Listed — not yet verified');
 /** The route of a model that is reached by a given way, if any. */
 const routeForWay = (model: Model, wayId: string): Route | undefined =>
   model.routes.find(route => TRANSPORTS[route.transport]!.way === wayId);
-/** The transports a lab's models use, once each, in the ways' order then the catalog's. */
-function transportsOfLab(vendor: string): string[] {
-  const seen = new Set<string>();
-  for (const way of WAYS) {
-    for (const model of modelsOfLab(vendor)) {
-      for (const route of model.routes) {
-        if (TRANSPORTS[route.transport]!.way === way.id) seen.add(route.transport);
-      }
-    }
-  }
-  return [...seen];
-}
-
 /** A markdown table from header cells and rows of markdown cells. */
 function mdTable(head: string[], rows: string[][]): string {
   const line = (cells: string[]) => `| ${cells.join(' | ')} |`;
@@ -161,7 +158,7 @@ export function modelsOverview(): Rendered {
           : '<span class="matrix__none">—</span>';
         return `<td data-label="${attr(way.short)}">${inner}</td>`;
       }).join('');
-      return `<tr><td class="matrix__model"><a href="${modelHref(model.slug)}">${escapeHtml(model.name)}</a></td>${cells}</tr>`;
+      return `<tr><td class="matrix__model"><a href="${modelAnchorHref(model)}">${escapeHtml(model.name)}</a></td>${cells}</tr>`;
     }).join('');
     return groupRow + modelRows;
   }).join('');
@@ -194,7 +191,7 @@ function transportSteps(transport: Transport): string {
 function servesLine(transportId: string): string {
   const models = MODELS.filter(model => model.routes.some(route => route.transport === transportId));
   if (!models.length) return '';
-  return `Serves ${models.map(model => link(model.name, modelHref(model.slug))).join(', ')}.`;
+  return `Serves ${models.map(model => link(model.name, modelAnchorHref(model))).join(', ')}.`;
 }
 
 /** /models/set-up/ — "Set up your agents", grouped by the way in: install and log in once per route. */
@@ -234,60 +231,17 @@ export function setUp(): Rendered {
   return doc.render();
 }
 
-// ---------------------------------------------------------------- one page per lab
+// ---------------------------------------------------------------- one page per lab, its models as sections
 
-/** /models/<lab>/ — one lab: its models, the ways in it uses, how to subscribe, and its quirks. */
-export function labPage(slug: string): Rendered {
-  const lab = need(labBySlug(slug), `has no lab "${slug}"`);
-  const doc = new Doc().h1(lab.name);
-  doc.md(lab.blurb);
-  doc.note('Part of <a href="/models/">Models</a> — set each route up on <a href="/models/set-up/">Set up your agents</a>.');
-
-  doc.heading('Models');
-  const cards = modelsOfLab(lab.vendor).map(model =>
-    `<a class="doc-entry" href="${modelHref(model.slug)}"><span class="doc-entry__name">${escapeHtml(model.name)}</span>` +
-    `<span class="doc-entry__summary">${escapeHtml(model.summary)}</span></a>`).join('');
-  doc.raw(`<div class="doc-grid">${cards}</div>\n`);
-
-  doc.heading('Ways in');
-  const transports = transportsOfLab(lab.vendor);
-  doc.md(mdTable(
-    ['Way in', 'Set-up', 'Reaches'],
-    transports.map(id => {
-      const transport = TRANSPORTS[id]!;
-      const served = modelsOfLab(lab.vendor)
-        .filter(model => model.routes.some(route => route.transport === id))
-        .map(model => {
-          const route = model.routes.find(entry => entry.transport === id)!;
-          return `${model.name} (${route.status === 'verified' ? 'verified' : 'listed'})`;
-        });
-      return [link(transport.name, setupHref(id)), WAYS.find(way => way.id === transport.way)!.name, served.join('; ')];
-    }),
-  ));
-
-  doc.heading('Subscribe or get a key');
-  doc.md(`Sign-up and pricing for ${lab.name} live on the vendor's own pages: ${link(`${lab.name} — sign-up and pricing`, lab.subscribeHref)}. Never put a key in the team file.`);
-
-  if (lab.quirks.length) {
-    doc.heading('Known quirks');
-    doc.md(lab.quirks.map(quirk => `- ${quirk}`).join('\n'));
-  }
-
-  doc.note(`Verified on ${escapeHtml(VERIFIED_ON)}.`);
-  return doc.render();
-}
-
-// ---------------------------------------------------------------- one page per model (unchanged in shape)
-
-/** /models/<slug>/ — one model: the ways to reach it, the seat line per route, its quirks, and when each route was verified. */
-export function modelPage(slug: string): Rendered {
-  const model = need(MODELS.find(entry => entry.slug === slug), `has no model "${slug}"`);
-  const lab = labByVendor(model.vendor);
-  const doc = new Doc().h1(model.name);
+/** One model as a section of its lab's page: the heading is its own anchor (the slug), then its
+ *  ways to reach it, the seat line per route, and its quirks. A model is a section here, not a
+ *  page of its own, so every link to a model is a link to this anchor. */
+function modelSection(doc: Doc, model: Model): void {
+  doc.raw(`<h2 id="${escapeHtml(model.slug)}">${escapeHtml(model.name)}</h2>\n`);
+  doc.toc.push({ title: model.name, id: model.slug });
   doc.md(model.summary);
-  doc.note(`Part of ${lab ? `<a href="${labHref(lab.slug)}">${escapeHtml(lab.name)}</a>` : escapeHtml(labName(model.vendor))} — set each route up on <a href="/models/set-up/">Set up your agents</a>.`);
 
-  doc.heading('Ways to reach it');
+  doc.heading('Ways to reach it', 3);
   doc.md(mdTable(
     ['Route', 'Spends', 'Status'],
     model.routes.map(route => {
@@ -298,7 +252,7 @@ export function modelPage(slug: string): Rendered {
 
   const seated = model.routes.filter((route): route is Route & { seat: Seat } => Boolean(route.seat));
   if (seated.length) {
-    doc.heading('The seat line');
+    doc.heading('The seat line', 3);
     doc.md('Each route maps to a TeamCLI seat line — the same fields, written generically. No machine paths, no launcher script of anybody\'s, no team\'s own seat names.');
     const dash = '—';
     doc.md(mdTable(
@@ -323,11 +277,19 @@ export function modelPage(slug: string): Rendered {
 
   const quirks = [...(model.quirks ?? []), ...model.routes.flatMap(route => route.quirks ?? [])];
   if (quirks.length) {
-    doc.heading('Known quirks');
+    doc.heading('Known quirks', 3);
     doc.md(quirks.map(quirk => `- ${quirk}`).join('\n'));
   }
+}
 
-  doc.note(`Verified on ${escapeHtml(VERIFIED_ON)}. Each route above is marked verified — a seat the team has run — or listed, not yet verified.`);
+/** /models/<lab>/ — one lab: its blurb and how to subscribe, then each of its models as a section. */
+export function labPage(slug: string): Rendered {
+  const lab = need(labBySlug(slug), `has no lab "${slug}"`);
+  const doc = new Doc().h1(lab.name);
+  doc.md(lab.blurb);
+  doc.note(`Part of <a href="/models/">Models</a>. Sign-up and pricing for ${escapeHtml(lab.name)} live on the vendor's own pages: <a href="${attr(lab.subscribeHref)}" rel="noopener noreferrer">${escapeHtml(lab.name)}</a> — never put a key in the team file. Set each route up on <a href="/models/set-up/">Set up your agents</a>.`);
+  for (const model of modelsOfLab(lab.vendor)) modelSection(doc, model);
+  doc.note(`Verified on ${escapeHtml(VERIFIED_ON)}. Each route is marked verified — a seat the team has run — or listed, not yet verified.`);
   return doc.render();
 }
 

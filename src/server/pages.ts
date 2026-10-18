@@ -8,7 +8,7 @@
 import { bullet, commandNames, commandPage, commandTable, fenceWith, paragraph, profileNames, section, sentence, README, ReferenceError } from './reference';
 import { escapeHtml, fenceHtml, renderMarkdown, slug, type Fence, type Rendered } from './markdown';
 import { contentReady, packageVersion, read, refInfo } from './team';
-import { guideIndex, LABS, labHref, labPage, modelHref, modelPage, modelsOverview, MODELS, setUp } from './models';
+import { guideIndex, LABS, labHref, labPage, modelAnchorHref, modelsOverview, MODELS, setUp } from './models';
 
 if (!contentReady()) throw new Error('content/team is missing: run `bun run content` (scripts/content.ts) first.');
 
@@ -673,7 +673,7 @@ export function navFor(section: Section): NavGroup[] {
       ...LABS.map(lab => ({
         label: lab.name,
         href: labHref(lab.slug),
-        items: MODELS.filter(model => model.vendor === lab.vendor).map(model => ({ name: model.name, href: modelHref(model.slug) })),
+        items: MODELS.filter(model => model.vendor === lab.vendor).map(model => ({ name: model.name, href: modelAnchorHref(model) })),
       })),
     ];
   }
@@ -709,14 +709,13 @@ export function pages(): PageMeta[] {
     const section = sectionOf(path);
     return { path, title, description: descriptionFor(path), priority, section, nav: navFor(section), files, ...content };
   };
-  // Models: the overview matrix, "Set up your agents", one page per lab, one page per model.
-  // All read from the one data file.
+  // Models: the overview matrix, "Set up your agents", and one page per lab, each holding its
+  // models as sections. All read from the one data file.
   const modelFiles = ['src/server/models.ts', 'src/data/models.json'];
   const models = [
     page('/models/', 'Models — team', '0.9', modelsOverview(), modelFiles),
     page('/models/set-up/', 'Set up your agents — team', '0.9', setUp(), modelFiles),
     ...LABS.map(lab => page(labHref(lab.slug), `${lab.name} — team`, '0.7', labPage(lab.slug), modelFiles)),
-    ...MODELS.map(model => page(modelHref(model.slug), `${model.name} — team`, '0.7', modelPage(model.slug), modelFiles)),
   ];
   const group = [
     page('/docs/', 'Getting started — team', '0.9', gettingStarted(), ['src/server/pages.ts']),
@@ -783,10 +782,6 @@ const DESCRIPTIONS: Record<string, string> = {
   unlock: 'Releases a lock team lock took, and only that caller’s: the holder file has to name the same project and by line; anyone else is refused.',
   usage: 'What this machine holds: every team with an approval store here, its accounts and windows, what is left and used, and when each figure was read.',
 };
-/** A model page's description: the site's own one line, built from the model's name. */
-const MODEL_DESCRIPTIONS: Record<string, string> = Object.fromEntries(
-  MODELS.map(model => [model.slug, `${model.name}: how to reach it with TeamCLI — each route, the subscription it spends, and the seat line, marked verified or listed.`]),
-);
 /** A lab page's description: the site's own one line, built from the lab's name. */
 const LAB_DESCRIPTIONS: Record<string, string> = Object.fromEntries(
   LABS.map(lab => [lab.slug, `${lab.name} with TeamCLI: its models, the ways in, how to subscribe or get an API key, and its known quirks.`]),
@@ -818,7 +813,7 @@ export function descriptionFor(path: string): string {
     : path.startsWith('/docs/commands/') && path !== '/docs/commands/'
     ? DESCRIPTIONS[path.slice('/docs/commands/'.length, -1)]
     : path.startsWith('/models/') && path !== '/models/' && path !== '/models/set-up/'
-    ? MODEL_DESCRIPTIONS[path.slice('/models/'.length, -1)] ?? LAB_DESCRIPTIONS[path.slice('/models/'.length, -1)]
+    ? LAB_DESCRIPTIONS[path.slice('/models/'.length, -1)]
     : SITE_PAGES[path];
   if (!description) throw new ReferenceError(`no description for ${path}`);
   return description;

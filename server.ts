@@ -10,6 +10,7 @@ import { IMMUTABLE_CACHE, SHORT_CACHE, isImmutableAsset, loadAssetManifest } fro
 import { materialSheets, type StylesheetBundle } from './src/server/css';
 import { descriptionFor, headline, headlineAccent, headlineLead, heroSubline, homePoints, homeSamples, homeTitle, info, inline, INSTALL_MANAGERS, installMarkup, navFor, pages, SECTION_HOME, sectionOf, versionLine, type NavGroup } from './src/server/pages';
 import { commandNames } from './src/server/reference';
+import { modelRedirects } from './src/server/models';
 import { fenceHtml } from './src/server/markdown';
 import { searchSite, suggestions } from './src/server/search';
 import { jsonForScript, robotsTxt, SITE, SITE_NAME, sitemapXml, structuredData } from './src/server/seo';
@@ -80,6 +81,10 @@ function plainPage(path: string, title: string, description: string, template: s
   }));
 }
 
+// The old per-model URLs now redirect, once and for all, to the model's section on its lab page,
+// so a link anyone kept to `/models/<model>/` still lands on the model.
+const MODEL_REDIRECTS = modelRedirects();
+
 const mime: Record<string, string> = { '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.woff2': 'font/woff2' };
 /** The files browsers and link previews ask for at the root, from public/. */
 const rootFiles = new Set(['/favicon.ico', '/favicon.svg', '/apple-touch-icon.png', '/og-image.png']);
@@ -124,6 +129,9 @@ export async function handleRequest(request: Request): Promise<Response> {
     return new Response(body, { headers: { ...commonHeaders, 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-cache' } });
   }
   if (!path.endsWith('/') && !extname(path)) return new Response(null, { status: 308, headers: { Location: `${url.pathname}/${url.search}` } });
+  // A retired per-model URL moves permanently to its lab-page section.
+  const movedTo = MODEL_REDIRECTS[path];
+  if (movedTo) return new Response(null, { status: 301, headers: { ...commonHeaders, Location: movedTo, 'Cache-Control': 'public, max-age=3600' } });
 
   let response: Response;
   if (path === '/') {
