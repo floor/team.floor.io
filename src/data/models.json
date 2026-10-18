@@ -18,6 +18,381 @@
     { "slug": "zhipu", "name": "Z.ai", "vendor": "zhipu", "blurb": "Z.ai (Zhipu) GLM models, run as Claude Code seats through the endpoint.", "subscribeHref": "https://z.ai", "quirks": ["Z.ai GLM ships no seat CLI of its own; it provides a coding helper that configures other CLIs."] },
     { "slug": "meta", "name": "Meta", "vendor": "meta", "blurb": "Meta's Muse models, run by the Muse CLI.", "subscribeHref": "https://ai.meta.com", "quirks": ["The Muse CLI is installed and has a launch profile, but no seat has run it yet."] }
   ],
+  "families": [
+    {
+      "slug": "claude-opus", "vendor": "anthropic", "name": "Claude Opus",
+      "tagline": "Anthropic's line for long-running agentic coding and knowledge work.",
+      "summary": "Claude Opus is Anthropic's line for work that runs long and thinks hard: multi-step coding agents, changes across a whole repository, and knowledge work that wants the full context window. Opus 5.5, the current version, sits below Fable and above Sonnet in Anthropic's lineup, at a quarter of Fable's price.",
+      "good": [
+        "Long multi-step coding runs — Terminal-Bench 4.0 agentic coding at 66.4% (vendor-reported)",
+        "Knowledge work with tools — Humanity's Last Exam 67.7% with tools (vendor-reported)",
+        "Computer use — OSWorld 2.1 at 81.8% (vendor-reported)"
+      ],
+      "limits": [
+        "Not the cheapest per token — Sonnet 5.5 is half the price, Haiku 5.5 a fraction of it",
+        "Below Fable on the hardest long-horizon work; Anthropic positions Fable for when Opus at higher effort falls short"
+      ],
+      "modelSlug": "claude-opus-5-5"
+    },
+    {
+      "slug": "claude-sonnet", "vendor": "anthropic", "name": "Claude Sonnet",
+      "tagline": "The Claude line that balances speed and intelligence.",
+      "summary": "Claude Sonnet is the middle of Anthropic's lineup, and on Anthropic's own Terminal-Bench 4.0 table its top scorer for agentic coding. Sonnet 5.5 turns in outputs more than 30% faster than Sonnet 5 while keeping the 1M-token context window, at half Opus 5.5's price.",
+      "good": [
+        "Agentic coding at speed — Terminal-Bench 4.0 70.6%, the top of Anthropic's own table (vendor-reported)",
+        "Fast for its class — outputs 30%+ faster than Sonnet 5 (vendor-reported)",
+        "Half Opus 5.5's price at $2 in / $10 out per MTok"
+      ],
+      "limits": [
+        "Below Opus and Fable on the most demanding long-horizon work",
+        "FrontierCode 1.1 trails Opus 5.5 — 46.2% at max effort against 54.4% (vendor-reported)"
+      ],
+      "modelSlug": "claude-sonnet-5-5"
+    },
+    {
+      "slug": "claude-haiku", "vendor": "anthropic", "name": "Claude Haiku",
+      "tagline": "The fast, cheap Claude — for sub-agents, quick checks and high-volume steps.",
+      "summary": "Claude Haiku is the smallest of the Claude lineup, and a great little fighter: fast at standard speed, a tenth of Sonnet's input price, and — on Haiku 5.5 — a Terminal-Bench 4.0 score no previous Haiku came near. Anthropic's own positioning is high-volume, latency-sensitive work: classification, routing, extraction, subagent tasks.",
+      "good": [
+        "Sub-agents and quick checks — the work where waiting costs more than thinking",
+        "High-volume steps at $0.10 in / $0.50 out per MTok for prompts up to 100k tokens",
+        "Anthropic's fastest model to date at standard speed (vendor-reported)"
+      ],
+      "limits": [
+        "Not the model for the hardest agentic coding — Terminal-Bench 4.0 39.2% against Sonnet 5.5's 70.6% (vendor-reported)",
+        "Prompts over 100,000 tokens step up to $0.50 in / $2.50 out per MTok"
+      ],
+      "reach": [
+        "Claude Code lists Claude Haiku on its own model screen, so a seat with model: Claude Haiku runs it the same way the Opus and Sonnet seats run theirs.",
+        "Cursor and Antigravity list it among the Claude models on their plans."
+      ]
+    },
+    {
+      "slug": "claude-fable", "vendor": "anthropic", "name": "Claude Fable",
+      "tagline": "Anthropic's deepest reasoner — for work where Opus at higher effort falls short.",
+      "summary": "Claude Fable is the top of Anthropic's lineup: always-on thinking, the longest horizon, the highest price. Anthropic's own guidance is to reach for Fable when Opus at a higher effort setting falls short. It shares the rest of the lineup's shape — the 1M-token context and 128K output window.",
+      "good": [
+        "The hardest long-horizon agentic work; Anthropic's pick when Opus at higher effort falls short",
+        "FrontierCode v1.1 at 50.3% — above Opus 5's 48.0% on Anthropic's own table (vendor-reported)"
+      ],
+      "limits": [
+        "The most expensive Claude at $10 in / $50 out per MTok",
+        "Slower than the rest of the lineup (Anthropic's own comparative)"
+      ],
+      "modelSlug": "claude-fable-5-1"
+    },
+    {
+      "slug": "claude-mythos", "vendor": "anthropic", "name": "Claude Mythos",
+      "tagline": "Fable's capabilities for verified organizations, behind Anthropic's verification program.",
+      "summary": "Claude Mythos is Fable's twin: the same capabilities, context window and pricing, offered only to organizations that pass Anthropic's Cyber Verification Program. It exists so high-assurance organizations can run the top of the lineup under their own clearance; everyone else uses Fable.",
+      "good": [
+        "Fable 5.1's specifications and pricing under an organizational verification gate"
+      ],
+      "limits": [
+        "Limited availability — Anthropic's Cyber Verification Program, not a self-serve model",
+        "No TeamCLI route: Claude Code's model screen lists Opus, Sonnet, Haiku and Fable only"
+      ]
+    },
+    {
+      "slug": "gemini-argon", "vendor": "google", "name": "Gemini Argon",
+      "tagline": "Google's flagship reasoning line — a 1M-token unified context, outputs up to 1M.",
+      "summary": "Gemini Argon is the top of Google's lineup: reasoning-first, a million-token unified context, and a long-decode mode that answers with up to a million tokens. Its introductory pricing runs through November 30, 2026, then doubles.",
+      "good": [
+        "Very large inputs and very long outputs — long decode answers with up to 1M tokens",
+        "Flagship reasoning with thinking effort adjustable from low to high"
+      ],
+      "limits": [
+        "No benchmarks published by Google — no coding-agent figures to cite",
+        "The price doubles on December 1, 2026, to $4 in / $20 out per MTok"
+      ],
+      "modelSlug": "gemini-4-argon"
+    },
+    {
+      "slug": "gemini-pro", "vendor": "google", "name": "Gemini Pro",
+      "tagline": "Google's general-purpose tier between Argon and Flash.",
+      "summary": "Gemini Pro is the balanced line of the Gemini family. The current 3.1 Pro is a preview with tiered pricing; 2.5 Pro remains available with access limited. Google publishes no benchmarks for the line, and no TeamCLI seat runs it.",
+      "good": [
+        "The middle tier — heavier than Flash, lighter than Argon"
+      ],
+      "limits": [
+        "3.1 Pro is in preview and 2.5 Pro is access-limited",
+        "No benchmarks published by Google"
+      ]
+    },
+    {
+      "slug": "gemini-flash", "vendor": "google", "name": "Gemini Flash",
+      "tagline": "Google's fast line for long-horizon software engineering and autonomous agents.",
+      "summary": "Gemini Flash is Google's fast tier — in Google's own words for 3.8 Flash, engineered for long-horizon software engineering and autonomous agents. It undercuts Argon at $0.75 in / $3.75 out per MTok on introductory pricing, and four versions are offered today.",
+      "good": [
+        "Agentic coding loops where the cost per iteration matters",
+        "Four versions offered, from 3.8 Flash down to the access-limited 2.5"
+      ],
+      "limits": [
+        "Introductory pricing doubles on January 1, 2027",
+        "No benchmarks published by Google"
+      ],
+      "modelSlug": "gemini-3-8-flash"
+    },
+    {
+      "slug": "gemini-flash-lite", "vendor": "google", "name": "Gemini Flash-Lite",
+      "tagline": "Google's fastest, cheapest tier — the one for high-volume steps.",
+      "summary": "Flash-Lite is the floor of the Gemini lineup: the fastest, most cost-effective tier in Google's own description. For coding agents it is the model for high-volume steps — sweeps, triage, sub-agent checks — at $0.30 in / $2.50 out per MTok.",
+      "good": [
+        "The cheapest Gemini text tier for high-volume steps"
+      ],
+      "limits": [
+        "The lightest model of the lineup; Google publishes no benchmarks for it"
+      ]
+    },
+    {
+      "slug": "gpt-astra", "vendor": "openai", "name": "GPT Astra",
+      "tagline": "OpenAI's most capable line, for the most demanding work.",
+      "summary": "GPT-6 Astra is the top of OpenAI's lineup — the most capable model for the most demanding work, in OpenAI's own words. It carries a 1.05M-token context (922K max input), a 128K output window, and the highest price in the catalog at $10 in / $50 out per MTok.",
+      "good": [
+        "The most demanding work, with the deepest context at 1.05M tokens"
+      ],
+      "limits": [
+        "The most expensive OpenAI line; prompts over 272k tokens double the input price",
+        "No benchmarks published by OpenAI"
+      ]
+    },
+    {
+      "slug": "gpt-sol", "vendor": "openai", "name": "GPT Sol",
+      "tagline": "OpenAI's near-flagship line for complex work at a lower cost.",
+      "summary": "GPT Sol is OpenAI's workhorse line for complex work: near-Astra performance at a fifth of the price, in OpenAI's own positioning. GPT-6.1 Sol is the current version, and the one TeamCLI has run — verified through Codex, listed through Antigravity and Cursor.",
+      "good": [
+        "Complex coding work at $2 in / $10 out per MTok",
+        "Three ways in — verified through Codex, listed through Antigravity and Cursor"
+      ],
+      "limits": [
+        "No benchmarks published by OpenAI",
+        "The 5.6 promotional price ($4/$20) runs at least through November 21, 2026"
+      ],
+      "modelSlug": "gpt-sol-6-1"
+    },
+    {
+      "slug": "gpt-terra", "vendor": "openai", "name": "GPT Terra",
+      "tagline": "OpenAI's mid-tier line, priced between Sol and Astra on output.",
+      "summary": "GPT Terra is OpenAI's middle line: $2 in / $12 out per MTok, between Sol and Astra on output price. OpenAI's pages carry no positioning for it beyond the price and the long-context tiers.",
+      "good": [
+        "A mid tier at $2 in / $12 out per MTok when a step needs more than Sol"
+      ],
+      "limits": [
+        "No benchmarks published by OpenAI, and no positioning on its own model pages"
+      ],
+      "modelSlug": "gpt-terra-5-6"
+    },
+    {
+      "slug": "gpt-luna", "vendor": "openai", "name": "GPT Luna",
+      "tagline": "OpenAI's focused, high-volume tier — the cheap, fast one.",
+      "summary": "GPT-6 Luna is OpenAI's cheap tier — for focused, high-volume tasks in OpenAI's own words — at $0.10 in / $0.50 out per MTok, a twentieth of Sol's input price. It shares the 1.05M-token context with the rest of the current line.",
+      "good": [
+        "High-volume steps at $0.10 in / $0.50 out per MTok",
+        "The same 1.05M-token context as Sol and Astra"
+      ],
+      "limits": [
+        "A focused tier, not a frontier one; no benchmarks published by OpenAI"
+      ]
+    },
+    {
+      "slug": "gpt-codex", "vendor": "openai", "name": "GPT Codex",
+      "tagline": "OpenAI's line built for coding, named for the Codex CLI.",
+      "summary": "GPT-5.3 Codex is OpenAI's coding-specialized model, priced below Sol at $1.75 in / $14 out per MTok, with a Fast tier at $3.50/$28 that trades price for speed. TeamCLI's Codex seats run the Sol line today.",
+      "good": [
+        "Coding-specialized, at $1.75 in / $14 out per MTok",
+        "A priced Fast tier — $3.50/$28 — for steps that need the faster variant"
+      ],
+      "limits": [
+        "No benchmarks published by OpenAI; no TeamCLI seat has run it yet"
+      ],
+      "reach": [
+        "Run by the Codex CLI — the same codex transport as the Sol seats, pointed at gpt-5.3-codex."
+      ]
+    },
+    {
+      "slug": "gpt-cyber", "vendor": "openai", "name": "GPT Cyber",
+      "tagline": "OpenAI's line for authorized vulnerability research and security testing.",
+      "summary": "GPT-5.6 Cyber (Daybreak) is OpenAI's security-research line, gated to authorized vulnerability research and security testing. At $12.50 in / $75 out per MTok it is the most expensive model in OpenAI's catalog, above Astra.",
+      "good": [
+        "Authorized security testing and vulnerability research — its purpose"
+      ],
+      "limits": [
+        "Gated to authorized use, per OpenAI's terms",
+        "No TeamCLI route, and no benchmarks published by OpenAI"
+      ]
+    },
+    {
+      "slug": "gpt-rosalind", "vendor": "openai", "name": "GPT Rosalind",
+      "tagline": "OpenAI's life-sciences line, for approved organizations.",
+      "summary": "GPT-Rosalind is OpenAI's line for life-sciences research, offered as Research and Discovery variants at $5 in / $25 out per MTok to approved organizations, with billing from October 5, 2026. It is not a general coding model.",
+      "good": [
+        "Life-sciences research work, for approved organizations"
+      ],
+      "limits": [
+        "Approved organizations only; not a coding-agent line",
+        "No TeamCLI route, and no benchmarks published by OpenAI"
+      ]
+    },
+    {
+      "slug": "grok", "vendor": "xai", "name": "Grok",
+      "tagline": "xAI's flagship line — its most capable model, recommended for code and chat.",
+      "summary": "Grok is xAI's main line. Grok 4.7 is xAI's most capable model and its recommendation for coding; the 4.3 tier trades capability for a million-token context at $1.25 in / $2.50 out per MTok. TeamCLI runs 4.7 both by the Grok CLI and through Cursor.",
+      "good": [
+        "Coding and chat — xAI's own recommendation for Grok 4.7",
+        "500K-token context at $2 in / $6 out per MTok for prompts under 200k tokens",
+        "The 4.3 tier: 1M-token context at $1.25 in / $2.50 out per MTok"
+      ],
+      "limits": [
+        "No benchmarks published by xAI, and no release dates on its model pages",
+        "Prompts of 200k tokens and up step up to $4 in / $12 out per MTok"
+      ],
+      "modelSlug": "grok-4-7"
+    },
+    {
+      "slug": "grok-build", "vendor": "xai", "name": "Grok Build",
+      "tagline": "xAI's coding-focused model, priced under the main line.",
+      "summary": "Grok Build 0.1 is xAI's coding-specialized model: a 256K-token context at $1 in / $2 out per MTok — the cheapest way into a Grok model. xAI publishes no dates or benchmarks for it.",
+      "good": [
+        "Coding work at $1 in / $2 out per MTok with a 256K-token context"
+      ],
+      "limits": [
+        "No benchmarks and no release date published",
+        "No TeamCLI route yet — the Grok CLI seats run the main Grok line"
+      ]
+    },
+    {
+      "slug": "deepseek-flash", "vendor": "deepseek", "name": "DeepSeek Flash",
+      "tagline": "DeepSeek's fast line — vision, a 1M context, and prices at cents.",
+      "summary": "DeepSeek Flash is the fast line of DeepSeek's pair: vision supported, thinking on by default, a 1M-token context and a 384K output window. Off-peak input (cache miss) is $0.15 per MTok, peak $0.30; output $0.60 off-peak, $1.20 peak.",
+      "good": [
+        "Agentic coding at cents per MTok",
+        "Vision input and a 384K output window",
+        "Off-peak hours halve the price — weekdays outside 01:00–04:00 and 06:00–10:00 UTC"
+      ],
+      "limits": [
+        "No benchmarks published by DeepSeek",
+        "Peak-hour pricing doubles; the headline prices are cache-miss input"
+      ],
+      "modelSlug": "deepseek-v4-1-flash"
+    },
+    {
+      "slug": "deepseek-pro", "vendor": "deepseek", "name": "DeepSeek Pro",
+      "tagline": "DeepSeek's larger line — no vision, triple Flash's output price.",
+      "summary": "DeepSeek V4 Pro is the heavier of DeepSeek's pair: the same 1M-token context and 384K output window, no vision input, and roughly triple Flash's price — $1.98 out off-peak, $3.96 peak.",
+      "good": [
+        "The heavier DeepSeek line, for work past Flash's ceiling"
+      ],
+      "limits": [
+        "No vision input, and no benchmarks published by DeepSeek",
+        "Triple Flash's price on output"
+      ],
+      "reach": [
+        "The same Claude Code endpoint route as the Flash seat, pointed at deepseek-v4-pro; no seat has run it yet."
+      ]
+    },
+    {
+      "slug": "kimi-k3", "vendor": "moonshot", "name": "Kimi K3",
+      "tagline": "Moonshot's flagship — long-horizon coding and knowledge work, 2.8T parameters.",
+      "summary": "Kimi K3 is Moonshot's flagship: 2.8 trillion parameters, native vision, a 1M-token context, effort up to max. Moonshot positions it for long-horizon coding and knowledge work. TeamCLI runs it today as a Claude Code endpoint seat; the native Kimi CLI is listed but has no launch profile yet.",
+      "good": [
+        "Long-horizon coding and knowledge work — Moonshot's own positioning",
+        "Native vision with a 1M-token context",
+        "Cached input at $0.30 per MTok — a tenth of fresh input"
+      ],
+      "limits": [
+        "No benchmarks published by Moonshot",
+        "No native-CLI launch profile yet — the endpoint route is the way in today"
+      ],
+      "modelSlug": "kimi-k3"
+    },
+    {
+      "slug": "kimi-k2", "vendor": "moonshot", "name": "Kimi K2",
+      "tagline": "Moonshot's coding-specialist line, with a priced highspeed variant.",
+      "summary": "Kimi K2 is Moonshot's coding line: K2.7 Code at a 256K context ($0.95 in / $4 out per MTok), a highspeed variant at about 180 tokens per second of output ($1.90/$8), and K2.6 for general work. The one vendor-published output speed in this catalog belongs here.",
+      "good": [
+        "Dedicated coding at $0.95 in / $4 out per MTok",
+        "The highspeed variant: about 180 tokens/s of output, up to 260 in short context (vendor-published)",
+        "Cache hits at $0.19 per MTok"
+      ],
+      "limits": [
+        "A 256K context — a quarter of K3's",
+        "No benchmarks published by Moonshot"
+      ],
+      "reach": [
+        "The same Claude Code endpoint route that runs K3 would run the K2 line; no seat has run it yet."
+      ]
+    },
+    {
+      "slug": "glm", "vendor": "zhipu", "name": "GLM",
+      "tagline": "Z.ai's frontier line — reasoning always on, a 1M context.",
+      "summary": "GLM is Z.ai's main line. GLM-5.3 turns reasoning on always (effort low to max, max by default), reads a 1M-token context, and made its largest coding jump in the family's history over GLM-5.2, on Z.ai's own benchmarks. Older versions stay served at lower prices.",
+      "good": [
+        "Agentic coding — Terminal-Bench 3.0 28.3 against GLM-5.2's 4.6, DeepSWE v1.1 66.9 against 46.2 (vendor-reported)",
+        "Reasoning always on with adjustable effort; a 1M context at $1.40 in / $4.40 out per MTok",
+        "Older versions still served at lower prices (GLM-5, then 4.7/4.6/4.5)"
+      ],
+      "limits": [
+        "Text-only input — no vision",
+        "The benchmarks are Z.ai's own, measured its way; no independent figures may be republished here"
+      ],
+      "modelSlug": "glm-5-3"
+    },
+    {
+      "slug": "glm-flash", "vendor": "zhipu", "name": "GLM Flash",
+      "tagline": "Z.ai's cheap, fast companion line.",
+      "summary": "GLM Flash is Z.ai's fast tier: GLM-5.3 Flash at $0.15 in / $0.50 out per MTok with cache reads at $0.03, and FlashX, the faster variant, at $0.37/$1.25. The 4.x Flash models are free.",
+      "good": [
+        "High-volume steps at $0.15 in / $0.50 out per MTok",
+        "Free 4.x Flash models for try-out work"
+      ],
+      "limits": [
+        "No benchmarks published by Z.ai for the Flash line",
+        "No TeamCLI seat has run it — the endpoint seats run the main GLM line"
+      ],
+      "reach": [
+        "The same Claude Code endpoint route as the GLM 5.3 seat, pointed at glm-5.3-flash; no seat has run it yet."
+      ]
+    },
+    {
+      "slug": "muse-wonder", "vendor": "meta", "name": "Muse Wonder",
+      "tagline": "Meta's frontier coding line — long-running agents and computer use.",
+      "summary": "Muse Wonder is the top of Meta's Muse lineup: frontier coding, long-running agents, advanced computer use. Meta says Wonder Full tops agentic and coding benchmarks, including DeepSWE and SWE-Marathon, in third-party runs, and publishes no numbers of its own. Meta's developer pages carry no prices or context windows.",
+      "good": [
+        "Frontier coding and long-running agents — Meta's own positioning",
+        "Wonder Full tops third-party agentic runs, per Meta — no numbers published"
+      ],
+      "limits": [
+        "No prices, context windows or benchmark figures on Meta's developer pages — nothing to cite",
+        "The Muse CLI has a launch profile but no seat has run it, so the route is listed, not verified"
+      ],
+      "modelSlug": "muse-wonder-1-0"
+    },
+    {
+      "slug": "muse-spark", "vendor": "meta", "name": "Muse Spark",
+      "tagline": "Meta's mid line — and its open-weight release.",
+      "summary": "Muse Spark is the middle of Meta's lineup, with Muse Spark Open (816B) as the open-weight release — the most capable US open-weight model, in Meta's own words, served on SGLang, vLLM and Apple MLX. Meta publishes no prices or benchmarks for the Spark line.",
+      "good": [
+        "Spark Open 816B: open weights, run it yourself on SGLang, vLLM or Apple MLX",
+        "The coding-optimized 1.2 is also served through OpenRouter"
+      ],
+      "limits": [
+        "No prices, context windows or dates published on Meta's developer pages",
+        "No TeamCLI route"
+      ]
+    },
+    {
+      "slug": "muse-glimmer", "vendor": "meta", "name": "Muse Glimmer",
+      "tagline": "Meta's local, always-on agent model.",
+      "summary": "Muse Glimmer is Meta's model for always-on local agents, available on Hugging Face. Meta's developer pages publish nothing else about it — no prices, no context window, no benchmarks.",
+      "good": [
+        "Always-on local agents on your own hardware, on Hugging Face"
+      ],
+      "limits": [
+        "Nothing else published to cite",
+        "No TeamCLI route"
+      ]
+    }
+  ],
   "transports": {
     "claude-code": {
       "name": "Claude Code",
