@@ -140,6 +140,37 @@
     text-align: left;
 }
 
+/* Shown only when the site is built from a release candidate: the install command points
+   at the `next` dist-tag, and this strip says so above the package-manager tabs. */
+.doc-install__channel {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 6px 10px;
+    background: var(--bg-code-bar);
+    border-bottom: 1px solid var(--border);
+    color: var(--term-output);
+    font-size: var(--fs-sm);
+    line-height: 1.4;
+}
+
+.doc-install__channel-tag {
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-xs);
+    padding: 1px 8px;
+    color: var(--accent);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.doc-install__channel code {
+    font-family: var(--font-mono);
+}
+
 .doc-install__bar {
     display: flex;
     align-items: center;

@@ -127,10 +127,21 @@ export function installLine(): string {
 }
 
 /**
- * The package the home page's install block installs. Every manager's command is
- * this name, so the block cannot show one package on one tab and another on the next.
+ * Whether the ref the site is built from is a release candidate — its version carries a
+ * prerelease suffix (e.g. 0.5.0-rc.5). npm's `latest` dist-tag still points at the last
+ * final release, so a candidate is only reachable from the `next` tag.
  */
-export const INSTALL_PACKAGE = 'team';
+export const INSTALL_IS_PRERELEASE = info.version.includes('-');
+
+/**
+ * The package the home page's install block installs. Every manager's command is this
+ * name, so the block cannot show one package on one tab and another on the next. When the
+ * built ref is a release candidate we append `@next` so the command fetches the candidate
+ * rather than the older `latest`; a final release self-corrects to the plain name. This
+ * `@next` + the "release candidate" label below are the one deploy-context decoration the
+ * install block adds on top of the reference — an explicit, approved exception.
+ */
+export const INSTALL_PACKAGE = INSTALL_IS_PRERELEASE ? 'team@next' : 'team';
 
 /** The managers the home page offers, in tab order, and the global-install command each one uses. */
 export const INSTALL_MANAGERS = [
@@ -159,7 +170,10 @@ export function installMarkup(): string {
   const panels = commands.map(item =>
     `<div class="doc-install__panel" role="tabpanel" id="install-panel-${item.id}" aria-labelledby="install-tab-${item.id}" data-package-manager="${item.id}" data-command="${escapeHtml(item.command)}" tabindex="0"><pre class="doc-install__command"><code class="hljs language-bash"><span class="install__prompt" aria-hidden="true">$</span> ${escapeHtml(item.command)}</code></pre></div>`,
   ).join('');
-  return `<div class="doc-install"><div class="doc-install__bar"><div class="doc-install__switch" role="tablist" aria-label="Package manager">${tabs}</div>` +
+  const channel = INSTALL_IS_PRERELEASE
+    ? `<p class="doc-install__channel"><span class="doc-install__channel-tag">Release candidate</span> installs from the <code>next</code> tag</p>`
+    : '';
+  return `<div class="doc-install">${channel}<div class="doc-install__bar"><div class="doc-install__switch" role="tablist" aria-label="Package manager">${tabs}</div>` +
     `<button type="button" class="doc-install__copy example__copy mtrl-button mtrl-button--text mtrl-button--xs">Copy</button></div>${panels}</div>\n`;
 }
 
