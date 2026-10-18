@@ -2,14 +2,30 @@
 // pieces the home page is built from.
 import { describe, expect, test } from 'bun:test';
 import { bundleCss, materialSheets, tokens } from '../src/server/css';
-import { commandNames } from '../src/server/reference';
+import { decodeEntities, fences } from '../src/server/markdown';
+import { commandNames, commandPage, commandTable } from '../src/server/reference';
 import { handleRequest } from '../server';
 import { contentReady, read, refInfo } from '../src/server/team';
-import { descriptionFor, headline, headlineAccent, headlineLead, homePoints, homeSamples, homeTitle, info, INSTALL_PACKAGE, installCommands, installLine, installMarkup, nav, packageLead, pages, readingOrder, versionLine } from '../src/server/pages';
+import { descriptionFor, headline, headlineAccent, headlineLead, homePoints, homeSamples, homeTitle, info, INSTALL_PACKAGE, installCommands, installLine, installMarkup, nav, pages, readingOrder, versionLine } from '../src/server/pages';
+
+/** The text a page shows of a block: the tags out, the entities decoded, as docs:check reads it. */
+function blockText(html: string): string {
+  return decodeEntities(html.replace(/<[^>]+>/g, '')).replace(/\n$/, '');
+}
+/** Every block a page shows, in order: its terminals and its code blocks. */
+function blocks(html: string): string[] {
+  return [...html.matchAll(/<pre class="(?:example__code|term)"[^>]*>([\s\S]*?)<\/pre>/g)].map(match => blockText(match[1]!));
+}
+/** A reference page's fences, as the site renders them; the fixture's own is left out. */
+function referenceBlocks(markdown: string): string[] {
+  return fences(markdown).filter(fence => fence.lang !== 'fixture').map(fence => fence.text.replace(/\n$/, ''));
+}
 
 describe('the page list', () => {
+  const list = pages();
+  const byPath = new Map(list.map(page => [page.path, page]));
+
   test('every page is a place of its own, with a title, a description and content', () => {
-    const list = pages();
     expect(new Set(list.map(page => page.path)).size).toBe(list.length);
     for (const page of list) {
       expect(page.path.startsWith('/docs/')).toBe(true);
@@ -22,27 +38,36 @@ describe('the page list', () => {
   });
 
   test('one page per command, and the docs\' own pages beside them', () => {
-    const paths = pages().map(page => page.path);
-    for (const name of commandNames()) expect(paths).toContain(`/docs/commands/${name}/`);
-    expect(paths).toContain('/docs/');
-    expect(paths).toContain('/docs/file/');
-    expect(paths).toContain('/docs/safety/');
-    expect(paths).toContain('/docs/clis/');
+    for (const name of commandNames()) expect(byPath.has(`/docs/commands/${name}/`), name).toBe(true);
+    for (const path of ['/docs/', '/docs/file/', '/docs/file/tasks/', '/docs/file/seats/', '/docs/file/delivery-order/', '/docs/file/grant/', '/docs/file/delegates/', '/docs/file/tempo/', '/docs/concepts/registry/', '/docs/commands/', '/docs/safety/', '/docs/clis/']) {
+      expect(byPath.has(path), path).toBe(true);
+    }
+    expect(list.length).toBe(commandNames().length + 12);
   });
 
   test('every page is reached — the navigation, or a link from a page — and the reading order is the navigation\'s own', () => {
     const inNav = new Set(nav.flatMap(group => group.items.map(item => item.href)));
-    for (const page of pages()) {
-      const reached = inNav.has(page.path) || pages().some(other => other !== page && other.html.includes(`href="${page.path}"`));
+    for (const page of list) {
+      const reached = inNav.has(page.path) || list.some(other => other !== page && other.html.includes(`href="${page.path}"`));
       expect(reached, page.path).toBe(true);
     }
     expect(readingOrder).toEqual(nav.flatMap(group => group.items));
   });
 
-  test('a description is the site\'s own words, and a page without one is a mistake', () => {
-    expect(descriptionFor('/')).toBe(packageLead());
-    expect(descriptionFor('/')).toBe('Set up and run a team of AI agents for your project. Agents propose, you decide.');
+  test('a description is the site\'s own words, one line, and a page without one is a mistake', () => {
+    expect(descriptionFor('/')).toBe('Set up and run a team of specialized AI agents in herdr: you set the roster, agents do the work, and you decide.');
     expect(() => descriptionFor('/nowhere/')).toThrow(/no description/);
+    for (const path of ['/', '/privacy/', ...list.map(page => page.path)]) {
+      const description = descriptionFor(path);
+      expect(description.length, path).toBeLessThanOrEqual(160);
+      expect(description.includes('\n'), path).toBe(false);
+    }
+  });
+
+  test('every page has a title of its own, ending in the site\'s name; a command page is named for its command', () => {
+    expect(new Set(list.map(page => page.title)).size).toBe(list.length);
+    for (const page of list) expect(page.title.endsWith(' — team'), page.path).toBe(true);
+    for (const name of commandNames()) expect(byPath.get(`/docs/commands/${name}/`)!.title).toBe(`team ${name} — team`);
   });
 
   test('a page names this site teamcli.io', async () => {
@@ -65,8 +90,10 @@ describe('the page list', () => {
     expect(html).toContain(`<h1 class="hero__name" id="hero-title">${headlineLead}<br><span class="hero__accent">${headlineAccent}</span></h1>`);
     expect(html).toContain('<p class="hero__tagline">Specialized agents, from any lab.</p>');
     expect(html).not.toContain('Agents propose. You decide.');
-    expect(html).toContain('name="description" content="Set up and run a team of AI agents for your project. Agents propose, you decide."');
-    const own = [headline, headlineLead, headlineAccent, homeTitle, versionLine(), ...['/', '/privacy/', '/docs/', '/docs/file/', '/docs/commands/', '/docs/safety/', '/docs/clis/'].map(descriptionFor)];
+    expect(html).toContain('name="description" content="Set up and run a team of specialized AI agents in herdr: you set the roster, agents do the work, and you decide."');
+    const own = [headline, headlineLead, headlineAccent, homeTitle, versionLine(),
+      ...['/', '/privacy/', '/docs/', '/docs/file/', '/docs/commands/', '/docs/concepts/registry/', '/docs/safety/', '/docs/clis/'].map(descriptionFor),
+      ...commandNames().map(name => descriptionFor(`/docs/commands/${name}/`))];
     for (const text of own) {
       expect(text.toLowerCase()).not.toContain('vendor');
       expect(text.toLowerCase()).not.toContain('crew');
@@ -77,24 +104,20 @@ describe('the page list', () => {
   test('a missing page counts the commands the site lists', async () => {
     const html = await (await handleRequest(new Request('http://localhost/no-such-page/'))).text();
     expect(html).toContain(`All ${commandNames().length} commands →`);
-    expect(commandNames().length).toBe(16);
+    expect(commandNames().length).toBe(41);
     expect(html).not.toContain('eleven');
     expect(descriptionFor('/docs/commands/add/')).toBe('Starts one declared seat, or a temporary one beside the team with --temporary --like <seat> --until <result:path|merged:branch>.');
     expect(descriptionFor('/docs/commands/release/')).toBe('Checks a release on npm and GitHub. When the file has the pairs: Linear milestone, qualifying status update, and the release marker in the public activity file.');
     expect(descriptionFor('/docs/commands/release/').length).toBeLessThanOrEqual(160);
-    expect(descriptionFor('/docs/safety/')).toBe('Why team is safe to run: the owner outside herdr, the approved copy, and dialogs.trust: owner sends no key, coordinator may press it from its own seat.');
-    const safety = pages().find(page => page.path === '/docs/safety/')!.html;
-    expect(safety).toContain('dialogs.trust: owner or coordinator');
-    expect(safety).not.toContain('Trust is left to the owner');
-    const home = await (await handleRequest(new Request('http://localhost/'))).text();
-    expect(home).toContain('dialogs.trust: owner sends no key, or the coordinator may.');
-    expect(home).not.toContain('prompts team never answers');
-    expect(home).toContain('Seven sections of <code>.agents/team.yaml</code>, then the other fields.');
-    expect(home).not.toContain('Every field of');
-    expect(descriptionFor('/docs/file/')).toBe('Seven sections of .agents/team.yaml — the head, identity, workspace, machine, seats, watch and budgets — then the other fields the README names.');
-    expect(descriptionFor('/docs/commands/up/')).toBe('Starts the session, a workspace and each seat the file has not stopped, plus the watch; a stopped seat waits for team add. --dry-run prints the plan.');
+    expect(descriptionFor('/docs/safety/')).toBe('Why team is safe to run: the owner outside herdr, the live file as the record, grants and delegates the owner alone, and what team never does.');
+    expect(descriptionFor('/docs/file/')).toBe('The team file, section by section: tasks, seats, delivery order, grant, delegates and tempo — then the format by example and its other fields.');
+    expect(descriptionFor('/docs/concepts/registry/')).toBe('The agent, team and project records this machine keeps: what each field means, and why an id is the identity.');
+    expect(descriptionFor('/docs/commands/up/')).toBe('Starts the session, a workspace and each seat the file declares, plus the watch; --dry-run prints the plan and the refusals.');
     expect(descriptionFor('/docs/file/').length).toBeLessThanOrEqual(160);
     expect(descriptionFor('/docs/commands/up/').length).toBeLessThanOrEqual(160);
+    const home = await (await handleRequest(new Request('http://localhost/'))).text();
+    expect(home).toContain('Six sections of <code>.agents/team.yaml</code>, then the format and the other fields.');
+    expect(home).not.toContain('Every field of');
   });
 });
 
@@ -158,627 +181,113 @@ describe('the home page, from the reference', () => {
     expect(samples[1]!.fence.lang).toBe('console');
     expect(samples[2]!.fence.lang).toBe('console');
     expect(samples[0]!.fence.text).toContain('project:');
+    expect(samples[1]!.fence.text).toContain('team down --dry-run');
+    expect(samples[2]!.fence.text).toContain('team status');
+  });
+});
+
+describe('the command pages, one per reference page', () => {
+  const byPath = new Map(pages().map(page => [page.path, page]));
+
+  test('each command page shows exactly its reference page\'s blocks, once each and in order', () => {
+    for (const name of commandNames()) {
+      const page = byPath.get(`/docs/commands/${name}/`)!;
+      expect(blocks(page.html), name).toEqual(referenceBlocks(commandPage(name)));
+    }
+  });
+
+  test('the reference\'s internal notes and its development-only note never reach a page', () => {
+    for (const page of byPath.values()) {
+      expect(page.html.includes('docs/internal'), page.path).toBe(false);
+      expect(page.html.includes('TEAMCLI_DEV_MODE'), page.path).toBe(false);
+    }
+  });
+
+  test('no page serves a command the reference no longer has', () => {
+    expect(byPath.has('/docs/commands/approve/')).toBe(false);
+    const served = [...byPath.keys()].filter(path => path.startsWith('/docs/commands/') && path !== '/docs/commands/').map(path => path.split('/')[3]!);
+    expect(new Set(served).size).toBe(commandNames().length);
+    expect(served.every(name => commandNames().includes(name))).toBe(true);
+  });
+
+  test('the command index lists them all, each with a summary and who may run it', () => {
+    const index = byPath.get('/docs/commands/')!;
+    expect([...index.html.matchAll(/class="doc-entry__name"><code>team ([a-z-]+)<\/code>/g)].map(match => match[1])).toEqual(commandNames());
+    expect([...index.html.matchAll(/class="doc-entry__who">/g)].length).toBe(commandNames().length);
+    expect(index.html).toContain('<span class="doc-entry__who">the owner</span>');
+  });
+});
+
+describe('the docs beside the commands', () => {
+  const byPath = new Map(pages().map(page => [page.path, page]));
+
+  test('the team file hub is the example file section by section, then the format and its other fields', () => {
+    const hub = byPath.get('/docs/file/')!;
+    expect(hub.html).toContain('<h1 id="the-team-file">The team file</h1>');
+    expect(hub.html).toContain('The sections');
+    expect(hub.html).toContain('The format, by example');
+    expect(hub.html).toContain('More fields');
+    expect((hub.html.match(/class="doc-entry"/g) ?? []).length).toBe(6);
+  });
+
+  test('each card of the hub is a page of its own, carrying its section', () => {
+    const hub = byPath.get('/docs/file/')!;
+    const cards = [...hub.html.matchAll(/<a class="doc-entry" href="(\/docs\/file\/[a-z-]+\/)"/g)].map(match => match[1]!);
+    expect(cards.length).toBe(6);
+    for (const path of cards) {
+      const page = byPath.get(path);
+      expect(page, path).toBeTruthy();
+      expect(page!.html).toContain('Part of <a href="/docs/file/">the team file</a>');
+    }
+  });
+
+  test('the delivery order page keeps the section\'s fence and its rules, and leaves the nested example out', () => {
+    const page = byPath.get('/docs/file/delivery-order/')!;
+    expect(blocks(page.html).length).toBe(1);
+    expect(page.html).toContain('read outermost first');
+    expect((page.html.match(/<li>/g) ?? []).length).toBe(3);
+  });
+
+  test('the registries page is the reference\'s page whole', () => {
+    const page = byPath.get('/docs/concepts/registry/')!;
+    expect(page.html).toContain('The agent, team and project registries');
+    expect(blocks(page.html)).toEqual(referenceBlocks(read('docs/concepts/registry.md')));
+  });
+
+  test('getting started installs the package and walks the first run', () => {
+    const page = byPath.get('/docs/')!;
+    expect(page.html).toContain('<h1 id="getting-started">Getting started</h1>');
+    expect(page.html).toContain('The file is private to each clone');
+    expect(page.html).toContain('Your first team in five minutes');
+  });
+
+  test('the CLIs page names each profile with its sign-in check', () => {
+    const page = byPath.get('/docs/clis/')!;
+    for (const cli of ['claude-code', 'codex', 'cursor', 'antigravity']) expect(page.html, cli).toContain(`<td><code>${cli}</code></td>`);
+    expect(page.html).toContain('team doctor --login');
   });
 });
 
 describe('the safety page, from the reference', () => {
+  const safety = pages().find(page => page.path === '/docs/safety/')!;
+
   test('the who-may-run-what table gives each command its own rule', () => {
-    const safety = pages().find(page => page.path === '/docs/safety/')!.html;
-    const row = (name: string) => new RegExp(`<td><code>team ${name}</code></td><td>([\\s\\S]*?)</td>`).exec(safety)?.[1] ?? '';
-    expect(row('up')).toBe('the owner');
-    expect(row('down')).toContain('the coordinator');
+    const row = (name: string) => new RegExp(`<td><code>team ${name}</code></td><td>([\\s\\S]*?)</td>`).exec(safety.html)?.[1] ?? '';
+    expect(row('up')).toContain("the owner or the team's lead seat, or a delegate entry naming <code>up</code>");
+    expect(row('up')).toContain("a verified grant admits the orchestrator's seat");
+    expect(row('down')).toBe("the owner or the team's lead seat, or a delegate entry");
     expect(row('up')).not.toBe(row('down'));
-  });
-});
-
-describe('the team up reference, in pages', () => {
-  const byPath = new Map(pages().map(page => [page.path, page]));
-  const up = byPath.get('/docs/commands/up/')!;
-  const words = (html: string) => html.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
-
-  test('one hub page and five reference pages, each linked from the hub and linking back', () => {
-    expect([...byPath.keys()].filter(path => path.startsWith('/docs/commands/up/'))).toEqual([
-      '/docs/commands/up/', '/docs/commands/up/launch/', '/docs/commands/up/records/', '/docs/commands/up/waiting/', '/docs/commands/up/limits/', '/docs/commands/up/refusals/',
-    ]);
-    for (const path of ['/docs/commands/up/launch/', '/docs/commands/up/records/', '/docs/commands/up/waiting/', '/docs/commands/up/limits/', '/docs/commands/up/refusals/']) {
-      expect(up.html).toContain(`href="${path}"`);
-      expect(byPath.get(path)!.html).toContain('href="/docs/commands/up/"');
-    }
+    expect([...safety.html.matchAll(/<td><code>team [a-z-]+<\/code><\/td><td>/g)].length).toBe(commandTable().length);
   });
 
-  test('the hub holds the purpose, the flags, three examples and the short behaviour', () => {
-    expect(up.toc.map(item => item.title)).toEqual(['Flags', 'Examples', 'Who may run it', 'What it reads and writes', 'What it prints', 'Exit codes', 'Known issues', 'The reference pages']);
-    expect((up.html.match(/<pre /g) ?? []).length).toBe(4);
-    // The opening is the whole first paragraph: the stopped-seat rule is hub material.
-    expect(up.html).toContain('left out until');
-    // The record sample the first "What it prints" sentence introduces rides with it.
-    expect(up.html).toContain('claude-keeper: ready\nclaude-beacon: ready');
-    // The deep material is not on the hub: it is on the reference pages.
-    expect(up.html).not.toContain('The records are what stdout gets');
-    expect(up.html).not.toContain('[o] open pane');
-    // The hub is a fraction of the whole set, not the whole on one page.
-    const set = [...byPath.values()].filter(page => page.path.startsWith('/docs/commands/up/')).map(page => words(page.html)).reduce((a, b) => a + b, 0);
-    expect(words(up.html) * 3).toBeLessThan(set);
+  test('the grants and the delegates are the owner\'s alone, in the reference\'s words', () => {
+    expect(safety.html).toContain('Records the grant the owner gives');
+    expect(safety.html).toContain('Names panes outside');
   });
 
-  test('the deep material is on the reference pages, in the reference\'s own words', () => {
-    expect(byPath.get('/docs/commands/up/launch/')!.html).toContain('under the run lock');
-    expect(byPath.get('/docs/commands/up/records/')!.html).toContain('The records are what stdout gets');
-    expect(byPath.get('/docs/commands/up/waiting/')!.html).toContain('[o] open pane, [s] skip seat, [q] stop cleanly');
-    expect(byPath.get('/docs/commands/up/limits/')!.html).toContain('The waiting proof is placement');
-    expect(byPath.get('/docs/commands/up/refusals/')!.html).toContain('only the owner runs');
-    // The limits page is its five bullets alone: the records tail that follows them in the
-    // reference belongs to the records page, once.
-    const limits = byPath.get('/docs/commands/up/limits/')!.html;
-    expect(limits).not.toContain('The records are what stdout gets');
-    expect(limits).not.toContain('left out: timeout (no terminal for owner)');
-    expect(limits).not.toContain('[o] open pane');
-  });
-
-  test('the reference pages answer, each with its own title and description', async () => {
-    const expected: [string, string, string][] = [
-      ['/docs/commands/up/launch/', 'team up: the launch — team', 'What team up does before it creates anything'],
-      ['/docs/commands/up/records/', 'team up: the records — team', 'Every line a team up run prints'],
-      ['/docs/commands/up/waiting/', 'team up: waiting for the owner — team', 'The pause when a seat stops at a dialog'],
-      ['/docs/commands/up/limits/', 'team up: known limits — team', 'The windows a process of the same user still has'],
-      ['/docs/commands/up/refusals/', 'team up: refusals — team', 'What stops a team up run before its first step'],
-    ];
-    for (const [path, title, description] of expected) {
-      const response = await handleRequest(new Request(`https://teamcli.io${path}`));
-      expect(response.status).toBe(200);
-      const body = await response.text();
-      expect(body).toContain(`<title>${title}</title>`);
-      expect(body).toContain(description);
-    }
-  });
-});
-
-describe('the team watch reference, in pages', () => {
-  const byPath = new Map(pages().map(page => [page.path, page]));
-  const watch = byPath.get('/docs/commands/watch/')!;
-  const words = (html: string) => html.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
-  const refPaths = ['/docs/commands/watch/reports/', '/docs/commands/watch/nudge/', '/docs/commands/watch/screens/', '/docs/commands/watch/budgets/', '/docs/commands/watch/checks/'];
-
-  test('one hub page and five reference pages, each linked from the hub and linking back', () => {
-    expect([...byPath.keys()].filter(path => path.startsWith('/docs/commands/watch/'))).toEqual([
-      '/docs/commands/watch/', ...refPaths,
-    ]);
-    for (const path of refPaths) {
-      expect(watch.html).toContain(`href="${path}"`);
-      expect(byPath.get(path)!.html).toContain('href="/docs/commands/watch/"');
-    }
-  });
-
-  test('the hub holds the purpose, the flags, the base example and the short behaviour', () => {
-    expect(watch.toc.map(item => item.title)).toEqual(['Flags', 'Examples', 'Who may run it', 'What it reads and writes', 'What it prints', 'Refusals', 'Exit codes', 'The reference pages']);
-    expect((watch.html.match(/<pre class="(?:example__code|term)"/g) ?? []).length).toBe(3);
-    // The purpose is the whole first paragraph: the temporary-seat close is hub material.
-    expect(watch.html).toContain('closes a temporary seat or');
-    // The base run and the second-watch refusal ride on the hub.
-    expect(watch.html).toContain('the watch of &quot;beacon&quot; stopped');
-    expect(watch.html).toContain('a watch already runs for the session');
-    // The short lead of what it prints is here; the report table is not.
-    expect(watch.html).toContain('Every line carries its time');
-    expect(watch.html).not.toContain('is in the file and is not running');
-    expect(watch.html).not.toContain('nudged the operator (its own unsent line');
-    // The hub is a fraction of the whole set, not the whole on one page.
-    const set = [...byPath.values()].filter(page => page.path.startsWith('/docs/commands/watch/')).map(page => words(page.html)).reduce((a, b) => a + b, 0);
-    expect(words(watch.html) * 2).toBeLessThan(set);
-  });
-
-  test('the deep material is on the reference pages, in the reference\'s own words', () => {
-    expect(byPath.get('/docs/commands/watch/reports/')!.html).toContain('is in the file and is not running');
-    expect(byPath.get('/docs/commands/watch/reports/')!.html).toContain('free memory is 8%, below 15%');
-    expect(byPath.get('/docs/commands/watch/nudge/')!.html).toContain('nudged the operator (its own unsent line');
-    expect(byPath.get('/docs/commands/watch/nudge/')!.html).toContain('nudge not typed (--no-nudge)');
-    expect(byPath.get('/docs/commands/watch/screens/')!.html).toContain('the live-agent check is the second layer');
-    expect(byPath.get('/docs/commands/watch/budgets/')!.html).toContain('The budget reports read the figures');
-    expect(byPath.get('/docs/commands/watch/checks/')!.html).toContain('team.yaml is invalid');
-    expect(byPath.get('/docs/commands/watch/checks/')!.html).toContain("watch.checks can't turn off attention");
-    // The reports table sits on the reports page, not duplicated onto the nudge page.
-    const nudge = byPath.get('/docs/commands/watch/nudge/')!.html;
-    expect(nudge).not.toContain('is in the file and is not running');
-  });
-
-  test('the reference pages answer, each with its own title and description', async () => {
-    const expected: [string, string, string][] = [
-      ['/docs/commands/watch/reports/', 'team watch: the reports — team', 'Every line a team watch pass can print and when each is made'],
-      ['/docs/commands/watch/nudge/', 'team watch: the nudge — team', 'The one fixed line team watch types into the operator’s pane'],
-      ['/docs/commands/watch/screens/', 'team watch: how a screen is read — team', 'How team watch reads a pane'],
-      ['/docs/commands/watch/budgets/', 'team watch: budgets — team', 'The figures a team watch pass reads off the seats'],
-      ['/docs/commands/watch/checks/', 'team watch: the approved checks and timings — team', 'The checks and timings the owner approves for team watch'],
-    ];
-    for (const [path, title, description] of expected) {
-      const response = await handleRequest(new Request(`https://teamcli.io${path}`));
-      expect(response.status).toBe(200);
-      const body = await response.text();
-      expect(body).toContain(`<title>${title}</title>`);
-      expect(body).toContain(description);
-    }
-  });
-});
-
-describe('the team doctor reference, in pages', () => {
-  const byPath = new Map(pages().map(page => [page.path, page]));
-  const doctor = byPath.get('/docs/commands/doctor/')!;
-  const words = (html: string) => html.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
-  const refPaths = ['/docs/commands/doctor/report/', '/docs/commands/doctor/models/', '/docs/commands/doctor/clis/', '/docs/commands/doctor/login/', '/docs/commands/doctor/budgets/'];
-
-  test('one hub page and five reference pages, each linked from the hub and linking back', () => {
-    expect([...byPath.keys()].filter(path => path.startsWith('/docs/commands/doctor/'))).toEqual([
-      '/docs/commands/doctor/', ...refPaths,
-    ]);
-    for (const path of refPaths) {
-      expect(doctor.html).toContain(`href="${path}"`);
-      expect(byPath.get(path)!.html).toContain('href="/docs/commands/doctor/"');
-    }
-  });
-
-  test('the hub holds the purpose, the flags, the base example and the short behaviour', () => {
-    expect(doctor.toc.map(item => item.title)).toEqual(['Flags', 'Examples', 'Who may run it', 'What it reads and writes', 'What it prints', 'Refusals', 'Exit codes', 'The reference pages']);
-    expect((doctor.html.match(/<pre class="(?:example__code|term)"/g) ?? []).length).toBe(5);
-    // The purpose is the whole first paragraph: the refuse-until rule is hub material.
-    expect(doctor.html).toContain('refuse until the missing ones that block them are done');
-    // The base example and its canonical run ride on the hub.
-    expect(doctor.html).toContain('nothing missing, 2 warnings');
-    expect(doctor.html).toContain('the lobby ~/.config/team/lobby: verified');
-    // The short lead of what it prints is here; the ordered findings are not.
-    expect(doctor.html).toContain('One line per finding');
-    expect(doctor.html).not.toContain('The findings come in order');
-    expect(doctor.html).not.toContain('judged by two questions');
-    // The hub is a fraction of the whole set, not the whole on one page.
-    const set = [...byPath.values()].filter(page => page.path.startsWith('/docs/commands/doctor/')).map(page => words(page.html)).reduce((a, b) => a + b, 0);
-    expect(words(doctor.html) * 2).toBeLessThan(set);
-  });
-
-  test('the deep material is on the reference pages, in the reference\'s own words', () => {
-    expect(byPath.get('/docs/commands/doctor/report/')!.html).toContain('The findings come in order');
-    expect(byPath.get('/docs/commands/doctor/report/')!.html).toContain('asks for 2.0 GB free swap');
-    expect(byPath.get('/docs/commands/doctor/models/')!.html).toContain('the launch runs team-codex');
-    expect(byPath.get('/docs/commands/doctor/models/')!.html).toContain('the model is chosen by its launcher');
-    expect(byPath.get('/docs/commands/doctor/clis/')!.html).toContain('older than the tested 2.1.288');
-    expect(byPath.get('/docs/commands/doctor/login/')!.html).toContain('log in to codex');
-    expect(byPath.get('/docs/commands/doctor/budgets/')!.html).toContain('the budget checks were not run');
-    // The sign-in file sits on the login page, not duplicated onto the CLIs page as the
-    // install example repeats it: each page shows that file once.
-    const login = byPath.get('/docs/commands/doctor/login/')!.html;
-    expect(login).toContain('reads the logins alone');
-    expect(login).not.toContain('The findings come in order');
-  });
-
-  test('the reference pages answer, each with its own title and description', async () => {
-    const expected: [string, string, string][] = [
-      ['/docs/commands/doctor/report/', 'team doctor: the report — team', 'Every finding a team doctor run prints, in order'],
-      ['/docs/commands/doctor/models/', 'team doctor: models and launches — team', 'What team doctor says of a seat’s model'],
-      ['/docs/commands/doctor/clis/', 'team doctor: each CLI — team', 'herdr and each seat’s CLI in team doctor'],
-      ['/docs/commands/doctor/login/', 'team doctor: the sign-in checks — team', 'team doctor --login: one read-only sign-in check per CLI'],
-      ['/docs/commands/doctor/budgets/', 'team doctor: the budget checks — team', 'The owner’s budget checks in team doctor'],
-    ];
-    for (const [path, title, description] of expected) {
-      const response = await handleRequest(new Request(`https://teamcli.io${path}`));
-      expect(response.status).toBe(200);
-      const body = await response.text();
-      expect(body).toContain(`<title>${title}</title>`);
-      expect(body).toContain(description);
-    }
-  });
-});
-
-describe('the team status reference, in pages', () => {
-  const byPath = new Map(pages().map(page => [page.path, page]));
-  const status = byPath.get('/docs/commands/status/')!;
-  const words = (html: string) => html.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
-  const refPaths = ['/docs/commands/status/rows/', '/docs/commands/status/differences/', '/docs/commands/status/budgets/', '/docs/commands/status/json/'];
-
-  test('one hub page and four reference pages, each linked from the hub and linking back', () => {
-    expect([...byPath.keys()].filter(path => path.startsWith('/docs/commands/status/'))).toEqual([
-      '/docs/commands/status/', ...refPaths,
-    ]);
-    for (const path of refPaths) {
-      expect(status.html).toContain(`href="${path}"`);
-      expect(byPath.get(path)!.html).toContain('href="/docs/commands/status/"');
-    }
-  });
-
-  test('the hub holds the purpose, the flags, the base example, the machine check and the short behaviour', () => {
-    expect(status.toc.map(item => item.title)).toEqual(['Flags', 'Examples', 'Who may run it', 'What it reads and writes', 'The machine check', 'Refusals', 'Exit codes', 'The reference pages']);
-    expect((status.html.match(/<pre class="(?:example__code|term)"/g) ?? []).length).toBe(3);
-    // The purpose is the whole first paragraph: the repair-naming is hub material.
-    expect(status.html).toContain('It names the command that repairs each difference');
-    // The base reading and the machine-check note ride on the hub.
-    expect(status.html).toContain('difference: claude-keeper is in the file and is not running');
-    expect(status.html).toContain('would refuse now');
-    // The deep sections are not on the hub: they are on the reference pages.
-    expect(status.html).not.toContain('A pane is its seat only while the process');
-    expect(status.html).not.toContain('the agent in');
-    // The hub is a fraction of the whole set, not the whole on one page.
-    const set = [...byPath.values()].filter(page => page.path.startsWith('/docs/commands/status/')).map(page => words(page.html)).reduce((a, b) => a + b, 0);
-    expect(words(status.html) * 2).toBeLessThan(set);
-  });
-
-  test('the deep material is on the reference pages, in the reference\'s own words', () => {
-    expect(byPath.get('/docs/commands/status/rows/')!.html).toContain('A pane is its seat only while the process');
-    expect(byPath.get('/docs/commands/status/differences/')!.html).toContain('the agent in');
-    expect(byPath.get('/docs/commands/status/differences/')!.html).toContain('<span class="term__command">team add claude-keeper</span>');
-    expect(byPath.get('/docs/commands/status/budgets/')!.html).toContain('CODEX_HOME');
-    expect(byPath.get('/docs/commands/status/json/')!.html).toContain('team status --json');
-    // The rows prose sits on the rows page, not duplicated onto the differences page.
-    expect(byPath.get('/docs/commands/status/differences/')!.html).not.toContain('A pane is its seat only while the process');
-  });
-
-  test('the reference pages answer, each with its own title and description', async () => {
-    const expected: [string, string, string][] = [
-      ['/docs/commands/status/rows/', 'team status: the rows — team', 'One line per seat in team status'],
-      ['/docs/commands/status/differences/', 'team status: differences — team', 'Every way the file, the state and the live session disagree in team status'],
-      ['/docs/commands/status/budgets/', 'team status: budgets — team', 'The budgets table team status prints after the seats'],
-      ['/docs/commands/status/json/', 'team status: the JSON — team', 'team status --json: the same reading as one document'],
-    ];
-    for (const [path, title, description] of expected) {
-      const response = await handleRequest(new Request(`https://teamcli.io${path}`));
-      expect(response.status).toBe(200);
-      const body = await response.text();
-      expect(body).toContain(`<title>${title}</title>`);
-      expect(body).toContain(description);
-    }
-  });
-});
-
-describe('the team usage reference, in pages', () => {
-  const byPath = new Map(pages().map(page => [page.path, page]));
-  const usage = byPath.get('/docs/commands/usage/')!;
-  const words = (html: string) => html.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
-  const refPaths = ['/docs/commands/usage/reads-writes/', '/docs/commands/usage/report/', '/docs/commands/usage/restricted/', '/docs/commands/usage/json/', '/docs/commands/usage/refusals/'];
-
-  test('one hub page and five reference pages, each linked from the hub and linking back', () => {
-    expect([...byPath.keys()].filter(path => path.startsWith('/docs/commands/usage/'))).toEqual([
-      '/docs/commands/usage/', ...refPaths,
-    ]);
-    for (const path of refPaths) {
-      expect(usage.html).toContain(`href="${path}"`);
-      expect(byPath.get(path)!.html).toContain('href="/docs/commands/usage/"');
-    }
-  });
-
-  test('the hub holds the purpose, the worked example and the short behaviour', () => {
-    expect(usage.toc.map(item => item.title)).toEqual(['Examples', 'What it reads and writes', 'Who may run it', 'Exit codes', 'The reference pages']);
-    // The worked example: the team file and the restricted-view output.
-    expect((usage.html.match(/<pre class="(?:example__code|term)"/g) ?? []).length).toBe(2);
-    expect(usage.html).toContain('Shows what this machine holds');
-    expect(usage.html).toContain('usage on this machine, 1 team');
-    // The deep material is not on the hub: it is on the reference pages.
-    expect(usage.html).not.toContain('The header counts the machine');
-    expect(usage.html).not.toContain('The restricted view is a closed list of fields');
-    expect(usage.html).not.toContain('&quot;view&quot;: &quot;restricted&quot;');
-    // The hub is a fraction of the whole set, not the whole on one page.
-    const set = [...byPath.values()].filter(page => page.path.startsWith('/docs/commands/usage/')).map(page => words(page.html)).reduce((a, b) => a + b, 0);
-    expect(words(usage.html) * 2).toBeLessThan(set);
-  });
-
-  test('the deep material is on the reference pages, in the reference\'s own words', () => {
-    expect(byPath.get('/docs/commands/usage/reads-writes/')!.html).toContain('opens no lock, writes no state and logs no line');
-    expect(byPath.get('/docs/commands/usage/report/')!.html).toContain('The header counts the machine');
-    expect(byPath.get('/docs/commands/usage/restricted/')!.html).toContain('The restricted view is a closed list of fields');
-    expect(byPath.get('/docs/commands/usage/json/')!.html).toContain('&quot;view&quot;: &quot;restricted&quot;');
-    expect(byPath.get('/docs/commands/usage/refusals/')!.html).toContain('is a note line and exit 0');
-    // The report page does not carry the JSON document; that is the JSON page.
-    expect(byPath.get('/docs/commands/usage/report/')!.html).not.toContain('&quot;view&quot;: &quot;restricted&quot;');
-  });
-
-  test('the reference pages answer, each with its own title and description', async () => {
-    const expected: [string, string, string][] = [
-      ['/docs/commands/usage/reads-writes/', 'team usage: what it reads and writes — team', 'That team usage writes nothing'],
-      ['/docs/commands/usage/report/', 'team usage: the report — team', 'The team usage report'],
-      ['/docs/commands/usage/restricted/', 'team usage: the restricted view — team', 'Which caller reads the full or restricted view'],
-      ['/docs/commands/usage/json/', 'team usage: the JSON — team', 'What team usage --json prints'],
-      ['/docs/commands/usage/refusals/', 'team usage: refusals — team', 'The two things that refuse team usage'],
-    ];
-    for (const [path, title, description] of expected) {
-      const response = await handleRequest(new Request(`https://teamcli.io${path}`));
-      expect(response.status).toBe(200);
-      const body = await response.text();
-      expect(body).toContain(`<title>${title}</title>`);
-      expect(body).toContain(description);
-    }
-  });
-});
-
-describe('the team down reference, in pages', () => {
-  const byPath = new Map(pages().map(page => [page.path, page]));
-  const down = byPath.get('/docs/commands/down/')!;
-  const words = (html: string) => html.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
-  const refPaths = ['/docs/commands/down/delegate/', '/docs/commands/down/output/', '/docs/commands/down/edge-cases/', '/docs/commands/down/refusals/'];
-
-  test('one hub page and four reference pages, each linked from the hub and linking back', () => {
-    expect([...byPath.keys()].filter(path => path.startsWith('/docs/commands/down/'))).toEqual([
-      '/docs/commands/down/', ...refPaths,
-    ]);
-    for (const path of refPaths) {
-      expect(down.html).toContain(`href="${path}"`);
-      expect(byPath.get(path)!.html).toContain('href="/docs/commands/down/"');
-    }
-  });
-
-  test('the hub holds the purpose, the flags, the basic walkthrough and the short behaviour', () => {
-    expect(down.toc.map(item => item.title)).toEqual(['Flags', 'Examples', 'What it reads and writes', 'Who may run it', 'What it prints', 'Exit codes', 'The reference pages']);
-    // The walkthrough trio: the team file, the dry-run plan, the owner's stop.
-    expect((down.html.match(/<pre class="(?:example__code|term)"/g) ?? []).length).toBe(3);
-    expect(down.html).toContain('claude-keeper: stopped');
-    // The deep material is not on the hub: it is on the reference pages.
-    expect(down.html).not.toContain('A pane the team file');
-    expect(down.html).not.toContain('is working (');
-    expect(down.html).not.toContain('team.yaml is invalid');
-    expect(down.html).not.toContain('this call is claude-beacon');
-    // The hub is a fraction of the whole set, not the whole on one page.
-    const set = [...byPath.values()].filter(page => page.path.startsWith('/docs/commands/down/')).map(page => words(page.html)).reduce((a, b) => a + b, 0);
-    expect(words(down.html) * 2).toBeLessThan(set);
-  });
-
-  test('the deep material is on the reference pages, in the reference\'s own words', () => {
-    expect(byPath.get('/docs/commands/down/delegate/')!.html).toContain('A pane the team file');
-    expect(byPath.get('/docs/commands/down/delegate/')!.html).toContain('this call is claude-beacon');
-    expect(byPath.get('/docs/commands/down/output/')!.html).toContain('holds unsent text in its input box');
-    expect(byPath.get('/docs/commands/down/edge-cases/')!.html).toContain('team.yaml is invalid');
-    expect(byPath.get('/docs/commands/down/edge-cases/')!.html).toContain('claude-relay');
-    expect(byPath.get('/docs/commands/down/refusals/')!.html).toContain('another session-mutating run is holding session');
-    // The dry-run plan is fenced twice in the reference, so it shows on both the hub and the edge-cases page.
-    expect(down.html).toContain('wait until claude-keeper');
-    expect(byPath.get('/docs/commands/down/edge-cases/')!.html).toContain('wait until claude-keeper');
-  });
-
-  test('the reference pages answer, each with its own title and description', async () => {
-    const expected: [string, string, string][] = [
-      ['/docs/commands/down/delegate/', 'team down: the approved delegate — team', 'The approved delegate for team down'],
-      ['/docs/commands/down/output/', 'team down: what it prints — team', 'What team down prints'],
-      ['/docs/commands/down/edge-cases/', 'team down: a renamed seat and a broken file — team', 'Two team down runs'],
-      ['/docs/commands/down/refusals/', 'team down: refusals — team', 'Every message that refuses team down'],
-    ];
-    for (const [path, title, description] of expected) {
-      const response = await handleRequest(new Request(`https://teamcli.io${path}`));
-      expect(response.status).toBe(200);
-      const body = await response.text();
-      expect(body).toContain(`<title>${title}</title>`);
-      expect(body).toContain(description);
-    }
-  });
-});
-
-describe('the team approve reference, in pages', () => {
-  const byPath = new Map(pages().map(page => [page.path, page]));
-  const approve = byPath.get('/docs/commands/approve/')!;
-  const words = (html: string) => html.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
-  const refPaths = ['/docs/commands/approve/who/', '/docs/commands/approve/read-back/', '/docs/commands/approve/record/', '/docs/commands/approve/refusals/', '/docs/commands/approve/overrides/'];
-
-  test('one hub page and five reference pages, each linked from the hub and linking back', () => {
-    expect([...byPath.keys()].filter(path => path.startsWith('/docs/commands/approve/'))).toEqual([
-      '/docs/commands/approve/', ...refPaths,
-    ]);
-    for (const path of refPaths) {
-      expect(approve.html).toContain(`href="${path}"`);
-      expect(byPath.get(path)!.html).toContain('href="/docs/commands/approve/"');
-    }
-  });
-
-  test('the hub holds the purpose, the flags, the basic walkthrough and the short behaviour', () => {
-    expect(approve.toc.map(item => item.title)).toEqual(['Flags', 'Examples', 'Who may run it', 'What it reads and writes', 'What it prints', 'Exit codes', 'The reference pages']);
-    // The walkthrough trio: the team file, the --show read, the owner's approve.
-    expect((approve.html.match(/<pre class="(?:example__code|term)"/g) ?? []).length).toBe(3);
-    expect(approve.html).toContain('project: beacon');
-    expect(approve.html).toContain('Approved. The record is in');
-    // The deep material is not on the hub: it is on the reference pages.
-    expect(approve.html).not.toContain('The record this command writes is signed');
-    expect(approve.html).not.toContain('A delegate\'s approval is for ordinary changes');
-    expect(approve.html).not.toContain('lives in the approval store, beside the record');
-    expect(approve.html).not.toContain('Type the number of seats (2)');
-    // The hub is a fraction of the whole set, not the whole on one page.
-    const set = [...byPath.values()].filter(page => page.path.startsWith('/docs/commands/approve/')).map(page => words(page.html)).reduce((a, b) => a + b, 0);
-    expect(words(approve.html) * 2).toBeLessThan(set);
-  });
-
-  test('the deep material is on the reference pages, in the reference\'s own words', () => {
-    expect(byPath.get('/docs/commands/approve/who/')!.html).toContain('approval is for ordinary changes: the roster');
-    expect(byPath.get('/docs/commands/approve/who/')!.html).toContain('only the owner approves a team file, from a terminal outside herdr; this call is claude-keeper');
-    expect(byPath.get('/docs/commands/approve/read-back/')!.html).toContain('Then the ceilings the approval would fix');
-    expect(byPath.get('/docs/commands/approve/read-back/')!.html).toContain('Needs a new approval: `trust` changed.');
-    expect(byPath.get('/docs/commands/approve/record/')!.html).toContain('The record this command writes is signed');
-    expect(byPath.get('/docs/commands/approve/record/')!.html).toContain('approved before records were signed');
-    expect(byPath.get('/docs/commands/approve/refusals/')!.html).toContain('delegation needs a verified approval');
-    expect(byPath.get('/docs/commands/approve/refusals/')!.html).toContain('Type the number of seats (2) to approve this file');
-    expect(byPath.get('/docs/commands/approve/overrides/')!.html).toContain('lives in the approval store, beside the record');
-    // The read-back page does not carry the refusal walkthrough; that is the refusals page.
-    expect(byPath.get('/docs/commands/approve/read-back/')!.html).not.toContain('Type the number of seats (2)');
-  });
-
-  test('the reference pages answer, each with its own title and description', async () => {
-    const expected: [string, string, string][] = [
-      ['/docs/commands/approve/who/', 'team approve: who may run it — team', 'Who may run team approve'],
-      ['/docs/commands/approve/read-back/', 'team approve: the read-back — team', 'What team approve prints back'],
-      ['/docs/commands/approve/record/', 'team approve: the signed record — team', 'The signed approval record'],
-      ['/docs/commands/approve/refusals/', 'team approve: refusals — team', 'What refuses a team approve write'],
-      ['/docs/commands/approve/overrides/', 'team approve: the overrides file — team', 'overrides.yaml beside the approval record'],
-    ];
-    for (const [path, title, description] of expected) {
-      const response = await handleRequest(new Request(`https://teamcli.io${path}`));
-      expect(response.status).toBe(200);
-      const body = await response.text();
-      expect(body).toContain(`<title>${title}</title>`);
-      expect(body).toContain(description);
-    }
-  });
-});
-
-describe('the team worktree reference, in pages', () => {
-  const byPath = new Map(pages().map(page => [page.path, page]));
-  const worktree = byPath.get('/docs/commands/worktree/')!;
-  const words = (html: string) => html.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
-  const refPaths = ['/docs/commands/worktree/reads-writes/', '/docs/commands/worktree/refusals/'];
-
-  test('one hub page and two reference pages, each linked from the hub and linking back', () => {
-    expect([...byPath.keys()].filter(path => path.startsWith('/docs/commands/worktree/'))).toEqual([
-      '/docs/commands/worktree/', ...refPaths,
-    ]);
-    for (const path of refPaths) {
-      expect(worktree.html).toContain(`href="${path}"`);
-      expect(byPath.get(path)!.html).toContain('href="/docs/commands/worktree/"');
-    }
-  });
-
-  test('the hub holds the purpose, the flags, the happy path and the short behaviour', () => {
-    expect(worktree.toc.map(item => item.title)).toEqual(['Flags', 'Examples', 'Who may run it', 'Exit codes', 'The reference pages']);
-    expect((worktree.html.match(/<pre class="(?:example__code|term)"/g) ?? []).length).toBe(5);
-    // The purpose is the whole first paragraph.
-    expect(worktree.html).toContain('Creates and removes a task worktree');
-    // The happy path rides on the hub.
-    expect(worktree.html).toContain('../worktrees/beacon/select-width');
-    expect(worktree.html).toContain('removed tidy-logs');
-    // The deep sections are not on the hub: they are on the reference pages.
-    expect(worktree.html).not.toContain('the worktree limit is 8');
-    expect(worktree.html).not.toContain('Every value the two subcommands read');
-    // The hub is a fraction of the whole set, not the whole on one page.
-    const set = [...byPath.values()].filter(page => page.path.startsWith('/docs/commands/worktree/')).map(page => words(page.html)).reduce((a, b) => a + b, 0);
-    expect(words(worktree.html) * 2).toBeLessThan(set);
-  });
-
-  test('the deep material is on the reference pages, in the reference\'s own words', () => {
-    expect(byPath.get('/docs/commands/worktree/reads-writes/')!.html).toContain('Every value the two subcommands read');
-    expect(byPath.get('/docs/commands/worktree/reads-writes/')!.html).toContain('claude-later is not in the approved file');
-    expect(byPath.get('/docs/commands/worktree/refusals/')!.html).toContain('the worktree limit is 8');
-    expect(byPath.get('/docs/commands/worktree/refusals/')!.html).toContain('commits on no remote branch');
-    // The refusals table sits on the refusals page, not on the reads-writes page.
-    expect(byPath.get('/docs/commands/worktree/reads-writes/')!.html).not.toContain('the worktree limit is 8');
-  });
-
-  test('the reference pages answer, each with its own title and description', async () => {
-    const expected: [string, string, string][] = [
-      ['/docs/commands/worktree/reads-writes/', 'team worktree: what it reads and writes — team', 'What team worktree reads and writes'],
-      ['/docs/commands/worktree/refusals/', 'team worktree: refusals — team', 'Every message that refuses team worktree and its exit'],
-    ];
-    for (const [path, title, description] of expected) {
-      const response = await handleRequest(new Request(`https://teamcli.io${path}`));
-      expect(response.status).toBe(200);
-      const body = await response.text();
-      expect(body).toContain(`<title>${title}</title>`);
-      expect(body).toContain(description);
-    }
-  });
-});
-
-describe('the team add reference, in pages', () => {
-  const byPath = new Map(pages().map(page => [page.path, page]));
-  const add = byPath.get('/docs/commands/add/')!;
-  const words = (html: string) => html.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
-  const refPaths = ['/docs/commands/add/who/', '/docs/commands/add/output/', '/docs/commands/add/refusals/', '/docs/commands/add/stopped-and-temporary/'];
-
-  test('one hub page and four reference pages, each linked from the hub and linking back', () => {
-    expect([...byPath.keys()].filter(path => path.startsWith('/docs/commands/add/'))).toEqual([
-      '/docs/commands/add/', ...refPaths,
-    ]);
-    for (const path of refPaths) {
-      expect(add.html).toContain(`href="${path}"`);
-      expect(byPath.get(path)!.html).toContain('href="/docs/commands/add/"');
-    }
-  });
-
-  test('the hub holds the purpose, the flags, the basic add and the short behaviour', () => {
-    expect(add.toc.map(item => item.title)).toEqual(['Flags', 'Examples', 'What it reads and writes', 'Who may run it', 'Exit codes', 'The reference pages']);
-    // The basic add: the team file and a missing seat started.
-    expect((add.html.match(/<pre class="(?:example__code|term)"/g) ?? []).length).toBe(2);
-    expect(add.html).toContain('claude-keeper: ready');
-    // The deep material is not on the hub: it is on the reference pages.
-    expect(add.html).not.toContain('A file with a');
-    expect(add.html).not.toContain('is already running');
-    expect(add.html).not.toContain('claude-beacon-tmp-1');
-    expect(add.html).not.toContain('this call is claude-beacon');
-    // The hub is a fraction of the whole set, not the whole on one page.
-    const set = [...byPath.values()].filter(page => page.path.startsWith('/docs/commands/add/')).map(page => words(page.html)).reduce((a, b) => a + b, 0);
-    expect(words(add.html) * 2).toBeLessThan(set);
-  });
-
-  test('the deep material is on the reference pages, in the reference\'s own words', () => {
-    expect(byPath.get('/docs/commands/add/who/')!.html).toContain('A file with a');
-    expect(byPath.get('/docs/commands/add/who/')!.html).toContain('this call is claude-beacon');
-    expect(byPath.get('/docs/commands/add/output/')!.html).toContain('left out: vendor notice');
-    expect(byPath.get('/docs/commands/add/refusals/')!.html).toContain('is already running');
-    expect(byPath.get('/docs/commands/add/refusals/')!.html).toContain('has no seat &quot;scratch&quot;');
-    expect(byPath.get('/docs/commands/add/stopped-and-temporary/')!.html).toContain('claude-beacon-tmp-1');
-    expect(byPath.get('/docs/commands/add/stopped-and-temporary/')!.html).toContain('stopped claude-beacon');
-    // The refusals page does not carry the temporary-seat example; that is the stopped-and-temporary page.
-    expect(byPath.get('/docs/commands/add/refusals/')!.html).not.toContain('claude-beacon-tmp-1');
-  });
-
-  test('the reference pages answer, each with its own title and description', async () => {
-    const expected: [string, string, string][] = [
-      ['/docs/commands/add/who/', 'team add: who may run it — team', 'Who may run team add'],
-      ['/docs/commands/add/output/', 'team add: what it prints — team', 'What team add prints'],
-      ['/docs/commands/add/refusals/', 'team add: refusals — team', 'Every message that refuses team add'],
-      ['/docs/commands/add/stopped-and-temporary/', 'team add: a stopped seat and a temporary seat — team', 'team add clearing a seat left stopped'],
-    ];
-    for (const [path, title, description] of expected) {
-      const response = await handleRequest(new Request(`https://teamcli.io${path}`));
-      expect(response.status).toBe(200);
-      const body = await response.text();
-      expect(body).toContain(`<title>${title}</title>`);
-      expect(body).toContain(description);
-    }
-  });
-});
-
-describe('the team remove reference, in pages', () => {
-  const byPath = new Map(pages().map(page => [page.path, page]));
-  const remove = byPath.get('/docs/commands/remove/')!;
-  const words = (html: string) => html.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
-  const refPaths = ['/docs/commands/remove/who/', '/docs/commands/remove/output/', '/docs/commands/remove/refusals/', '/docs/commands/remove/keep-and-temporary/'];
-
-  test('one hub page and four reference pages, each linked from the hub and linking back', () => {
-    expect([...byPath.keys()].filter(path => path.startsWith('/docs/commands/remove/'))).toEqual([
-      '/docs/commands/remove/', ...refPaths,
-    ]);
-    for (const path of refPaths) {
-      expect(remove.html).toContain(`href="${path}"`);
-      expect(byPath.get(path)!.html).toContain('href="/docs/commands/remove/"');
-    }
-  });
-
-  test('the hub holds the purpose, the flags, the basic removal and the short behaviour', () => {
-    expect(remove.toc.map(item => item.title)).toEqual(['Flags', 'Examples', 'What it reads and writes', 'Who may run it', 'Exit codes', 'The reference pages']);
-    // The basic removal: the team file and the plain remove (with its idempotent second run).
-    expect((remove.html.match(/<pre class="(?:example__code|term)"/g) ?? []).length).toBe(2);
-    expect(remove.html).toContain('removed claude-beacon');
-    // The deep material is not on the hub: it is on the reference pages.
-    expect(remove.html).not.toContain('A file with a');
-    expect(remove.html).not.toContain('is working; left as it is');
-    expect(remove.html).not.toContain('left running; nothing was typed');
-    expect(remove.html).not.toContain('there is nothing to keep');
-    // The hub is a fraction of the whole set, not the whole on one page.
-    const set = [...byPath.values()].filter(page => page.path.startsWith('/docs/commands/remove/')).map(page => words(page.html)).reduce((a, b) => a + b, 0);
-    expect(words(remove.html) * 2).toBeLessThan(set);
-  });
-
-  test('the deep material is on the reference pages, in the reference\'s own words', () => {
-    expect(byPath.get('/docs/commands/remove/who/')!.html).toContain('A file with a');
-    expect(byPath.get('/docs/commands/remove/who/')!.html).toContain('this call is claude-beacon');
-    expect(byPath.get('/docs/commands/remove/output/')!.html).toContain('it now reads as claude-reviewer-left');
-    expect(byPath.get('/docs/commands/remove/refusals/')!.html).toContain('is working; left as it is');
-    expect(byPath.get('/docs/commands/remove/refusals/')!.html).toContain('a seat name is required');
-    expect(byPath.get('/docs/commands/remove/keep-and-temporary/')!.html).toContain('removed temporary claude-beacon-tmp-1');
-    expect(byPath.get('/docs/commands/remove/keep-and-temporary/')!.html).toContain('stopped claude-beacon');
-    // The refusals page does not carry the non-owner leave; that is the what-it-prints page.
-    expect(byPath.get('/docs/commands/remove/refusals/')!.html).not.toContain('it now reads as claude-reviewer-left');
-  });
-
-  test('the reference pages answer, each with its own title and description', async () => {
-    const expected: [string, string, string][] = [
-      ['/docs/commands/remove/who/', 'team remove: who may run it — team', 'Who may run team remove'],
-      ['/docs/commands/remove/output/', 'team remove: what it prints — team', 'What team remove prints'],
-      ['/docs/commands/remove/refusals/', 'team remove: refusals — team', 'Every message that refuses team remove'],
-      ['/docs/commands/remove/keep-and-temporary/', 'team remove: a temporary seat and --keep — team', 'Removing a temporary seat by the name add gave it'],
-    ];
-    for (const [path, title, description] of expected) {
-      const response = await handleRequest(new Request(`https://teamcli.io${path}`));
-      expect(response.status).toBe(200);
-      const body = await response.text();
-      expect(body).toContain(`<title>${title}</title>`);
-      expect(body).toContain(description);
-    }
+  test('the claim about a lab\'s config carries what a launch still writes', () => {
+    expect(safety.html).toContain('lab&#39;s config');
+    expect(safety.html).toContain('project record');
   });
 });
 
@@ -786,7 +295,8 @@ describe('the reference the site is built against', () => {
   test('the content was fetched, and it says which ref it is', () => {
     expect(contentReady()).toBe(true);
     const ref = refInfo();
-    expect(ref.version).toMatch(/^\d+\.\d+\.\d+$/);
+    // A release candidate carries a prerelease suffix (e.g. 0.5.0-rc.5).
+    expect(ref.version).toMatch(/^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$/);
     expect(ref.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(ref.commit).toMatch(/^[0-9a-f]{40}$/);
     expect(info.version).toBe(ref.version);

@@ -45,11 +45,11 @@ function pager(path: string): string {
 function shell(body: { path: string; title: string; description: string; content: string; css: StylesheetBundle; section?: string; isHome?: boolean; jsonLd?: string[] }): string {
   const commands = commandNames();
   // A command page may hold reference pages under it (`/docs/commands/up/records/`):
-  // the header still names the command itself.
-  const command = /^\/docs\/commands\/([a-z]+)(?:\/[a-z-]+)?\/$/.exec(body.path)?.[1];
-  // The registry remains the source of every command; the first three are the path a
+  // the header still names the command itself. Command names may hyphenate (`ask-show`).
+  const command = /^\/docs\/commands\/([a-z]+(?:-[a-z]+)*)(?:\/[a-z-]+)?\/$/.exec(body.path)?.[1];
+  // The registry remains the source of every command; the first two are the path a
   // person takes from a new file to a running team.
-  const rollingCommands = ['init', 'approve', 'up'].filter(name => commands.includes(name)).concat(commands.filter(name => !['init', 'approve', 'up'].includes(name)));
+  const rollingCommands = ['init', 'up'].filter(name => commands.includes(name)).concat(commands.filter(name => !['init', 'up'].includes(name)));
   return eta.render('base', {
     path: body.path, title: body.title, description: body.description, css: body.css, section: body.section ?? 'Documentation',
     site: SITE, siteName: SITE_NAME,

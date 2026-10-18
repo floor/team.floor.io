@@ -74,11 +74,15 @@ export function bullet(markdown: string, startsWith: string): string {
  * next word starts lowercase.
  */
 export function sentence(markdown: string, startsWith: string): string {
-  const at = markdown.indexOf(startsWith);
+  // Match against whitespace-normalized text so an anchor that spans a soft-wrapped line
+  // break still resolves (v0.5.0 reflowed some reference prose mid-sentence). The returned
+  // sentence was already whitespace-collapsed, so this changes no currently-matching anchor.
+  const text = markdown.replace(/\s+/g, ' ');
+  const at = text.indexOf(startsWith);
   need(at < 0 ? undefined : at, `a sentence starting "${startsWith}"`);
-  const rest = markdown.slice(at);
+  const rest = text.slice(at);
   const end = /[.!?](?=\s+(?![a-z])|\s*$)/.exec(rest);
-  return (end ? rest.slice(0, end.index + 1) : rest).replace(/\s+/g, ' ').trim();
+  return (end ? rest.slice(0, end.index + 1) : rest).trim();
 }
 
 /**
@@ -86,14 +90,23 @@ export function sentence(markdown: string, startsWith: string): string {
  * that names more than one: "`up`: the owner; `down`: the owner, the coordinator or the
  * operator seat". That spelling is the row's shorthand for two rules, not one rule for
  * both — shown whole, the row for `team up` hands its reader who may run `team down`.
- * A cell that labels every command it names is split; any other cell is the row's, whole.
+ * A part with no label continues the rule named before it ("`up`: …; a verified grant
+ * admits …; `down`: …"), as a cell that labels every command it names is split; a part
+ * before any label leaves the cell the row's, whole.
  */
 function whoPerCommand(who: string, names: string[]): Map<string, string> | undefined {
   const parts = new Map<string, string>();
+  let current: string | undefined;
   for (const part of who.split(';').map(text => text.trim())) {
     const match = /^`([a-z]+)`:\s*(.+)$/.exec(part);
-    if (!match || !names.includes(match[1]!)) return undefined;
-    parts.set(match[1]!, match[2]!);
+    if (!match) {
+      if (!current || !part) return undefined;
+      parts.set(current, `${parts.get(current)}; ${part}`);
+      continue;
+    }
+    if (!names.includes(match[1]!)) return undefined;
+    current = match[1]!;
+    parts.set(current, match[2]!);
   }
   return names.every(name => parts.has(name)) ? parts : undefined;
 }
@@ -140,4 +153,10 @@ export function fenceWith(page: string, lang: string, contains: string): Fence {
  *  transcript the reference itself says ran against a stopped herdr. */
 export function fenceByInfo(page: string, info: string): Fence {
   return need(fences(page).find(fence => fence.info === info), `a fence headed "${info}"`);
+}
+
+/** The launch profiles the reference ships: every `src/profiles/*.yaml`, under its `cli` name. */
+export function profileNames(): string[] {
+  const files = readdirSync(resolve(contentDir, 'src/profiles')).filter(name => name.endsWith('.yaml')).map(name => name.slice(0, -'.yaml'.length)).sort();
+  return need(files.length ? files : undefined, 'its launch profiles');
 }
