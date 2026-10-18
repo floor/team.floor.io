@@ -18,7 +18,7 @@ import { Doc, inline } from './pages';
 /** What the catalog asked for and did not have. */
 export class CatalogError extends Error {}
 
-export interface Seat { cli: string; vendor: string; model?: string; version?: string; display?: string; launch: string }
+export interface Seat { cli: string; vendor: string; model?: string; version?: string; display?: string; modelFrom?: string; launch: string }
 export interface Route { transport: string; status: 'verified' | 'listed'; bill?: string; seat?: Seat; quirks?: string[] }
 export interface Model { slug: string; name: string; vendor: string; summary: string; routes: Route[]; quirks?: string[] }
 export interface Transport {
@@ -193,8 +193,8 @@ export function modelPage(slug: string): Rendered {
         ];
       }),
     ));
-    if (seated.some(route => !route.seat.display)) {
-      doc.note('A blank <code>display</code> is a seat whose model is chosen inside the connector; <code>team status</code> then reads the running model off the connector\'s own status row.');
+    if (seated.some(route => route.seat.modelFrom)) {
+      doc.note('A seat with <code>model_from: launcher</code> leaves the running model to what the launch runs — the provider\'s launcher, or Jules — so <code>team doctor</code> reads the model from the seat rather than from the file.');
     }
   }
 
