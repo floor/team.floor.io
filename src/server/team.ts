@@ -27,7 +27,8 @@ export function packageVersion(): string {
   } catch {
     throw new Error('content/team/package.json is missing: run `bun run content`');
   }
-  if (typeof parsed.version !== 'string' || !/^\d+\.\d+\.\d+$/.test(parsed.version)) {
+  // Accept a prerelease suffix (e.g. 0.5.0-rc.5) so the site can build against a release candidate.
+  if (typeof parsed.version !== 'string' || !/^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$/.test(parsed.version)) {
     throw new Error('content/team/package.json has no version');
   }
   return parsed.version;

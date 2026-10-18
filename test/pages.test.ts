@@ -295,7 +295,8 @@ describe('the reference the site is built against', () => {
   test('the content was fetched, and it says which ref it is', () => {
     expect(contentReady()).toBe(true);
     const ref = refInfo();
-    expect(ref.version).toMatch(/^\d+\.\d+\.\d+$/);
+    // A release candidate carries a prerelease suffix (e.g. 0.5.0-rc.5).
+    expect(ref.version).toMatch(/^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$/);
     expect(ref.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(ref.commit).toMatch(/^[0-9a-f]{40}$/);
     expect(info.version).toBe(ref.version);

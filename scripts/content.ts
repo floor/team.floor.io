@@ -43,7 +43,8 @@ if (packageJson.exitCode !== 0) {
   process.exit(1);
 }
 const version = (JSON.parse(packageJson.stdout.toString()) as { version: string }).version;
-if (!/^\d+\.\d+\.\d+$/.test(version)) {
+// A pinned TEAM_REF may be a release candidate (e.g. 0.5.0-rc.5), so accept a prerelease suffix here.
+if (!/^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$/.test(version)) {
   console.error(`package.json at ${TEAM_REF} has no version.`);
   process.exit(1);
 }
