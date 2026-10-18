@@ -127,11 +127,12 @@ describe('/docs/clis/, the notes the profiles carry', () => {
     expect(page).toContain('Cursor reads the running model off its own status row');
   });
 
-  test('the antigravity note gives the model flag its profile sets Claude and GPT models with', () => {
-    expect(page).toContain('also serves Claude and GPT models');
-    expect(page).toContain('spent from the same Google plan’s pool');
-    expect(page).toContain('<code>--model</code>');
+  test('the antigravity note shows only the model flag its profile carries', () => {
+    expect(page).toContain('The Antigravity profile sets its model with <code>--model</code>');
     expect(read('src/profiles/antigravity.yaml')).toMatch(/^models:\n[\s\S]*?option:\n[ \t]+- --model$/m);
+    // The reference carries no prose about which models it serves, so the page claims none.
+    expect(page).not.toContain('also serves Claude and GPT models');
+    expect(page).not.toContain('Google plan');
   });
 
   test('the Claude Code note names the four families the profile reads off its own screen', () => {
@@ -139,14 +140,31 @@ describe('/docs/clis/, the notes the profiles carry', () => {
     expect(read('src/profiles/claude-code.yaml')).toContain('yields: [Claude Opus, Claude Sonnet, Claude Haiku, Claude Fable]');
   });
 
-  test('the site’s own notes: the Gemini account rule, the experimental Muse, the one that is not a seat', () => {
-    // No profile carries these — the Gemini account rule, the Muse warning and the CLI that
-    // ships no profile — so they are the page's own words, pinned here so a cut cannot quietly
-    // drop the limit a reader needs before spending a seat on one.
-    expect(page).toContain('a Google Workspace account or an API-key account');
-    expect(page).toContain('a personal Google account cannot use it');
-    expect(page).toContain('run <code>antigravity</code> there instead');
-    expect(page).toContain('<strong>Experimental:</strong> Meta Muse Code seats cannot be fully adopted yet');
+  test('the Gemini and Muse notes state only facts their profiles carry', () => {
+    const muse = read('src/profiles/muse.yaml');
+    // Muse: the Meta account and the /status reading are its profile's own; the "experimental"
+    // and "fully adopted" wording is in no reference file, so the page does not carry it.
+    expect(muse).toContain('account: meta');
+    expect(muse).toContain('/status');
+    expect(page).toContain('its Meta account shows only inside the CLI’s own <code>/status</code>');
+    expect(page).not.toMatch(/experimental/i);
+    expect(page).not.toContain('fully adopted');
+    // Gemini: no profile carries an account rule, so the page claims none.
+    expect(page).not.toContain('Google Workspace');
+    expect(page).not.toContain('a personal Google account');
+    // The no-check note is tied to the absent check: field (both profiles carry login.hint only).
+    for (const cli of ['gemini', 'muse']) {
+      expect(block(cli, 'login', 0)).not.toMatch(/^\s*check:/m);
+      expect(page).toContain(`<code>team doctor --login</code> notes <code>${cli}: the login is not checked in this version</code>`);
+    }
+  });
+
+  test('a bridging note reconciles the five available profiles with the eight in the table', () => {
+    // The file's-format bullet names five available; the table shows eight. The note names the
+    // three the table adds as the "others" doctor reports, tied to the bullet so it cannot drift.
+    const bullet = read('README.md');
+    for (const cli of ['claude-code', 'codex', 'cursor', 'antigravity', 'grok']) expect(bullet).toContain(`\`${cli}\``);
+    expect(page).toContain('<code>gemini</code>, <code>muse</code> and <code>jules</code> — are the others <code>team doctor</code> reports on');
     expect(page).toContain('The native Kimi CLI is not a seat kind in this build');
   });
 

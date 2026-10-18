@@ -538,13 +538,20 @@ export function clis(): Rendered {
   const grok = read('src/profiles/grok.yaml');
   if (!profileBlock(grok, 'grok', 'status_model', 0).includes('Grok')) throw new ReferenceError('src/profiles/grok.yaml no longer reads its model off the composer footer');
   if (!/^unread_model:[ \t]*launch[ \t]*$/m.test(grok)) throw new ReferenceError('src/profiles/grok.yaml no longer falls back to the launch line\'s model when none is read');
-  // Gemini and Muse take their rules as a first message: a profile that gains a rules flag must
-  // not keep the sentence. And their notes quote what the doctor prints for a profile with no check.
+  // Gemini and Muse take their rules as a first message and carry no non-interactive login
+  // check: a profile that gains a rules flag or a check: field must not keep the sentences the
+  // notes build on, so each is tied to the field it reads.
   for (const cli of ['gemini', 'muse']) {
     if (factOf(cli).rules) throw new ReferenceError(`src/profiles/${cli}.yaml now carries a rules option: the page says its rules ride the first message`);
+    if (factOf(cli).check !== null) throw new ReferenceError(`src/profiles/${cli}.yaml now carries a login check: the page says it has none`);
   }
   const noCheck = 'the login is not checked in this version';
   if (!read('src/commands/doctor.ts').includes(noCheck)) throw new ReferenceError(`the doctor no longer prints "${noCheck}": the Gemini and Muse notes quote it`);
+  // The two reference-sourced facts the Muse note carries beyond its profile fields: the account
+  // it names (`account: meta`) and that the account shows only in the CLI's own /status.
+  const muse = read('src/profiles/muse.yaml');
+  if (!muse.includes('account: meta')) throw new ReferenceError('src/profiles/muse.yaml no longer carries `account: meta`: the Muse note names a Meta account');
+  if (!muse.includes('/status')) throw new ReferenceError('src/profiles/muse.yaml no longer records that the account shows in /status: the Muse note says so');
   const claudeYields = /yields: \[([^\]]*)\]/.exec(profileBlock(read('src/profiles/claude-code.yaml'), 'claude-code', 'status_model', 0))?.[1]?.split(',').map(name => name.trim()) ?? [];
   const families = ['Opus', 'Sonnet', 'Haiku', 'Fable'];
   if (claudeYields.length !== families.length || !families.every(family => claudeYields.includes(`Claude ${family}`))) {
@@ -585,14 +592,28 @@ export function clis(): Rendered {
     `none — the hint is <code>${escapeHtml(julesHint)}</code>`,
   ]);
 
+  // The file's-format bullet names the profiles available today and says `team doctor` reports
+  // what the others still need; the table shows all eight. A bridging note reconciles the two —
+  // the three the table adds are those others. The split is guarded against the bullet and the
+  // shipped set, so it cannot silently go stale.
+  const formatBullet = bullet(section(README, "The file's format"), '`seats[*].cli`');
+  const availableClis = ['claude-code', 'codex', 'cursor', 'antigravity', 'grok'];
+  const otherClis = ['gemini', 'muse', 'jules'];
+  for (const cli of availableClis) if (!formatBullet.includes(`\`${cli}\``)) throw new ReferenceError(`the file's-format bullet no longer lists "${cli}" among the available profiles`);
+  for (const cli of otherClis) if (formatBullet.includes(`\`${cli}\``)) throw new ReferenceError(`the file's-format bullet now lists "${cli}": the bridging note calls it one of the others team doctor reports`);
+  if (JSON.stringify([...availableClis, ...otherClis].sort()) !== JSON.stringify(profileNames())) throw new ReferenceError('the available/others split no longer covers exactly the shipped launch profiles');
+
   return new Doc()
     .h1('Supported CLIs')
-    .md(bullet(section(README, "The file's format"), '`seats[*].cli`'))
+    .md(formatBullet)
     .table(
       'Every launch profile the build ships: the command, the flags the profile adds, the words it reads on the pane, and the sign-in check',
       ['CLI', 'Binary', 'Unattended', 'Reads the screen', 'Sign-in check'],
       rows,
     )
+    // The table shows all eight; the format bullet names five as available. The three it adds —
+    // gemini, muse, jules — are the "others" the bullet points team doctor at.
+    .note(`The format bullet above names the profiles available today; the three the table adds beyond them — <code>gemini</code>, <code>muse</code> and <code>jules</code> — are the others <code>team doctor</code> reports on.`)
     // How the pane is read at all, in the watch page's own words; the per-CLI words above are
     // the profile's, and the two sentences hold for every profile the table lists.
     .md(sentence(watch, "A pane's screen is read by the profile's own expressions"))
@@ -603,9 +624,9 @@ export function clis(): Rendered {
     .md(paragraph(README, 'The Codex profile is tested with CLI 0.157.0'))
     .heading('Antigravity')
     .md(paragraph(README, 'The Antigravity profile is tested with CLI 1.2.16'))
-    // The pool line is the owner's, from the docs task: the antigravity CLI's own model flag
-    // carries Claude and GPT models too, and they spend the Google plan's pool.
-    .note(`The antigravity CLI also serves Claude and GPT models, through its own <code>${escapeHtml(modelFlag('antigravity'))}</code>: they are spent from the same Google plan’s pool as the Gemini models.`)
+    // The model flag is read from antigravity.yaml by name; the reference carries no prose about
+    // which models it serves, so the page claims none.
+    .note(`The Antigravity profile sets its model with <code>${escapeHtml(modelFlag('antigravity'))}</code>.`)
     .heading('Cursor')
     .md(paragraph(README, 'Launching a Cursor seat'))
     .heading('Grok')
@@ -613,13 +634,14 @@ export function clis(): Rendered {
     // the Cursor alternative from cursor.yaml, so the page cannot claim a model it does not read.
     .note(`The Grok profile is tested with CLI ${escapeHtml(factOf('grok').tested)}, runs unattended with ${flagsCode('grok')}, rides its rules on the launch line as <code>${escapeHtml(ruleFlag('grok'))}</code>, and sets its model with <code>${escapeHtml(modelFlag('grok'))}</code>. It reads the running model off the composer’s footer line — the model’s name, <code>Grok Fast</code> for the fast one, and the version the footer carries — and a screen that names no model, as behind a question widget, falls back to the launch line’s own model, labelled. Grok’s models also run as Cursor seats: Cursor’s own model list carries the Grok model — <code>${escapeHtml(grokInCursor[2]!)}</code> is <code>Grok ${escapeHtml(grokInCursor[1]!)}</code> — and Cursor reads the running model off its own status row.`)
     .heading('Gemini')
-    // The account rule and the hint-only login are the owner's, from the docs task; the profile
-    // carries no line for the accounts, and its login has a hint and no check.
-    .note(`The Gemini profile is tested with CLI ${escapeHtml(factOf('gemini').tested)}, runs unattended with ${flagsCode('gemini')}, and takes its rules as the seat’s first message. A Gemini CLI needs a Google Workspace account or an API-key account: a personal Google account cannot use it — run <code>antigravity</code> there instead. It has no non-interactive login check, so <code>team doctor --login</code> notes <code>gemini: the login is not checked in this version</code>, and the profile’s sign-in hint is <code>${escapeHtml(factOf('gemini').hint)}</code>.`)
+    // Every fact here is the profile's own: its tested range, its unattended flag, its
+    // first-message rules, and a login with a hint and no check.
+    .note(`The Gemini profile is tested with CLI ${escapeHtml(factOf('gemini').tested)}, runs unattended with ${flagsCode('gemini')}, and takes its rules as the seat’s first message. It has no non-interactive login check, so <code>team doctor --login</code> notes <code>gemini: the login is not checked in this version</code>, and the profile’s sign-in hint is <code>${escapeHtml(factOf('gemini').hint)}</code>.`)
     .heading('Muse')
-    // Experimental, by the owner's docs task: a Muse seat cannot be fully adopted yet. The
-    // profile's own account: Meta, and its login is the same hint-only shape as Gemini's.
-    .note(`<strong>Experimental:</strong> Meta Muse Code seats cannot be fully adopted yet. The profile is tested with CLI ${escapeHtml(factOf('muse').tested)}, runs unattended with ${flagsCode('muse')}, and takes its rules as the seat’s first message. Like Gemini it has no non-interactive login check — <code>team doctor --login</code> notes <code>muse: the login is not checked in this version</code> — and its account shows inside the CLI’s own <code>/status</code>; the sign-in hint is <code>${escapeHtml(factOf('muse').hint)}</code>.`)
+    // Every fact here is the profile's own: its tested range, its unattended flag, its
+    // first-message rules, a login with a hint and no check, and the Meta account the profile
+    // names, which shows only in the CLI's own /status.
+    .note(`The Muse profile is tested with CLI ${escapeHtml(factOf('muse').tested)}, runs unattended with ${flagsCode('muse')}, and takes its rules as the seat’s first message. It has no non-interactive login check — <code>team doctor --login</code> notes <code>muse: the login is not checked in this version</code> — its Meta account shows only inside the CLI’s own <code>/status</code>, and the sign-in hint is <code>${escapeHtml(factOf('muse').hint)}</code>.`)
     .heading('Jules')
     // Jules is a seat kind at this build. Its facts are read from jules.yaml by name (above);
     // the TUI has no auto-approve flag and herdr cannot read its pane, so its line reads apart.
