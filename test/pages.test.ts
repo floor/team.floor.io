@@ -6,7 +6,8 @@ import { decodeEntities, fences } from '../src/server/markdown';
 import { commandNames, commandPage, commandTable } from '../src/server/reference';
 import { handleRequest } from '../server';
 import { contentReady, read, refInfo } from '../src/server/team';
-import { descriptionFor, headline, headlineAccent, headlineLead, homePoints, homeSamples, homeTitle, info, INSTALL_PACKAGE, installCommands, installLine, installMarkup, nav, pages, readingOrder, versionLine } from '../src/server/pages';
+import { descriptionFor, headline, headlineAccent, headlineLead, homePoints, homeSamples, homeTitle, info, INSTALL_PACKAGE, installCommands, installLine, installMarkup, nav, pages, readingOrder, SECTIONS, versionLine } from '../src/server/pages';
+import { MODELS } from '../src/server/models';
 
 /** The text a page shows of a block: the tags out, the entities decoded, as docs:check reads it. */
 function blockText(html: string): string {
@@ -28,27 +29,29 @@ describe('the page list', () => {
   test('every page is a place of its own, with a title, a description and content', () => {
     expect(new Set(list.map(page => page.path)).size).toBe(list.length);
     for (const page of list) {
-      expect(page.path.startsWith('/docs/')).toBe(true);
+      expect(/^\/(?:docs|models|guide)\//.test(page.path), page.path).toBe(true);
       expect(page.path.endsWith('/')).toBe(true);
       expect(page.title.length).toBeGreaterThan(0);
       expect(page.description.length).toBeGreaterThan(0);
       expect(page.html.length).toBeGreaterThan(0);
-      expect(page.section).toBe('Documentation');
+      expect(SECTIONS as readonly string[], page.path).toContain(page.section);
     }
   });
 
-  test('one page per command, and the docs\' own pages beside them', () => {
+  test('one page per command, the docs\' own pages, and the Models and Guide sections beside them', () => {
     for (const name of commandNames()) expect(byPath.has(`/docs/commands/${name}/`), name).toBe(true);
-    for (const path of ['/docs/', '/docs/file/', '/docs/file/tasks/', '/docs/file/seats/', '/docs/file/delivery-order/', '/docs/file/grant/', '/docs/file/delegates/', '/docs/file/tempo/', '/docs/concepts/registry/', '/docs/commands/', '/docs/safety/', '/docs/clis/']) {
+    for (const path of ['/docs/', '/docs/file/', '/docs/file/tasks/', '/docs/file/seats/', '/docs/file/delivery-order/', '/docs/file/grant/', '/docs/file/delegates/', '/docs/file/tempo/', '/docs/concepts/registry/', '/docs/commands/', '/docs/safety/', '/docs/clis/', '/models/', '/guide/']) {
       expect(byPath.has(path), path).toBe(true);
     }
-    expect(list.length).toBe(commandNames().length + 12);
+    for (const model of MODELS) expect(byPath.has(`/models/${model.slug}/`), model.slug).toBe(true);
+    // 12 documentation pages + the Models landing and its one page per model + the Guide index.
+    expect(list.length).toBe(commandNames().length + 12 + (1 + MODELS.length) + 1);
   });
 
-  test('every page is reached — the navigation, or a link from a page — and the reading order is the navigation\'s own', () => {
-    const inNav = new Set(nav.flatMap(group => group.items.map(item => item.href)));
+  test('every page is reached — its section navigation, or a link from a page — and the reading order is the documentation navigation\'s own', () => {
     for (const page of list) {
-      const reached = inNav.has(page.path) || list.some(other => other !== page && other.html.includes(`href="${page.path}"`));
+      const inSectionNav = page.nav.some(group => group.items.some(item => item.href === page.path));
+      const reached = inSectionNav || list.some(other => other !== page && other.html.includes(`href="${page.path}"`));
       expect(reached, page.path).toBe(true);
     }
     expect(readingOrder).toEqual(nav.flatMap(group => group.items));

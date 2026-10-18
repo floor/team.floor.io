@@ -2,7 +2,7 @@
 // (sitemap.xml), robots.txt, and each page's JSON-LD. The pages come from the one page
 // list the routes serve (src/server/pages.ts), so a new page is listed at once.
 import { execFileSync } from 'node:child_process';
-import { info, pages } from './pages';
+import { info, pages, SECTION_HOME, sectionOf } from './pages';
 
 export const SITE = 'https://teamcli.io';
 /** The name a visitor and a link preview read: the host of SITE. */
@@ -81,8 +81,11 @@ export function structuredData(path: string, name: string, description: string):
       site,
     ];
   }
-  if (!path.startsWith('/docs/')) return [site];
-  const trail = [{ name: 'Home', path: '/' }, { name: 'Documentation', path: '/docs/' }, ...path === '/docs/' ? [] : [{ name, path }]];
+  // Every section's pages are a trail home, through the section's landing, to themselves.
+  if (!/^\/(?:docs|models|guide)\//.test(path)) return [site];
+  const section = sectionOf(path);
+  const home = SECTION_HOME[section];
+  const trail = [{ name: 'Home', path: '/' }, { name: section, path: home }, ...path === home ? [] : [{ name, path }]];
   return [{
     '@context': 'https://schema.org', '@type': 'BreadcrumbList',
     itemListElement: trail.map((item, index) => ({ '@type': 'ListItem', position: index + 1, name: item.name, item: SITE + item.path })),

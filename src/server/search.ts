@@ -26,7 +26,7 @@ export function searchDocuments(): SearchDocument[] {
     headings: page.toc.map(item => item.title).join(' · '),
     text: plainText(page.html),
     description: page.description,
-    kind: page.path === '/docs/commands/' || page.path.startsWith('/docs/commands/') ? 'Commands' : 'Documentation',
+    kind: page.path.startsWith('/docs/commands/') ? 'Commands' : page.section,
   }));
   return [home, ...docs, privacy];
 }
