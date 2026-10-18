@@ -804,7 +804,7 @@ const familyDescriptions = lazy((): Record<string, string> => Object.fromEntries
 
 const SITE_PAGES: Record<string, string> = {
   '/privacy/': 'How teamcli.io reaches you, and what stays in your browser.',
-  '/models/': 'Set up your agents — install each CLI or app, get the subscription or API key, and log in — then the model families of every lab against each way in, each row linking to its family page.',
+  '/models/': 'Set up your agents: install the CLI or app, get the key, log in — then every lab\'s model families against each way in, each row linking to its family page.',
   '/guide/': 'Task guides for running a team with TeamCLI — your first team, and running a release — with an index now and the first guides coming soon.',
   '/docs/': 'Your first team in five minutes: install team, write .agents/team.yaml, and start the session from the owner’s terminal.',
   '/docs/file/': 'The team file, section by section: tasks, seats, delivery order, grant, delegates and tempo — then the format by example and its other fields.',
