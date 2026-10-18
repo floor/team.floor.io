@@ -134,6 +134,16 @@ describe('localHref', () => {
     expect(localHref('#safety')).toBe('#safety');
   });
 
+  test('a team-file section the site splits into its own page', () => {
+    expect(localHref('../team-file.md#delivery_order')).toBe('/docs/file/delivery-order/');
+    expect(localHref('../team-file.md#seats')).toBe('/docs/file/seats/');
+  });
+
+  test('a reference contract the site does not serve goes to the repository', () => {
+    expect(localHref('../reference/exit-codes.md')).toBe('https://github.com/floor/teamcli/blob/main/docs/reference/exit-codes.md');
+    expect(localHref('../reference/output.md')).toBe('https://github.com/floor/teamcli/blob/main/docs/reference/output.md');
+  });
+
   test('a link that runs code is not a link', () => {
     expect(localHref('javascript:alert(1)')).toBe('');
     expect(localHref('DATA:text/html,<script>')).toBe('');

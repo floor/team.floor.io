@@ -206,11 +206,17 @@ export function localHref(href: string): string {
   // are pages of their own, and the delivery order's is the one linked by name.
   if (href === '../README.md#the-files-format') return '/docs/file/#the-format-by-example';
   if (href === '../team-file.md#delivery_order' || href === '#delivery_order') return '/docs/file/delivery-order/';
+  // The team file's seats section is a page of its own, like the delivery order's.
+  if (href === '../team-file.md#seats') return '/docs/file/seats/';
   if (href === '../README.md') return '/docs/';
   // A file the site does not serve: the reference's own page in the repository.
   if (href === '../src/profiles/efforts.json') return 'https://github.com/floor/teamcli/blob/main/src/profiles/efforts.json';
   const design = /^\.\.\/design\/([a-z-]+)\.md$/.exec(href);
   if (design) return `https://github.com/floor/teamcli/blob/main/docs/design/${design[1]}.md`;
+  // The reference contracts (exit codes, output, cli, herdr) are repo-only docs the site does
+  // not serve, like the design notes.
+  const reference = /^\.\.\/reference\/([a-z-]+)\.md$/.exec(href);
+  if (reference) return `https://github.com/floor/teamcli/blob/main/docs/reference/${reference[1]}.md`;
   if (href === 'CHANGELOG.md') return 'https://github.com/floor/teamcli/blob/main/CHANGELOG.md';
   return href;
 }
