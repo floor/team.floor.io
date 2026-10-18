@@ -787,14 +787,21 @@ const DESCRIPTIONS: Record<string, string> = {
   unlock: 'Releases a lock team lock took, and only that caller’s: the holder file has to name the same project and by line; anyone else is refused.',
   usage: 'What this machine holds: every team with an approval store here, its accounts and windows, what is left and used, and when each figure was read.',
 };
+/** Build once, on first use: this module and the models module read each other — the models
+ *  module renders its pages through Doc from here, and this one reads the catalog from there —
+ *  so a map built at module level races whichever of the two loads first. */
+const lazy = <T>(build: () => T): (() => T) => {
+  let value: T | undefined;
+  return () => (value ??= build());
+};
 /** A lab page's description: the site's own one line, built from the lab's name. */
-const LAB_DESCRIPTIONS: Record<string, string> = Object.fromEntries(
+const labDescriptions = lazy((): Record<string, string> => Object.fromEntries(
   LABS.map(lab => [lab.slug, `${lab.name} with TeamCLI: its families, the ways in, how to subscribe or get an API key, and its known quirks.`]),
-);
+));
 /** A family page's description: the family's own tagline, which already names its lab. */
-const FAMILY_DESCRIPTIONS: Record<string, string> = Object.fromEntries(
+const familyDescriptions = lazy((): Record<string, string> => Object.fromEntries(
   LABS.flatMap(lab => familiesOf(lab.vendor).map(family => [`${lab.slug}/${family.slug}`, family.tagline])),
-);
+));
 
 const SITE_PAGES: Record<string, string> = {
   '/privacy/': 'How teamcli.io reaches you, and what stays in your browser.',
@@ -822,7 +829,7 @@ export function descriptionFor(path: string): string {
     : path.startsWith('/docs/commands/') && path !== '/docs/commands/'
     ? DESCRIPTIONS[path.slice('/docs/commands/'.length, -1)]
     : path.startsWith('/models/') && path !== '/models/' && path !== '/models/set-up/'
-    ? FAMILY_DESCRIPTIONS[path.slice('/models/'.length, -1)] ?? LAB_DESCRIPTIONS[path.slice('/models/'.length, -1)]
+    ? familyDescriptions()[path.slice('/models/'.length, -1)] ?? labDescriptions()[path.slice('/models/'.length, -1)]
     : SITE_PAGES[path];
   if (!description) throw new ReferenceError(`no description for ${path}`);
   return description;
