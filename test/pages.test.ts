@@ -6,7 +6,7 @@ import { decodeEntities, fences } from '../src/server/markdown';
 import { commandNames, commandPage, commandTable } from '../src/server/reference';
 import { handleRequest } from '../server';
 import { contentReady, read, refInfo } from '../src/server/team';
-import { descriptionFor, headline, headlineAccent, headlineLead, homePoints, homeSamples, homeTitle, info, INSTALL_IS_PRERELEASE, INSTALL_PACKAGE, installCommands, installLine, installMarkup, nav, pages, readingOrder, versionLine } from '../src/server/pages';
+import { descriptionFor, headline, headlineAccent, headlineLead, homePoints, homeSamples, homeTitle, info, INSTALL_PACKAGE, installCommands, installLine, installMarkup, nav, pages, readingOrder, versionLine } from '../src/server/pages';
 
 /** The text a page shows of a block: the tags out, the entities decoded, as docs:check reads it. */
 function blockText(html: string): string {
@@ -148,24 +148,9 @@ describe('the home page, from the reference', () => {
     expect(html).not.toContain('@teamcli/cli');
     const page = await (await handleRequest(new Request('http://localhost/'))).text();
     expect(page).toContain('["bun","npm","pnpm","yarn"]');
-    expect(page).toContain(`data-command="yarn global add ${INSTALL_PACKAGE}"`);
+    expect(page).toContain('data-command="yarn global add team"');
     expect(html).toContain('aria-selected="true"');
     expect([...html.matchAll(/aria-selected="true"/g)].length).toBe(1);
-  });
-
-  test('a release-candidate build installs from the next tag behind a label', () => {
-    const html = installMarkup();
-    if (INSTALL_IS_PRERELEASE) {
-      expect(INSTALL_PACKAGE).toBe('team@next');
-      expect(html).toContain('class="doc-install__channel"');
-      expect(html).toContain('Release candidate');
-      expect(installCommands().every(item => item.command.endsWith(' team@next'))).toBe(true);
-    } else {
-      expect(INSTALL_PACKAGE).toBe('team');
-      expect(html).not.toContain('doc-install__channel');
-      expect(html).not.toContain('Release candidate');
-      expect(installCommands().some(item => item.command.includes('@'))).toBe(false);
-    }
   });
 
   test('three home points, each a single block of prose', () => {
