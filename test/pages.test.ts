@@ -7,7 +7,7 @@ import { commandNames, commandPage, commandTable } from '../src/server/reference
 import { handleRequest } from '../server';
 import { contentReady, read, refInfo } from '../src/server/team';
 import { descriptionFor, headline, headlineAccent, headlineLead, homePoints, homeSamples, homeTitle, info, INSTALL_PACKAGE, installCommands, installLine, installMarkup, nav, pages, readingOrder, SECTIONS, versionLine } from '../src/server/pages';
-import { MODELS } from '../src/server/models';
+import { LABS, MODELS } from '../src/server/models';
 
 /** The text a page shows of a block: the tags out, the entities decoded, as docs:check reads it. */
 function blockText(html: string): string {
@@ -40,17 +40,18 @@ describe('the page list', () => {
 
   test('one page per command, the docs\' own pages, and the Models and Guide sections beside them', () => {
     for (const name of commandNames()) expect(byPath.has(`/docs/commands/${name}/`), name).toBe(true);
-    for (const path of ['/docs/', '/docs/file/', '/docs/file/tasks/', '/docs/file/seats/', '/docs/file/delivery-order/', '/docs/file/grant/', '/docs/file/delegates/', '/docs/file/tempo/', '/docs/concepts/registry/', '/docs/commands/', '/docs/safety/', '/docs/clis/', '/models/', '/guide/']) {
+    for (const path of ['/docs/', '/docs/file/', '/docs/file/tasks/', '/docs/file/seats/', '/docs/file/delivery-order/', '/docs/file/grant/', '/docs/file/delegates/', '/docs/file/tempo/', '/docs/concepts/registry/', '/docs/commands/', '/docs/safety/', '/docs/clis/', '/models/', '/models/set-up/', '/guide/']) {
       expect(byPath.has(path), path).toBe(true);
     }
+    for (const lab of LABS) expect(byPath.has(`/models/${lab.slug}/`), lab.slug).toBe(true);
     for (const model of MODELS) expect(byPath.has(`/models/${model.slug}/`), model.slug).toBe(true);
-    // 12 documentation pages + the Models landing and its one page per model + the Guide index.
-    expect(list.length).toBe(commandNames().length + 12 + (1 + MODELS.length) + 1);
+    // 12 documentation pages + the Guide index + the Models overview and set-up + one page per lab and per model.
+    expect(list.length).toBe(commandNames().length + 12 + 1 + 2 + LABS.length + MODELS.length);
   });
 
   test('every page is reached — its section navigation, or a link from a page — and the reading order is the documentation navigation\'s own', () => {
     for (const page of list) {
-      const inSectionNav = page.nav.some(group => group.items.some(item => item.href === page.path));
+      const inSectionNav = page.nav.some(group => group.href === page.path || group.items.some(item => item.href === page.path));
       const reached = inSectionNav || list.some(other => other !== page && other.html.includes(`href="${page.path}"`));
       expect(reached, page.path).toBe(true);
     }

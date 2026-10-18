@@ -8,7 +8,7 @@
 import { bullet, commandNames, commandPage, commandTable, fenceWith, paragraph, profileNames, section, sentence, README, ReferenceError } from './reference';
 import { escapeHtml, fenceHtml, renderMarkdown, slug, type Fence, type Rendered } from './markdown';
 import { contentReady, packageVersion, read, refInfo } from './team';
-import { guideIndex, modelHref, modelPage, modelsLanding, MODELS } from './models';
+import { guideIndex, LABS, labHref, labPage, modelHref, modelPage, modelsOverview, MODELS, setUp } from './models';
 
 if (!contentReady()) throw new Error('content/team is missing: run `bun run content` (scripts/content.ts) first.');
 
@@ -647,7 +647,7 @@ export function clis(): Rendered {
 
 // ---------------------------------------------------------------- the site's own list
 
-export interface NavGroup { label: string; items: { name: string; href: string }[] }
+export interface NavGroup { label: string; href?: string; items: { name: string; href: string }[] }
 export interface PageMeta extends Rendered {
   path: string; title: string; description: string; priority: string; section: string; nav: NavGroup[]; files: string[];
 }
@@ -668,10 +668,14 @@ export function sectionOf(path: string): Section {
 /** The sidebar groups for one section. Each section has its own; the top navigation chooses which shows. */
 export function navFor(section: Section): NavGroup[] {
   if (section === 'Models') {
-    return [{
-      label: 'Models',
-      items: [{ name: 'Set up your agents', href: '/models/' }, ...MODELS.map(model => ({ name: model.name, href: modelHref(model.slug) }))],
-    }];
+    return [
+      { label: 'Models', items: [{ name: 'Overview', href: '/models/' }, { name: 'Set up your agents', href: '/models/set-up/' }] },
+      ...LABS.map(lab => ({
+        label: lab.name,
+        href: labHref(lab.slug),
+        items: MODELS.filter(model => model.vendor === lab.vendor).map(model => ({ name: model.name, href: modelHref(model.slug) })),
+      })),
+    ];
   }
   if (section === 'Guide') {
     return [{ label: 'Guide', items: [{ name: 'Overview', href: '/guide/' }] }];
@@ -705,10 +709,13 @@ export function pages(): PageMeta[] {
     const section = sectionOf(path);
     return { path, title, description: descriptionFor(path), priority, section, nav: navFor(section), files, ...content };
   };
-  // Models: "Set up your agents", then one page per model. Both read from the one data file.
+  // Models: the overview matrix, "Set up your agents", one page per lab, one page per model.
+  // All read from the one data file.
   const modelFiles = ['src/server/models.ts', 'src/data/models.json'];
   const models = [
-    page('/models/', 'Set up your agents — team', '0.9', modelsLanding(), modelFiles),
+    page('/models/', 'Models — team', '0.9', modelsOverview(), modelFiles),
+    page('/models/set-up/', 'Set up your agents — team', '0.9', setUp(), modelFiles),
+    ...LABS.map(lab => page(labHref(lab.slug), `${lab.name} — team`, '0.7', labPage(lab.slug), modelFiles)),
     ...MODELS.map(model => page(modelHref(model.slug), `${model.name} — team`, '0.7', modelPage(model.slug), modelFiles)),
   ];
   const group = [
@@ -780,10 +787,15 @@ const DESCRIPTIONS: Record<string, string> = {
 const MODEL_DESCRIPTIONS: Record<string, string> = Object.fromEntries(
   MODELS.map(model => [model.slug, `${model.name}: how to reach it with TeamCLI — each route, the subscription it spends, and the seat line, marked verified or listed.`]),
 );
+/** A lab page's description: the site's own one line, built from the lab's name. */
+const LAB_DESCRIPTIONS: Record<string, string> = Object.fromEntries(
+  LABS.map(lab => [lab.slug, `${lab.name} with TeamCLI: its models, the ways in, how to subscribe or get an API key, and its known quirks.`]),
+);
 
 const SITE_PAGES: Record<string, string> = {
   '/privacy/': 'How teamcli.io reaches you, and what stays in your browser.',
-  '/models/': 'Set up your agents: install each CLI or app, get the subscription or API key, log in, and name the model in your team file — then a page per model.',
+  '/models/': 'The models the team runs and the ways in: a matrix of lab and model against each route — own CLI, Antigravity, Cursor, endpoint, API — verified or listed.',
+  '/models/set-up/': 'Set up your agents: install each CLI or app, get the subscription or API key, and log in — set a route up once and it serves every model on it.',
   '/guide/': 'Task guides for running a team with TeamCLI — your first team, and running a release — with an index now and the first guides coming soon.',
   '/docs/': 'Your first team in five minutes: install team, write .agents/team.yaml, and start the session from the owner’s terminal.',
   '/docs/file/': 'The team file, section by section: tasks, seats, delivery order, grant, delegates and tempo — then the format by example and its other fields.',
@@ -805,8 +817,8 @@ export function descriptionFor(path: string): string {
     ? 'Set up and run a team of specialized AI agents in herdr: you set the roster, agents do the work, and you decide.'
     : path.startsWith('/docs/commands/') && path !== '/docs/commands/'
     ? DESCRIPTIONS[path.slice('/docs/commands/'.length, -1)]
-    : path.startsWith('/models/') && path !== '/models/'
-    ? MODEL_DESCRIPTIONS[path.slice('/models/'.length, -1)]
+    : path.startsWith('/models/') && path !== '/models/' && path !== '/models/set-up/'
+    ? MODEL_DESCRIPTIONS[path.slice('/models/'.length, -1)] ?? LAB_DESCRIPTIONS[path.slice('/models/'.length, -1)]
     : SITE_PAGES[path];
   if (!description) throw new ReferenceError(`no description for ${path}`);
   return description;

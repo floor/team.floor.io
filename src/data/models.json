@@ -1,10 +1,28 @@
 {
-  "$comment": "The models catalog that renders the Models section. One file: model × transport × subscription × seat line, shaped to be replaced by TeamCLI's own registry (registry/models.json) without changing the pages. Every route is marked verified (a seat we have run) or listed (a documented route not yet run). Nothing here is a price or a benchmark; sign-up and pricing live on each vendor's own pages, linked. Seat lines use the reference team-file seats schema, which requires cli, vendor, model, version and launch; a seat whose launcher picks the model sets model_from: launcher. Verified by the team on the catalog's own date.",
+  "$comment": "The models catalog that renders the Models section. One file: lab × model × way-in × subscription × seat line, shaped to be replaced by TeamCLI's own registry (registry/models.json) without changing the pages. The five ways in are the matrix columns; each transport names the way it is. Every route is marked verified (a seat we have run) or listed (a documented route not yet run). Nothing here is a price or a benchmark; sign-up and pricing live on each vendor's own pages, linked. Seat lines use the reference team-file seats schema, which requires cli, vendor, model, version and launch; a seat whose launcher picks the model sets model_from: launcher. Verified by the team on the catalog's own date.",
   "verifiedOn": "2026-10-18",
+  "ways": [
+    { "id": "own-cli", "name": "The lab's own CLI", "short": "Own CLI" },
+    { "id": "antigravity", "name": "Antigravity", "short": "Antigravity" },
+    { "id": "cursor", "name": "Cursor", "short": "Cursor" },
+    { "id": "endpoint", "name": "Claude Code endpoint", "short": "Claude Code endpoint" },
+    { "id": "api", "name": "The API directly", "short": "Direct API" }
+  ],
+  "labs": [
+    { "slug": "anthropic", "name": "Anthropic", "vendor": "anthropic", "blurb": "Anthropic's Claude models — Opus, Sonnet and Fable — run by Claude Code or through a connector.", "subscribeHref": "https://www.anthropic.com/pricing", "quirks": [] },
+    { "slug": "google", "name": "Google", "vendor": "google", "blurb": "Google's Gemini models, reached through Antigravity's agy or Google's cloud agent Jules.", "subscribeHref": "https://antigravity.google", "quirks": ["The hosted Gemini CLI no longer serves personal accounts; Antigravity's agy is the Google route for a personal account.", "Jules picks its own Gemini model, and the jules binary answers no --version."] },
+    { "slug": "openai", "name": "OpenAI", "vendor": "openai", "blurb": "OpenAI's GPT models, run by Codex.", "subscribeHref": "https://openai.com/codex", "quirks": ["Codex updates itself, so its installed version moves on its own."] },
+    { "slug": "xai", "name": "xAI", "vendor": "xai", "blurb": "xAI's Grok models, run by the Grok CLI or through Cursor.", "subscribeHref": "https://x.ai", "quirks": [] },
+    { "slug": "deepseek", "name": "DeepSeek", "vendor": "deepseek", "blurb": "DeepSeek's models, run as Claude Code seats through DeepSeek's endpoint.", "subscribeHref": "https://www.deepseek.com", "quirks": ["DeepSeek ships no CLI of its own; its documented route is Claude Code with its endpoint."] },
+    { "slug": "moonshot", "name": "Moonshot", "vendor": "moonshot", "blurb": "Moonshot's Kimi models, run today as Claude Code endpoint seats.", "subscribeHref": "https://www.kimi.com", "quirks": ["The native Kimi Code CLI exists but is not a TeamCLI seat kind yet, so it has no launch profile."] },
+    { "slug": "zhipu", "name": "Z.ai", "vendor": "zhipu", "blurb": "Z.ai (Zhipu) GLM models, run as Claude Code seats through the endpoint.", "subscribeHref": "https://z.ai", "quirks": ["Z.ai GLM ships no seat CLI of its own; it provides a coding helper that configures other CLIs."] },
+    { "slug": "meta", "name": "Meta", "vendor": "meta", "blurb": "Meta's Muse models, run by the Muse CLI.", "subscribeHref": "https://ai.meta.com", "quirks": ["The Muse CLI is installed and has a launch profile, but no seat has run it yet."] }
+  ],
   "transports": {
     "claude-code": {
       "name": "Claude Code",
       "kind": "own-cli",
+      "way": "own-cli",
       "vendor": "Anthropic",
       "cli": "claude-code",
       "reaches": "Anthropic's own Claude models, run by Anthropic's CLI.",
@@ -18,6 +36,7 @@
     "antigravity": {
       "name": "Antigravity",
       "kind": "connector",
+      "way": "antigravity",
       "vendor": "Google",
       "cli": "antigravity",
       "reaches": "Gemini, Claude and GPT, through the Google AI Ultra pools.",
@@ -31,6 +50,7 @@
     "codex": {
       "name": "Codex",
       "kind": "own-cli",
+      "way": "own-cli",
       "vendor": "OpenAI",
       "cli": "codex",
       "reaches": "OpenAI's own GPT models, run by OpenAI's CLI.",
@@ -44,6 +64,7 @@
     "cursor": {
       "name": "Cursor",
       "kind": "connector",
+      "way": "cursor",
       "vendor": "Cursor",
       "cli": "cursor",
       "reaches": "Claude, GPT, Gemini and Grok, on a Cursor plan.",
@@ -57,6 +78,7 @@
     "grok": {
       "name": "Grok CLI",
       "kind": "own-cli",
+      "way": "own-cli",
       "vendor": "xAI",
       "cli": "grok",
       "reaches": "xAI's own Grok models, run by xAI's CLI.",
@@ -70,6 +92,7 @@
     "jules": {
       "name": "Jules",
       "kind": "cloud",
+      "way": "own-cli",
       "vendor": "Google",
       "cli": "jules",
       "reaches": "Gemini, in Google's cloud agent.",
@@ -83,6 +106,7 @@
     "muse": {
       "name": "Muse",
       "kind": "own-cli",
+      "way": "own-cli",
       "vendor": "Meta",
       "cli": "muse",
       "reaches": "Meta's own Muse models, run by Meta's CLI.",
@@ -96,6 +120,7 @@
     "claude-code-endpoint": {
       "name": "Claude Code with a provider endpoint",
       "kind": "endpoint",
+      "way": "endpoint",
       "vendor": "Anthropic-compatible providers",
       "cli": "claude-code",
       "reaches": "Any Anthropic-compatible endpoint — DeepSeek, Kimi and Z.ai GLM among them.",
@@ -109,6 +134,7 @@
     "kimi": {
       "name": "Kimi Code CLI",
       "kind": "own-cli",
+      "way": "own-cli",
       "vendor": "Moonshot",
       "cli": null,
       "reaches": "Moonshot's own Kimi models, run by Moonshot's CLI.",
@@ -122,6 +148,7 @@
     "api": {
       "name": "The API directly",
       "kind": "api",
+      "way": "api",
       "vendor": "The model's own vendor",
       "cli": null,
       "reaches": "The model over its vendor's API, without a CLI of its own.",
@@ -137,7 +164,7 @@
     {
       "slug": "claude-opus-5-5",
       "name": "Claude Opus 5.5",
-      "vendor": "Anthropic",
+      "vendor": "anthropic",
       "summary": "Anthropic's Opus line, run by Claude Code or through a connector.",
       "routes": [
         { "transport": "claude-code", "status": "verified", "seat": { "cli": "claude-code", "vendor": "anthropic", "model": "Claude Opus", "version": "5.5", "display": "Claude Opus 5.5", "launch": "claude" } },
@@ -148,7 +175,7 @@
     {
       "slug": "claude-sonnet-5-5",
       "name": "Claude Sonnet 5.5",
-      "vendor": "Anthropic",
+      "vendor": "anthropic",
       "summary": "Anthropic's Sonnet line, verified both by Claude Code and through Antigravity.",
       "routes": [
         { "transport": "claude-code", "status": "verified", "seat": { "cli": "claude-code", "vendor": "anthropic", "model": "Claude Sonnet", "version": "5.5", "display": "Claude Sonnet 5.5", "launch": "claude" } },
@@ -159,7 +186,7 @@
     {
       "slug": "claude-fable-5-1",
       "name": "Claude Fable 5.1",
-      "vendor": "Anthropic",
+      "vendor": "anthropic",
       "summary": "Anthropic's Fable line, run by Claude Code or through a connector.",
       "routes": [
         { "transport": "claude-code", "status": "verified", "seat": { "cli": "claude-code", "vendor": "anthropic", "model": "Claude Fable", "version": "5.1", "display": "Claude Fable 5.1", "launch": "claude" } },
@@ -170,7 +197,7 @@
     {
       "slug": "gemini-4-argon",
       "name": "Gemini 4 Argon",
-      "vendor": "Google",
+      "vendor": "google",
       "summary": "Google's Gemini 4 Argon, verified through Antigravity.",
       "routes": [
         { "transport": "antigravity", "status": "verified", "seat": { "cli": "antigravity", "vendor": "google", "model": "Gemini Argon", "version": "4", "display": "Gemini 4 Argon", "launch": "agy" } },
@@ -181,7 +208,7 @@
     {
       "slug": "gemini-3-8-flash",
       "name": "Gemini 3.8 Flash",
-      "vendor": "Google",
+      "vendor": "google",
       "summary": "Google's Gemini 3.8 Flash, verified through Antigravity.",
       "routes": [
         { "transport": "antigravity", "status": "verified", "seat": { "cli": "antigravity", "vendor": "google", "model": "Gemini Flash", "version": "3.8", "display": "Gemini 3.8 Flash", "launch": "agy" } },
@@ -192,7 +219,7 @@
     {
       "slug": "gemini-through-jules",
       "name": "Gemini through Jules",
-      "vendor": "Google",
+      "vendor": "google",
       "summary": "Gemini run inside Jules, Google's cloud coding agent.",
       "routes": [
         { "transport": "jules", "status": "verified", "seat": { "cli": "jules", "vendor": "google", "model": "Jules", "version": "0.1.42", "display": "Jules 0.1.42", "modelFrom": "launcher", "launch": "jules" } }
@@ -202,7 +229,7 @@
     {
       "slug": "gpt-sol-6-1",
       "name": "GPT Sol 6.1",
-      "vendor": "OpenAI",
+      "vendor": "openai",
       "summary": "OpenAI's GPT Sol 6.1, verified through Codex.",
       "routes": [
         { "transport": "codex", "status": "verified", "seat": { "cli": "codex", "vendor": "openai", "model": "GPT Sol", "version": "6.1", "display": "GPT Sol 6.1", "launch": "codex" } },
@@ -213,7 +240,7 @@
     {
       "slug": "gpt-terra-5-6",
       "name": "GPT Terra 5.6",
-      "vendor": "OpenAI",
+      "vendor": "openai",
       "summary": "OpenAI's GPT Terra 5.6, verified through Codex.",
       "routes": [
         { "transport": "codex", "status": "verified", "seat": { "cli": "codex", "vendor": "openai", "model": "GPT Terra", "version": "5.6", "display": "GPT Terra 5.6", "launch": "codex" } },
@@ -224,7 +251,7 @@
     {
       "slug": "grok-4-7",
       "name": "Grok 4.7",
-      "vendor": "xAI",
+      "vendor": "xai",
       "summary": "xAI's Grok 4.7, verified by the Grok CLI and through Cursor.",
       "routes": [
         { "transport": "grok", "status": "verified", "seat": { "cli": "grok", "vendor": "xai", "model": "Grok", "version": "4.7", "display": "Grok 4.7", "launch": "grok" } },
@@ -234,7 +261,7 @@
     {
       "slug": "deepseek-v4-1-flash",
       "name": "DeepSeek V4.1 Flash",
-      "vendor": "DeepSeek",
+      "vendor": "deepseek",
       "summary": "DeepSeek V4.1 Flash, run as a Claude Code seat through DeepSeek's endpoint.",
       "routes": [
         { "transport": "claude-code-endpoint", "status": "verified", "bill": "A DeepSeek API key.", "seat": { "cli": "claude-code", "vendor": "deepseek", "model": "DeepSeek Flash", "version": "V4.1", "display": "DeepSeek V4.1 Flash", "modelFrom": "launcher", "launch": "my-lab-claude" } },
@@ -245,7 +272,7 @@
     {
       "slug": "kimi-k3",
       "name": "Kimi K3",
-      "vendor": "Moonshot",
+      "vendor": "moonshot",
       "summary": "Moonshot's Kimi K3, run today as a Claude Code endpoint seat.",
       "routes": [
         { "transport": "claude-code-endpoint", "status": "verified", "bill": "A Moonshot (Kimi platform) API key.", "seat": { "cli": "claude-code", "vendor": "moonshot", "model": "Kimi", "version": "K3", "display": "Kimi K3", "modelFrom": "launcher", "launch": "my-lab-claude" } },
@@ -257,7 +284,7 @@
     {
       "slug": "glm-5-3",
       "name": "GLM 5.3",
-      "vendor": "Zhipu",
+      "vendor": "zhipu",
       "summary": "Z.ai (Zhipu) GLM 5.3, run as a Claude Code seat through its endpoint.",
       "routes": [
         { "transport": "claude-code-endpoint", "status": "verified", "bill": "A Z.ai (Zhipu) API key or coding plan.", "seat": { "cli": "claude-code", "vendor": "zhipu", "model": "GLM", "version": "5.3", "display": "GLM 5.3", "modelFrom": "launcher", "launch": "my-lab-claude" } },
@@ -268,7 +295,7 @@
     {
       "slug": "muse-wonder-1-0",
       "name": "Muse Wonder 1.0",
-      "vendor": "Meta",
+      "vendor": "meta",
       "summary": "Meta's Muse Wonder 1.0, run by the Muse CLI.",
       "routes": [
         { "transport": "muse", "status": "listed", "seat": { "cli": "muse", "vendor": "meta", "model": "Muse Wonder", "version": "1.0", "display": "Muse Wonder 1.0", "launch": "muse" } }

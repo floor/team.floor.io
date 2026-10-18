@@ -59,7 +59,7 @@
   <div class="layout">
     <nav class="sidebar" id="sidebar" aria-label="Documentation navigation">
       <div class="sidebar__group mobile-navigation"><a class="sidebar__link" href="/models/">Models</a><a class="sidebar__link" href="/docs/">Documentation</a><a class="sidebar__link" href="/guide/">Guide</a><a class="sidebar__link" href="https://github.com/floor/teamcli">GitHub ↗</a></div>
-      <% it.nav.forEach(group => { %><div class="sidebar__group"><div class="sidebar__label"><%= group.label %></div><% group.items.forEach(item => { %>
+      <% it.nav.forEach(group => { %><div class="sidebar__group"><% if (group.href) { %><a class="sidebar__label" href="<%= group.href %>"<% if (it.path === group.href) { %> aria-current="page"<% } %>><%= group.label %></a><% } else { %><div class="sidebar__label"><%= group.label %></div><% } %><% group.items.forEach(item => { %>
         <a class="sidebar__link <%= it.path === item.href ? 'sidebar__link--active' : '' %>" href="<%= item.href %>" <% if (it.path === item.href) { %>aria-current="page"<% } %>><%= item.name %></a>
       <% }); %></div><% }); %>
       <div class="sidebar__foot">team <%= it.version %> · <a href="https://github.com/floor/teamcli/blob/main/LICENSE">MIT license</a><br>Runs teams in <a href="https://herdr.dev">herdr</a></div>
