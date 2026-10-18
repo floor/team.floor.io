@@ -213,10 +213,12 @@ export const modelHref = (slug: string): string => `/models/${slug}/`;
 export const labHref = (slug: string): string => `/models/${slug}/`;
 /** A family's own page path: /models/<lab>/<family>/. */
 export const familyHref = (labSlug: string, familySlug: string): string => `/models/${labSlug}/${familySlug}/`;
-/** The setup page, and the anchor for one way's set-up on it, for a cell or a page to link into. */
-const SET_UP = '/models/set-up/';
+/** The Models overview page — set-up first, then the matrix — and the anchor of one way's
+ *  set-up on it, for a cell or a page to link into. */
+const MODELS_PAGE = '/models/';
+const SET_UP_ANCHOR = 'set-up-your-agents';
 const setupAnchor = (transportId: string): string => `setup-${transportId}`;
-const setupHref = (transportId: string): string => `${SET_UP}#${setupAnchor(transportId)}`;
+const setupHref = (transportId: string): string => `${MODELS_PAGE}#${setupAnchor(transportId)}`;
 
 const labByVendor = (vendor: string): Lab | undefined => LABS.find(lab => lab.vendor === vendor);
 const labBySlug = (slug: string): Lab | undefined => LABS.find(lab => lab.slug === slug);
@@ -234,8 +236,9 @@ export function modelAnchorHref(model: Model): string {
   const lab = labByVendor(model.vendor);
   return lab ? `${labHref(lab.slug)}#${model.slug}` : `#${model.slug}`;
 }
-/** The 301s from the old per-model URLs to the family pages' version anchors — /models/<lab>/<family>/#<version> —
- *  so every link kept from the lab-anchor era still lands on the model. */
+/** The 301s from retired URLs: the old per-model pages now point at the family pages' version
+ *  anchors — /models/<lab>/<family>/#<version> — so every link kept from the lab-anchor era
+ *  still lands on the model, and the set-up page's URL points at the overview's set-up anchor. */
 export function modelRedirects(): Record<string, string> {
   const map: Record<string, string> = {};
   for (const model of MODELS) {
@@ -244,6 +247,7 @@ export function modelRedirects(): Record<string, string> {
     const family = familyOfModel(model);
     map[modelHref(model.slug)] = family ? `${familyHref(lab.slug, family.slug)}#${model.slug}` : modelAnchorHref(model);
   }
+  map['/models/set-up/'] = `${MODELS_PAGE}#${SET_UP_ANCHOR}`;
   return map;
 }
 /** A route's status in words. */
@@ -262,11 +266,47 @@ const attr = (text: string): string => escapeHtml(text).replace(/'/g, '&#39;');
 
 // ---------------------------------------------------------------- the overview matrix
 
-/** /models/ — the overview: a matrix, labs and their families down, the ways in across. */
+/** /models/ — the overview: "Set up your agents" first, then the matrix — labs and their
+ *  families down, the ways in across. */
 export function modelsOverview(): Rendered {
   const doc = new Doc().h1('Models');
-  doc.md('Every model family the labs offer, and the ways in. A row is a family, linking to its page; a column is a way to reach it — the lab\'s own CLI, the Antigravity or Cursor connectors, Claude Code pointed at a provider\'s endpoint, or the API directly. Each cell is the route\'s status, and links to its set-up.');
-  doc.note('<strong>Verified</strong> is a seat the team has run; <strong>Listed</strong> is a documented route not yet run; a dash is a way that does not reach the family. Start with <a href="/models/set-up/">Set up your agents</a>.');
+  doc.md('Every model family the labs offer, and the ways in. Set a route up once and it serves every model on it — the set-up below walks each route in, and the matrix then shows which families it reaches.');
+
+  doc.heading('Set up your agents');
+  doc.md('A TeamCLI seat is a model reached by a route. Install the CLI or app the route uses, get the subscription or API key it spends, log in, and name the model in the team file.');
+
+  doc.heading('The seat line');
+  doc.md('In the team file, each seat names its model and how it is launched — the same six fields whichever route carries the model:');
+  doc.md(mdTable(
+    ['Field', 'What it is'],
+    [
+      [code('cli'), 'The launch profile — which CLI or app runs the seat.'],
+      [code('vendor'), 'The lab the model is from.'],
+      [code('model'), 'The model\'s name.'],
+      [code('version'), 'Its version, a token of its own.'],
+      [code('display'), 'The proper-case label `team status` shows.'],
+      [code('launch'), 'The command that starts the seat.'],
+    ],
+  ));
+  doc.note('A launcher script, an account, a token or a key never goes in the team file. An Anthropic-compatible endpoint reads its key from the OS keychain through a small launcher on the PATH, and marks the seat <code>model_from: launcher</code>.');
+
+  for (const way of WAYS) {
+    const transports = Object.entries(TRANSPORTS).filter(([, transport]) => transport.way === way.id);
+    if (!transports.length) continue;
+    doc.heading(way.name);
+    for (const [id, transport] of transports) {
+      doc.raw(`<h3 id="${escapeHtml(setupAnchor(id))}">${escapeHtml(transport.name)}</h3>\n`);
+      doc.md(`${transport.reaches} *(${transport.vendor})*`);
+      doc.md(transportSteps(transport));
+      const serves = servesLine(id);
+      if (serves) doc.md(serves);
+      if (transport.profileNote) doc.note(inline(transport.profileNote));
+    }
+  }
+
+  doc.heading('The models, at a glance');
+  doc.md('A row is a family, linking to its page; a column is a way to reach it — the lab\'s own CLI, the Antigravity or Cursor connectors, Claude Code pointed at a provider\'s endpoint, or the API directly. Each cell is the route\'s status, and links to its set-up above.');
+  doc.note('<strong>Verified</strong> is a seat the team has run; <strong>Listed</strong> is a documented route not yet run; a dash is a way that does not reach the family.');
 
   const header = `<thead><tr><th scope="col">Family</th>${WAYS.map(way => `<th scope="col">${escapeHtml(way.short)}</th>`).join('')}</tr></thead>`;
   const span = WAYS.length + 1;
@@ -329,43 +369,6 @@ function servesLine(transportId: string): string {
   }).join(', ')}.`;
 }
 
-/** /models/set-up/ — "Set up your agents", grouped by the way in: install and log in once per route. */
-export function setUp(): Rendered {
-  const doc = new Doc().h1('Set up your agents');
-  doc.md('A TeamCLI seat is a model reached by a route. Install the CLI or app the route uses, get the subscription or API key it spends, log in, and name the model in the team file. Set up a route once and it serves every model on it; the matrix on the <a href="/models/">overview</a> shows which models each route reaches.');
-
-  doc.heading('The seat line');
-  doc.md('In the team file, each seat names its model and how it is launched — the same six fields whichever route carries the model:');
-  doc.md(mdTable(
-    ['Field', 'What it is'],
-    [
-      [code('cli'), 'The launch profile — which CLI or app runs the seat.'],
-      [code('vendor'), 'The lab the model is from.'],
-      [code('model'), 'The model\'s name.'],
-      [code('version'), 'Its version, a token of its own.'],
-      [code('display'), 'The proper-case label `team status` shows.'],
-      [code('launch'), 'The command that starts the seat.'],
-    ],
-  ));
-  doc.note('A launcher script, an account, a token or a key never goes in the team file. An Anthropic-compatible endpoint reads its key from the OS keychain through a small launcher on the PATH, and marks the seat <code>model_from: launcher</code>.');
-
-  for (const way of WAYS) {
-    const transports = Object.entries(TRANSPORTS).filter(([, transport]) => transport.way === way.id);
-    if (!transports.length) continue;
-    doc.heading(way.name);
-    for (const [id, transport] of transports) {
-      doc.raw(`<h3 id="${escapeHtml(setupAnchor(id))}">${escapeHtml(transport.name)}</h3>\n`);
-      doc.md(`${transport.reaches} *(${transport.vendor})*`);
-      doc.md(transportSteps(transport));
-      const serves = servesLine(id);
-      if (serves) doc.md(serves);
-      if (transport.profileNote) doc.note(inline(transport.profileNote));
-    }
-  }
-  doc.note(`Verified on ${escapeHtml(VERIFIED_ON)}.`);
-  return doc.render();
-}
-
 // ---------------------------------------------------------------- one page per lab, one page per family
 
 /** One model as a section of its lab's page — the shape kept for the one model a launcher
@@ -426,7 +429,7 @@ export function labPage(slug: string): Rendered {
   const lab = need(labBySlug(slug), `has no lab "${slug}"`);
   const doc = new Doc().h1(lab.name);
   doc.md(lab.blurb);
-  doc.note(`Part of <a href="/models/">Models</a>. Sign-up and pricing for ${escapeHtml(lab.name)} live on the vendor's own pages: <a href="${attr(lab.subscribeHref)}" rel="noopener noreferrer">${escapeHtml(lab.name)}</a> — never put a key in the team file. Set each route up on <a href="/models/set-up/">Set up your agents</a>.`);
+  doc.note(`Part of <a href="/models/">Models</a>. Sign-up and pricing for ${escapeHtml(lab.name)} live on the vendor's own pages: <a href="${attr(lab.subscribeHref)}" rel="noopener noreferrer">${escapeHtml(lab.name)}</a> — never put a key in the team file. Set each route up on <a href="/models/#set-up-your-agents">Set up your agents</a>.`);
 
   doc.heading('Families');
   doc.md(`Every family ${escapeHtml(lab.name)} offers today, each with its own page — the versions, the prices, the benchmarks the vendor publishes, and how TeamCLI reaches it:`);

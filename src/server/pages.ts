@@ -8,7 +8,7 @@
 import { bullet, commandNames, commandPage, commandTable, fenceWith, paragraph, profileNames, section, sentence, README, ReferenceError } from './reference';
 import { escapeHtml, fenceHtml, renderMarkdown, slug, type Fence, type Rendered } from './markdown';
 import { contentReady, packageVersion, read, refInfo } from './team';
-import { familiesOf, familyHref, familyPage, guideIndex, LABS, labHref, labPage, modelsOverview, setUp } from './models';
+import { familiesOf, familyHref, familyPage, guideIndex, LABS, labHref, labPage, modelsOverview } from './models';
 
 if (!contentReady()) throw new Error('content/team is missing: run `bun run content` (scripts/content.ts) first.');
 
@@ -669,7 +669,7 @@ export function sectionOf(path: string): Section {
 export function navFor(section: Section): NavGroup[] {
   if (section === 'Models') {
     return [
-      { label: 'Models', items: [{ name: 'Overview', href: '/models/' }, { name: 'Set up your agents', href: '/models/set-up/' }] },
+      { label: 'Models', items: [{ name: 'Overview', href: '/models/' }] },
       ...LABS.map(lab => ({
         label: lab.name,
         href: labHref(lab.slug),
@@ -710,13 +710,12 @@ export function pages(): PageMeta[] {
     const section = sectionOf(path);
     return { path, title, description: descriptionFor(path), priority, section, nav: navFor(section), files, ...content };
   };
-  // Models: the overview matrix, "Set up your agents", one page per lab — the overview of its
-  // families and routes — and one page per family, holding the versions with their figures.
-  // All read from the catalog and the dated figures file beside it.
+  // Models: the overview — "Set up your agents" first, then the matrix — one page per lab, the
+  // overview of its families and routes, and one page per family, holding the versions with
+  // their figures. All read from the catalog and the dated figures file beside it.
   const modelFiles = ['src/server/models.ts', 'src/data/models.json', 'src/data/model-figures.json', 'scripts/refresh-model-figures.ts'];
   const models = [
     page('/models/', 'Models — team', '0.9', modelsOverview(), modelFiles),
-    page('/models/set-up/', 'Set up your agents — team', '0.9', setUp(), modelFiles),
     ...LABS.flatMap(lab => [
       page(labHref(lab.slug), `${lab.name} — team`, '0.7', labPage(lab.slug), modelFiles),
       ...familiesOf(lab.vendor).map(family => page(familyHref(lab.slug, family.slug), `${family.name} — team`, '0.6', familyPage(lab.slug, family.slug), modelFiles)),
@@ -805,8 +804,7 @@ const familyDescriptions = lazy((): Record<string, string> => Object.fromEntries
 
 const SITE_PAGES: Record<string, string> = {
   '/privacy/': 'How teamcli.io reaches you, and what stays in your browser.',
-  '/models/': 'The model families of every lab against each way in — own CLI, Antigravity, Cursor, endpoint, API — verified or listed, each row linking to its family page.',
-  '/models/set-up/': 'Set up your agents: install each CLI or app, get the subscription or API key, and log in — set a route up once and it serves every model on it.',
+  '/models/': 'Set up your agents — install each CLI or app, get the subscription or API key, and log in — then the model families of every lab against each way in, each row linking to its family page.',
   '/guide/': 'Task guides for running a team with TeamCLI — your first team, and running a release — with an index now and the first guides coming soon.',
   '/docs/': 'Your first team in five minutes: install team, write .agents/team.yaml, and start the session from the owner’s terminal.',
   '/docs/file/': 'The team file, section by section: tasks, seats, delivery order, grant, delegates and tempo — then the format by example and its other fields.',
@@ -828,7 +826,7 @@ export function descriptionFor(path: string): string {
     ? 'Set up and run a team of specialized AI agents in herdr: you set the roster, agents do the work, and you decide.'
     : path.startsWith('/docs/commands/') && path !== '/docs/commands/'
     ? DESCRIPTIONS[path.slice('/docs/commands/'.length, -1)]
-    : path.startsWith('/models/') && path !== '/models/' && path !== '/models/set-up/'
+    : path.startsWith('/models/') && path !== '/models/'
     ? familyDescriptions()[path.slice('/models/'.length, -1)] ?? labDescriptions()[path.slice('/models/'.length, -1)]
     : SITE_PAGES[path];
   if (!description) throw new ReferenceError(`no description for ${path}`);

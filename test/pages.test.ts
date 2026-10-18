@@ -40,7 +40,7 @@ describe('the page list', () => {
 
   test('one page per command, the docs\' own pages, and the Models and Guide sections beside them', () => {
     for (const name of commandNames()) expect(byPath.has(`/docs/commands/${name}/`), name).toBe(true);
-    for (const path of ['/docs/', '/docs/file/', '/docs/file/tasks/', '/docs/file/seats/', '/docs/file/delivery-order/', '/docs/file/grant/', '/docs/file/delegates/', '/docs/file/tempo/', '/docs/concepts/registry/', '/docs/commands/', '/docs/safety/', '/docs/clis/', '/models/', '/models/set-up/', '/guide/']) {
+    for (const path of ['/docs/', '/docs/file/', '/docs/file/tasks/', '/docs/file/seats/', '/docs/file/delivery-order/', '/docs/file/grant/', '/docs/file/delegates/', '/docs/file/tempo/', '/docs/concepts/registry/', '/docs/commands/', '/docs/safety/', '/docs/clis/', '/models/', '/guide/']) {
       expect(byPath.has(path), path).toBe(true);
     }
     for (const lab of LABS) expect(byPath.has(`/models/${lab.slug}/`), lab.slug).toBe(true);
@@ -48,9 +48,10 @@ describe('the page list', () => {
       const lab = LABS.find(entry => entry.vendor === family.vendor)!;
       expect(byPath.has(`/models/${lab.slug}/${family.slug}/`), family.slug).toBe(true);
     }
-    // 12 documentation pages + the Guide index + the Models overview and set-up + one page per
-    // lab + one page per family (each family page holds the versions, so there are no per-version pages).
-    expect(list.length).toBe(commandNames().length + 12 + 1 + 2 + LABS.length + FAMILIES.length);
+    // 12 documentation pages + the Guide index + the Models overview (set-up folded in, so no
+    // page of its own) + one page per lab + one page per family (each family page holds the
+    // versions, so there are no per-version pages).
+    expect(list.length).toBe(commandNames().length + 12 + 1 + 1 + LABS.length + FAMILIES.length);
   });
 
   test('every page is reached — its section navigation, or a link from a page — and the reading order is the documentation navigation\'s own', () => {
