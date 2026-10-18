@@ -14,7 +14,13 @@ describe('the index', () => {
   test('a document carries the text a reader sees, not the markup', () => {
     const file = documents.find(document => document.id === '/docs/file/')!;
     expect(file.text).toContain('seats');
-    expect(file.text).not.toContain('<');
+    // The reference's prose shows metavariable placeholders as reader-visible text
+    // (<home>, <entity>, <iso>, <name>, rendered from code spans). Those aren't real
+    // HTML elements, so any OTHER tag-shaped token is leaked markup — which must never
+    // reach the search text. A plain `no <` guard would false-trip on the placeholders.
+    const placeholders = new Set(['<home>', '<entity>', '<iso>', '<name>']);
+    const tags = (file.text.match(/<\/?[a-zA-Z][^<>]*>/g) ?? []).filter(tag => !placeholders.has(tag));
+    expect(tags).toEqual([]);
     expect(file.text).not.toContain('&amp;');
     expect(file.description.length).toBeGreaterThan(0);
   });
