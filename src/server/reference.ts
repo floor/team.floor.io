@@ -150,3 +150,9 @@ export function fenceWith(page: string, lang: string, contains: string): Fence {
 export function fenceByInfo(page: string, info: string): Fence {
   return need(fences(page).find(fence => fence.info === info), `a fence headed "${info}"`);
 }
+
+/** The launch profiles the reference ships: every `src/profiles/*.yaml`, under its `cli` name. */
+export function profileNames(): string[] {
+  const files = readdirSync(resolve(contentDir, 'src/profiles')).filter(name => name.endsWith('.yaml')).map(name => name.slice(0, -'.yaml'.length)).sort();
+  return need(files.length ? files : undefined, 'its launch profiles');
+}
