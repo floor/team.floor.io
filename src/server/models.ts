@@ -470,28 +470,27 @@ const figureCell = (figure: Figure | undefined): string => {
   const note = figure.note ? ` ${figure.note}` : '';
   return `**${figure.v}** — ${link(source.label, source.href)} (read ${source.read}).${note}`;
 };
+/** One figure as a labeled list line: what it measures, then the sourced, dated value. */
+const figureBullet = (label: string, figure: Figure | undefined): string => `- **${label}** — ${figureCell(figure)}`;
 
-/** One version as a block of the family's Versions section. The anchor keeps the old catalog
- *  slug when the team runs that version, so every kept link to the model lands here. */
+/** One version as a section of the family's Versions page part: Abilities, Costs, then
+ *  Benchmarks the lab itself reports. The anchor keeps the old catalog slug when the team
+ *  runs that version, so every kept link to the model lands here. */
 function versionSection(doc: Doc, family: Family, version: VersionFigures): void {
   doc.raw(`<h3 id="${escapeHtml(version.anchor)}">${escapeHtml(version.name)}${version.current ? ' — current' : ''}</h3>\n`);
-  doc.md(mdTable(
-    ['Field', 'Figure'],
-    [
-      ['Model id', version.apiId ? code(version.apiId) : '—'],
-      ['Released', figureCell(version.released)],
-      ['Context window', figureCell(version.context)],
-      ['Max output', figureCell(version.maxOut)],
-      ['Input price', figureCell(version.priceIn)],
-      ['Output price', figureCell(version.priceOut)],
-      ['Output speed', figureCell(version.speed)],
-      ['Latency', figureCell(version.latency)],
-      ['Intelligence index', '—'],
-    ],
-  ));
-  if (version.note) doc.md(inline(version.note));
+  doc.md(`- **Model id** — ${version.apiId ? code(version.apiId) : '—'}${version.note ? `\n- ${inline(version.note)}` : ''}`);
+  doc.md('**Abilities**');
+  doc.md([
+    figureBullet('Released', version.released),
+    figureBullet('Context window', version.context),
+    figureBullet('Max output', version.maxOut),
+    figureBullet('Output speed', version.speed),
+    figureBullet('Latency', version.latency),
+  ].join('\n'));
+  doc.md('**Costs**');
+  doc.md([figureBullet('Input price', version.priceIn), figureBullet('Output price', version.priceOut)].join('\n'));
   if (version.benchmarks?.length) {
-    doc.md('Benchmarks, vendor-reported:');
+    doc.md('**Benchmarks — as reported by the lab**');
     doc.md(version.benchmarks.map(benchmark => {
       const source = FIGURE_SOURCES[benchmark.s]!;
       const note = benchmark.note ? ` — ${benchmark.note}` : '';
@@ -499,6 +498,28 @@ function versionSection(doc: Doc, family: Family, version: VersionFigures): void
     }).join('\n'));
   }
   if (family.modelSlug && version.anchor === family.modelSlug) doc.md('This is the version the seat lines above run.');
+}
+
+/** The Versions comparison: every version across, the costs and the family's own benchmark
+ *  columns side by side, values verbatim — every one sourced and dated in its version's
+ *  section below and in the Sources list. A dash is a figure the source does not publish. */
+function versionsComparisonTable(family: Family): string {
+  const versions = FIGURES.families[family.slug]!.versions;
+  const benchmarkNames: string[] = [];
+  for (const version of versions) for (const benchmark of version.benchmarks ?? []) if (!benchmarkNames.includes(benchmark.name)) benchmarkNames.push(benchmark.name);
+  const value = (figure: Figure | undefined): string => figure?.v ?? '—';
+  const benchmark = (version: VersionFigures, name: string): string => version.benchmarks?.find(entry => entry.name === name)?.v ?? '—';
+  return mdTable(
+    ['Version', 'Released', 'Context', 'Input price', 'Output price', ...benchmarkNames],
+    versions.map(version => [
+      `${link(version.name, `#${version.anchor}`)}${version.current ? ' — current' : ''}`,
+      value(version.released),
+      value(version.context),
+      value(version.priceIn),
+      value(version.priceOut),
+      ...benchmarkNames.map(name => benchmark(version, name)),
+    ]),
+  );
 }
 
 /** The sources a family's figures were read from, in first-read order, for the Sources list. */
@@ -542,8 +563,9 @@ export function familyPage(labSlug: string, familySlug: string): Rendered {
   }
 
   doc.heading('Versions');
-  doc.md(`One block per version, the current one first. Every figure names the page it was read on and when; a dash means the source publishes no figure, and nothing here is estimated.`);
+  doc.md(`One block per version, the current one first, each with its own anchor. The comparison table puts the costs and the family's benchmark columns side by side; the values are verbatim, and every one is sourced and dated in its version's section below and in the Sources list. A dash means the source publishes no figure, and nothing here is estimated.`);
   doc.note('No independent intelligence or speed index is republished here: <a href="https://artificialanalysis.ai/models" rel="noopener noreferrer">Artificial Analysis</a> measures both across labs, and its terms allow the link but not the copy — its figures live on its own pages.');
+  doc.md(versionsComparisonTable(family));
   for (const version of FIGURES.families[family.slug]!.versions) versionSection(doc, family, version);
 
   doc.heading('Sources');
