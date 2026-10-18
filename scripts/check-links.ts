@@ -57,10 +57,15 @@ for (const path of [...publicPages, '/nope/']) {
       // A link that opens a new tab must not hand the opener on; one that stays in
       // the tab needs no rel.
       if (/target="_blank"/.test(target)) check(/rel="[^"]*noopener/.test(target), `${path}: ${href} opens a new tab without rel="noopener"`);
-      if (!href.startsWith(SITE) && INTERNAL_PREFIXES.some(prefix => href.includes(prefix))) problems.push(`${path}: links to ${href}`);
+      // A route the site keeps for itself must not be linked, absolute form included. Another
+      // site's path may hold the same shape — a vendor's docs under /api/ — and is not this
+      // site's route.
+      check(!INTERNAL_PREFIXES.some(prefix => href.startsWith(`${SITE}${prefix}`)), `${path}: links to ${href}`);
       continue;
     }
     check(href.startsWith('/'), `${path}: ${href} is neither absolute nor an anchor`);
+    // The same in relative form: an internal prefix is a kept route, not a page to link.
+    check(!INTERNAL_PREFIXES.some(prefix => href.startsWith(prefix)), `${path}: links to ${href}`);
 
     const [route, anchor = ''] = href.split('#');
     const answer = await status(route!);
