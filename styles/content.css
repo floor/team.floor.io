@@ -585,7 +585,11 @@
 }
 
 @media (max-width: 600px) {
-    .matrix td[data-label]::before {
+    /* The models pages' own tables carry each body cell's column name in data-label, so
+       a stacked row names each of its lines — the header row is hidden at this width.
+       The reference's tables, rendered by the markdown sheet, do not carry it: a stacked
+       reference row keeps reading as it did before, top line then meaning. */
+    .md td[data-label]::before {
         content: attr(data-label) " — ";
         color: var(--text-muted);
         font-weight: 600;

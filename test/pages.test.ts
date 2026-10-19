@@ -300,6 +300,33 @@ describe('the safety page, from the reference', () => {
   });
 });
 
+describe('the models pages\' reach columns', () => {
+  const list = pages();
+  const matrix = list.find(page => page.path === '/models/')!;
+  const lab = list.find(page => page.path === '/models/anthropic/')!;
+  const opus = list.find(page => page.path === '/models/anthropic/claude-opus/')!;
+
+  test('a documented route not yet run is Listed against its set-up; a way that does not reach is a dash', () => {
+    // The sidebar links the family pages too, so the row is the chunk with the matrix's own class.
+    const row = matrix.html.split('<tr>').find(part => part.includes('matrix__model') && part.includes('Claude Haiku'))!;
+    expect(row).toContain('<td data-label="Own CLI"><a href="/models/#setup-claude-code">Listed</a></td>');
+    expect(row).toContain('<td data-label="Cursor"><a href="/models/#setup-cursor">Listed</a></td>');
+    expect(row).toContain('<td data-label="Direct API"><span class="matrix__none">—</span></td>');
+  });
+
+  test('a lab page names the ways a listed family lists, and the route it serves', () => {
+    const text = blockText(lab.html);
+    expect(text).toContain('Claude Code · Antigravity · Cursor — no seat run yet');
+    expect(text).toContain('Claude Code — serves');
+    expect(text).toContain('Claude Haiku');
+  });
+
+  test('the models pages\' own tables name each cell\'s column, so a stacked phone row reads without its header', () => {
+    expect(opus.html).toContain('<td data-label="Version">');
+    expect(opus.html).toContain('<td data-label="Input price">');
+  });
+});
+
 describe('the reference the site is built against', () => {
   test('the content was fetched, and it says which ref it is', () => {
     expect(contentReady()).toBe(true);
