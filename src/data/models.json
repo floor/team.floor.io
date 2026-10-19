@@ -9,7 +9,7 @@
     { "id": "api", "name": "The API directly", "short": "Direct API" }
   ],
   "labs": [
-    { "slug": "anthropic", "name": "Anthropic", "vendor": "anthropic", "blurb": "Anthropic's Claude models — Opus, Sonnet and Fable — run by Claude Code or through a connector.", "subscribeHref": "https://www.anthropic.com/pricing", "quirks": [] },
+    { "slug": "anthropic", "name": "Anthropic", "vendor": "anthropic", "blurb": "Anthropic's Claude models — Opus, Sonnet, Haiku, Fable and Mythos — run by Claude Code or through a connector.", "subscribeHref": "https://www.anthropic.com/pricing", "quirks": [] },
     { "slug": "google", "name": "Google", "vendor": "google", "blurb": "Google's Gemini models, reached through Antigravity's agy or Google's cloud agent Jules.", "subscribeHref": "https://antigravity.google", "quirks": ["The hosted Gemini CLI no longer serves personal accounts; Antigravity's agy is the Google route for a personal account.", "Jules picks its own Gemini model, and the jules binary answers no --version."] },
     { "slug": "openai", "name": "OpenAI", "vendor": "openai", "blurb": "OpenAI's GPT models, run by Codex.", "subscribeHref": "https://openai.com/codex", "quirks": ["Codex updates itself, so its installed version moves on its own."] },
     { "slug": "xai", "name": "xAI", "vendor": "xai", "blurb": "xAI's Grok models, run by the Grok CLI or through Cursor.", "subscribeHref": "https://x.ai", "quirks": [] },
@@ -65,7 +65,8 @@
       "reach": [
         "Claude Code lists Claude Haiku on its own model screen, so a seat with model: Claude Haiku runs it the same way the Opus and Sonnet seats run theirs.",
         "Cursor and Antigravity list it among the Claude models on their plans."
-      ]
+      ],
+      "reachRoutes": ["claude-code", "antigravity", "cursor"]
     },
     {
       "slug": "claude-fable", "vendor": "anthropic", "name": "Claude Fable",
@@ -207,7 +208,8 @@
       ],
       "reach": [
         "Run by the Codex CLI — the same codex transport as the Sol seats, pointed at gpt-5.3-codex."
-      ]
+      ],
+      "reachRoutes": ["codex"]
     },
     {
       "slug": "gpt-cyber", "vendor": "openai", "name": "GPT Cyber",
@@ -288,7 +290,8 @@
       ],
       "reach": [
         "The same Claude Code endpoint route as the Flash seat, pointed at deepseek-v4-pro; no seat has run it yet."
-      ]
+      ],
+      "reachRoutes": ["claude-code-endpoint"]
     },
     {
       "slug": "kimi-k3", "vendor": "moonshot", "name": "Kimi K3",
@@ -320,7 +323,8 @@
       ],
       "reach": [
         "The same Claude Code endpoint route that runs K3 would run the K2 line; no seat has run it yet."
-      ]
+      ],
+      "reachRoutes": ["claude-code-endpoint"]
     },
     {
       "slug": "glm", "vendor": "zhipu", "name": "GLM",
@@ -351,7 +355,8 @@
       ],
       "reach": [
         "The same Claude Code endpoint route as the GLM 5.3 seat, pointed at glm-5.3-flash; no seat has run it yet."
-      ]
+      ],
+      "reachRoutes": ["claude-code-endpoint"]
     },
     {
       "slug": "muse-wonder", "vendor": "meta", "name": "Muse Wonder",

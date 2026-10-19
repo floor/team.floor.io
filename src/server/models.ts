@@ -32,26 +32,31 @@ export interface Transport {
 /** A model family: the line a lab sells under one name — Claude Opus, Gemini Flash, GPT Sol —
  *  across its versions. `modelSlug` names the catalog model the team actually runs, when it
  *  runs one; its routes and seat lines are the family's ways in. `reach` says, in prose, how a
- *  family with no catalog model would run; a family with neither is one TeamCLI cannot reach yet. */
+ *  family with no catalog model would run, and `reachRoutes` holds the same statement as
+ *  transport ids — documented routes, not yet run, so the matrix lists them; a family with
+ *  neither is one TeamCLI cannot reach yet. */
 export interface Family {
   slug: string; vendor: string; name: string; tagline: string; summary: string;
-  good: string[]; limits: string[]; modelSlug?: string; reach?: string[];
+  good: string[]; limits: string[]; modelSlug?: string; reach?: string[]; reachRoutes?: string[];
 }
 export interface Catalog { verifiedOn: string; ways: Way[]; labs: Lab[]; transports: Record<string, Transport>; models: Model[]; families: Family[] }
 
 /** A figure as read from a named source: the value verbatim, the source's id, and its note. */
 export interface Figure { v: string; s: string; note?: string }
 export interface BenchmarkFigure extends Figure { name: string }
+export interface CostFigure extends Figure { label: string }
 export interface FigureSource { label: string; href: string; read: string }
 /** One version's figures. An absent field is a dash — a figure the source does not publish,
- *  never a guess; every field that is there names the page it was read on. */
+ *  never a guess; every field that is there names the page it was read on. `extraCosts` holds
+ *  a priced variant the source publishes beside the standard prices (Opus 5.5's fast mode). */
 export interface VersionFigures {
   name: string; anchor: string; current?: boolean; apiId?: string; note?: string;
   released?: Figure; context?: Figure; maxOut?: Figure; priceIn?: Figure; priceOut?: Figure;
-  speed?: Figure; latency?: Figure; benchmarks?: BenchmarkFigure[];
+  speed?: Figure; latency?: Figure; benchmarks?: BenchmarkFigure[]; extraCosts?: CostFigure[];
 }
 export interface FiguresFile {
-  refreshedAt: string; sources: Record<string, FigureSource>; families: Record<string, { versions: VersionFigures[] }>;
+  refreshedAt: string; sources: Record<string, FigureSource>;
+  families: Record<string, { versions: VersionFigures[]; sources?: string[] }>;
 }
 
 function need<T>(value: T | undefined | null | false, what: string): T {
@@ -128,6 +133,10 @@ function load(): Catalog {
     need(Array.isArray(family.good) && family.good.length > 0, `family "${family.slug}" has no good list`);
     need(Array.isArray(family.limits) && family.limits.length > 0, `family "${family.slug}" has no limits list`);
     if (family.reach) need(Array.isArray(family.reach) && family.reach.length > 0, `family "${family.slug}" has an empty reach list`);
+    if (family.reachRoutes) {
+      need(Array.isArray(family.reachRoutes) && family.reachRoutes.length > 0, `family "${family.slug}" has an empty reachRoutes list`);
+      for (const id of family.reachRoutes) need(parsed.transports[id] !== undefined, `names the unknown transport "${id}" for the family "${family.slug}"`);
+    }
     if (family.modelSlug) {
       const model = parsed.models.find(entry => entry.slug === family.modelSlug);
       need(model, `family "${family.slug}" names an unknown model "${family.modelSlug}"`);
@@ -183,6 +192,15 @@ function loadFigures(): FiguresFile {
         need(benchmark.name, `family "${family.slug}" version "${version.name}" has a benchmark with no name`);
         need(known(benchmark), `family "${family.slug}" version "${version.name}" has a benchmark without a value or a known source`);
       }
+      for (const cost of version.extraCosts ?? []) {
+        need(cost.label, `family "${family.slug}" version "${version.name}" has an extra cost with no label`);
+        need(known(cost), `family "${family.slug}" version "${version.name}" has an extra cost without a value or a known source`);
+      }
+    }
+    // A family the sources dash out (Meta publishes no figures) still links the vendor page its
+    // dashes stand on; a family may also name the page its lineup was read from.
+    if (entry.sources) {
+      for (const id of entry.sources) need(parsed.sources[id] !== undefined, `lists the unknown source "${id}" for the family "${family.slug}"`);
     }
   }
   for (const slug of Object.keys(parsed.families)) {
@@ -255,10 +273,22 @@ const statusLabel = (status: Route['status']): string => (status === 'verified' 
 /** The route of a model that is reached by a given way, if any. */
 const routeForWay = (model: Model, wayId: string): Route | undefined =>
   model.routes.find(route => TRANSPORTS[route.transport]!.way === wayId);
-/** A markdown table from header cells and rows of markdown cells. */
+/** One table cell's inline markdown — code, strong, links — as HTML. The cells are all
+ *  code-built, so the three forms the builders emit are the whole grammar. */
+function cellHtml(markdown: string): string {
+  return escapeHtml(markdown)
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+}
+
+/** A table from header cells and rows of markdown cells, in the same frame the markdown
+ *  renderer gives its own tables. Every body cell carries its column name in data-label,
+ *  so the phone-width stacking — which hides the header row — still names each line. */
 function mdTable(head: string[], rows: string[][]): string {
-  const line = (cells: string[]) => `| ${cells.join(' | ')} |`;
-  return [line(head), line(head.map(() => '---')), ...rows.map(line)].join('\n');
+  const headCells = head.map(cell => `<th scope="col">${cellHtml(cell)}</th>`).join('');
+  const body = rows.map(cells => `<tr>${cells.map((cell, index) => `<td data-label="${attr(head[index]!)}">${cellHtml(cell)}</td>`).join('')}</tr>`).join('');
+  return `<div class="table-wrap" tabindex="0"><table><thead><tr>${headCells}</tr></thead>${body ? `<tbody>${body}</tbody>` : ''}</table></div>\n`;
 }
 const code = (text: string): string => `\`${text}\``;
 const link = (text: string, href: string): string => `[${text}](${href})`;
@@ -277,7 +307,7 @@ export function modelsOverview(): Rendered {
 
   doc.heading('The seat line');
   doc.md('In the team file, each seat names its model and how it is launched — the same six fields whichever route carries the model:');
-  doc.md(mdTable(
+  doc.raw(mdTable(
     ['Field', 'What it is'],
     [
       [code('cli'), 'The launch profile — which CLI or app runs the seat.'],
@@ -310,12 +340,18 @@ export function modelsOverview(): Rendered {
 
   const header = `<thead><tr><th scope="col">Family</th>${WAYS.map(way => `<th scope="col">${escapeHtml(way.short)}</th>`).join('')}</tr></thead>`;
   const span = WAYS.length + 1;
-  const row = (name: string, href: string, model: Model | undefined): string => {
+  const row = (name: string, href: string, model: Model | undefined, family?: Family): string => {
     const cells = WAYS.map(way => {
       const route = model ? routeForWay(model, way.id) : undefined;
-      const inner = route
-        ? `<a href="${setupHref(route.transport)}">${route.status === 'verified' ? 'Verified' : 'Listed'}</a>`
-        : '<span class="matrix__none">—</span>';
+      let inner: string;
+      if (route) {
+        inner = `<a href="${setupHref(route.transport)}">${route.status === 'verified' ? 'Verified' : 'Listed'}</a>`;
+      } else {
+        // A family with no catalog model may still name its routes: its reach prose, kept as
+        // transport ids — documented routes, not yet run, so the cell lists rather than dashes.
+        const reach = family?.reachRoutes?.find(id => TRANSPORTS[id]!.way === way.id);
+        inner = reach ? `<a href="${setupHref(reach)}">Listed</a>` : '<span class="matrix__none">—</span>';
+      }
       return `<td data-label="${attr(way.short)}">${inner}</td>`;
     }).join('');
     return `<tr><td class="matrix__model"><a href="${href}">${escapeHtml(name)}</a></td>${cells}</tr>`;
@@ -323,7 +359,7 @@ export function modelsOverview(): Rendered {
   const body = LABS.map(lab => {
     const groupRow = `<tr class="matrix__group"><td colspan="${span}"><a href="${labHref(lab.slug)}">${escapeHtml(lab.name)}</a></td></tr>`;
     const familyRows = familiesOf(lab.vendor)
-      .map(family => row(family.name, familyHref(lab.slug, family.slug), family.modelSlug ? modelBySlug(family.modelSlug) : undefined))
+      .map(family => row(family.name, familyHref(lab.slug, family.slug), family.modelSlug ? modelBySlug(family.modelSlug) : undefined, family))
       .join('');
     // The one model no family claims — a launcher that picks its own — keeps its row on the lab's page.
     const leftoverRows = modelsOfLab(lab.vendor)
@@ -357,16 +393,21 @@ function transportSteps(transport: Transport): string {
   return steps.map(step => `- ${step}`).join('\n');
 }
 
-/** The families a transport reaches, as links to their pages, for the "serves" line. */
+/** The families a transport reaches, as links to their pages, for the "serves" line — the
+ *  catalog models it carries, and the families whose documented-but-unrun routes name it. */
 function servesLine(transportId: string): string {
-  const models = MODELS.filter(model => model.routes.some(route => route.transport === transportId));
-  if (!models.length) return '';
-  return `Serves ${models.map(model => {
+  const carried = MODELS.filter(model => model.routes.some(route => route.transport === transportId)).map(model => {
     const family = familyOfModel(model);
     return family && labByVendor(model.vendor)
       ? link(family.name, familyHref(labByVendor(model.vendor)!.slug, family.slug))
       : link(model.name, modelAnchorHref(model));
-  }).join(', ')}.`;
+  });
+  const reached = FAMILIES.filter(family => !family.modelSlug && family.reachRoutes?.includes(transportId)).map(family => {
+    const lab = labByVendor(family.vendor)!;
+    return link(family.name, familyHref(lab.slug, family.slug));
+  });
+  const names = [...carried, ...reached];
+  return names.length ? `Serves ${names.join(', ')}.` : '';
 }
 
 // ---------------------------------------------------------------- one page per lab, one page per family
@@ -384,7 +425,7 @@ function modelSection(doc: Doc, model: Model): void {
  *  page's sections and the family pages' "Reaching it with TeamCLI". */
 function modelWays(doc: Doc, model: Model): void {
   doc.heading('Ways to reach it', 3);
-  doc.md(mdTable(
+  doc.raw(mdTable(
     ['Route', 'Spends', 'Status'],
     model.routes.map(route => {
       const transport = TRANSPORTS[route.transport]!;
@@ -397,7 +438,7 @@ function modelWays(doc: Doc, model: Model): void {
     doc.heading('The seat line', 3);
     doc.md('Each route maps to a TeamCLI seat line — the same fields, written generically. No machine paths, no launcher script of anybody\'s, no team\'s own seat names.');
     const dash = '—';
-    doc.md(mdTable(
+    doc.raw(mdTable(
       ['Route', 'cli', 'vendor', 'model', 'version', 'display', 'launch'],
       seated.map(route => {
         const seat = route.seat;
@@ -433,12 +474,13 @@ export function labPage(slug: string): Rendered {
 
   doc.heading('Families');
   doc.md(`Every family ${escapeHtml(lab.name)} offers today, each with its own page — the versions, the prices, the benchmarks the vendor publishes, and how TeamCLI reaches it:`);
-  doc.md(mdTable(
+  doc.raw(mdTable(
     ['Family', 'What it is', 'Ways in'],
     familiesOf(lab.vendor).map(family => {
       const model = family.modelSlug ? modelBySlug(family.modelSlug) : undefined;
       const ways = model
         ? model.routes.map(route => TRANSPORTS[route.transport]!.name).join(' · ')
+        : family.reachRoutes?.length ? `${family.reachRoutes.map(id => TRANSPORTS[id]!.name).join(' · ')} — no seat run yet`
         : family.reach?.length ? 'Reachable — no seat run yet' : 'Not reachable yet';
       return [link(family.name, familyHref(lab.slug, family.slug)), family.tagline, ways];
     }),
@@ -449,9 +491,13 @@ export function labPage(slug: string): Rendered {
   for (const model of modelsOfLab(lab.vendor)) {
     for (const route of model.routes) if (!transportIds.includes(route.transport)) transportIds.push(route.transport);
   }
+  for (const family of familiesOf(lab.vendor)) {
+    for (const id of family.reachRoutes ?? []) if (!transportIds.includes(id)) transportIds.push(id);
+  }
   const wayLines = transportIds.map(transportId => {
     const transport = TRANSPORTS[transportId]!;
     const served = familiesOf(lab.vendor).filter(family => {
+      if (family.reachRoutes?.includes(transportId)) return true;
       const model = family.modelSlug ? modelBySlug(family.modelSlug) : undefined;
       return model?.routes.some(route => route.transport === transportId);
     });
@@ -473,15 +519,16 @@ const figureCell = (figure: Figure | undefined): string => {
   const note = figure.note ? ` ${figure.note}` : '';
   return `**${figure.v}** — ${link(source.label, source.href)} (read ${source.read}).${note}`;
 };
-/** One figure as a labeled list line: what it measures, then the sourced, dated value. */
-const figureBullet = (label: string, figure: Figure | undefined): string => `- **${label}** — ${figureCell(figure)}`;
+/** One figure as a labeled list line: what it measures, then the sourced, dated value. The
+ *  label takes a colon, so an unpublished field reads as one dash, not a dash after a dash. */
+const figureBullet = (label: string, figure: Figure | undefined): string => `- **${label}:** ${figureCell(figure)}`;
 
 /** One version as a section of the family's Versions page part: Abilities, Costs, then
  *  Benchmarks the lab itself reports. The anchor keeps the old catalog slug when the team
  *  runs that version, so every kept link to the model lands here. */
 function versionSection(doc: Doc, family: Family, version: VersionFigures): void {
   doc.raw(`<h3 id="${escapeHtml(version.anchor)}">${escapeHtml(version.name)}${version.current ? ' — current' : ''}</h3>\n`);
-  doc.md(`- **Model id** — ${version.apiId ? code(version.apiId) : '—'}${version.note ? `\n- ${inline(version.note)}` : ''}`);
+  doc.md(`- **Model id:** ${version.apiId ? code(version.apiId) : '—'}${version.note ? `\n- ${inline(version.note)}` : ''}`);
   doc.md('**Abilities**');
   doc.md([
     figureBullet('Released', version.released),
@@ -491,7 +538,13 @@ function versionSection(doc: Doc, family: Family, version: VersionFigures): void
     figureBullet('Latency', version.latency),
   ].join('\n'));
   doc.md('**Costs**');
-  doc.md([figureBullet('Input price', version.priceIn), figureBullet('Output price', version.priceOut)].join('\n'));
+  const costs = [figureBullet('Input price', version.priceIn), figureBullet('Output price', version.priceOut)];
+  for (const cost of version.extraCosts ?? []) {
+    const source = FIGURE_SOURCES[cost.s]!;
+    const note = cost.note ? ` ${cost.note}` : '';
+    costs.push(`- **${cost.label}:** **${cost.v}** — ${link(source.label, source.href)} (read ${source.read}).${note}`);
+  }
+  doc.md(costs.join('\n'));
   if (version.benchmarks?.length) {
     doc.md('**Benchmarks — as reported by the lab**');
     doc.md(version.benchmarks.map(benchmark => {
@@ -525,15 +578,19 @@ function versionsComparisonTable(family: Family): string {
   );
 }
 
-/** The sources a family's figures were read from, in first-read order, for the Sources list. */
+/** The sources a family's figures were read from, in first-read order, for the Sources list —
+ *  the family's own named sources first (the page a dashed-out family stands on, or the page
+ *  its lineup was read from), then every figure's source. */
 function usedFigureSources(family: Family): FigureSource[] {
   const ids: string[] = [];
   const claim = (id: string): void => { if (!ids.includes(id)) ids.push(id); };
+  for (const id of FIGURES.families[family.slug]!.sources ?? []) claim(id);
   for (const version of FIGURES.families[family.slug]!.versions) {
     for (const figure of [version.released, version.context, version.maxOut, version.priceIn, version.priceOut, version.speed, version.latency]) {
       if (figure) claim(figure.s);
     }
     for (const benchmark of version.benchmarks ?? []) claim(benchmark.s);
+    for (const cost of version.extraCosts ?? []) claim(cost.s);
   }
   return ids.map(id => FIGURE_SOURCES[id]!);
 }
@@ -568,7 +625,7 @@ export function familyPage(labSlug: string, familySlug: string): Rendered {
   doc.heading('Versions');
   doc.md(`One block per version, the current one first, each with its own anchor. The comparison table puts the costs and the family's benchmark columns side by side; the values are verbatim, and every one is sourced and dated in its version's section below and in the Sources list. A dash means the source publishes no figure, and nothing here is estimated.`);
   doc.note('No independent intelligence or speed index is republished here: <a href="https://artificialanalysis.ai/models" rel="noopener noreferrer">Artificial Analysis</a> measures both across labs, and its terms allow the link but not the copy — its figures live on its own pages.');
-  doc.md(versionsComparisonTable(family));
+  doc.raw(versionsComparisonTable(family));
   for (const version of FIGURES.families[family.slug]!.versions) versionSection(doc, family, version);
 
   doc.heading('Sources');
