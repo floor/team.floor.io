@@ -744,11 +744,11 @@ try {
   //	   longest token plus padding, and the row-mate's width beside it — never a ratio
   //	   cap. A frame that does scroll is a keyboard tab stop (tabindex 0, with the
   //	   site's inside focus outline), so a reader who cannot use a pointer can scroll it.
-  //	3. the top navigation marks the page's section exactly once: a /docs/commands/…
-  //	   page is Commands, every other page that declares a section is Documentation, and
-  //	   the pages that declare none — the home page, privacy and the 404 — carry no
-  //	   current link at all. The mark is aria-current, the one assistive tech reads; the
-  //	   visible class alone is not the mark.
+  //	3. the top navigation marks the page's section exactly once: a /models/… page is
+  //	   Models, a /guide/… page is Guide, every other /docs/… page (the command pages
+  //	   among them) is Documentation, and the pages that declare none — the home page,
+  //	   privacy and the 404 — carry no current link at all. The mark is aria-current, the
+  //	   one assistive tech reads; the visible class alone is not the mark.
   // The page list is the site's own sitemap.xml, read over HTTP, so this measures what the
   // site publishes and not a list retyped here.
   {
@@ -848,8 +848,8 @@ try {
         const nav = facts.nav;
         check(nav !== null, `${where} rule 3 navigation: the header carries no top navigation`);
         if (nav) {
-          const expected = path.startsWith('/docs/commands/') ? 'Commands' : path.startsWith('/docs/') ? 'Documentation' : nav.declared;
-          const target = expected === 'Commands' ? '/docs/commands/' : expected === 'Documentation' ? '/docs/' : null;
+          const expected = path.startsWith('/models/') ? 'Models' : path.startsWith('/guide/') ? 'Guide' : path.startsWith('/docs/') ? 'Documentation' : nav.declared;
+          const target = expected === 'Models' ? '/models/' : expected === 'Guide' ? '/guide/' : expected === 'Documentation' ? '/docs/' : null;
           const current = nav.links.filter(link => link.current !== null);
           const carrying = `${current.length} of ${nav.links.length} links carry aria-current (${current.map(link => JSON.stringify(link.path)).join(', ') || 'none'})`;
           if (target === null) {

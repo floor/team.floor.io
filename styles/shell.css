@@ -293,6 +293,22 @@ video {
     text-transform: uppercase;
 }
 
+/* A sidebar group whose label is its own page (a lab): the label keeps its look, and gains
+   the hover and the active colour of a link. */
+a.sidebar__label {
+    display: block;
+    text-decoration: none;
+    transition: color var(--transition);
+}
+
+a.sidebar__label:hover {
+    color: var(--text);
+}
+
+a.sidebar__label[aria-current] {
+    color: var(--accent);
+}
+
 .sidebar__link {
     display: block;
     padding: 5px 10px;

@@ -40,8 +40,9 @@
   <header class="header"><div class="header__inner">
     <span class="header__brand"><a class="header__logo" href="/" aria-label="team, home"><img class="header__mark" src="/favicon.svg" width="24" height="24" alt="" /><span>team</span></a><% if (it.isHome || it.headerCommand) { %><span class="header__command" aria-hidden="true" data-header-command="<%= it.headerCommand %>" data-header-commands="<%= it.rollingCommands.join(',') %>" data-header-home="<%= it.isHome %>"><span class="header__typed"><%= it.headerCommand %></span><span class="header__caret"></span></span><% } %></span>
     <nav class="header__nav" aria-label="Main navigation">
-      <a href="/docs/" class="<%= it.section === 'Documentation' && !it.path.startsWith('/docs/commands/') ? 'active' : '' %>" <% if (it.section === 'Documentation' && !it.path.startsWith('/docs/commands/')) { %>aria-current="page"<% } %>>Documentation</a>
-      <a href="/docs/commands/" class="<%= it.path.startsWith('/docs/commands/') ? 'active' : '' %>" <% if (it.path.startsWith('/docs/commands/')) { %>aria-current="page"<% } %>>Commands</a>
+      <a href="/models/" class="<%= it.section === 'Models' ? 'active' : '' %>" <% if (it.section === 'Models') { %>aria-current="page"<% } %>>Models</a>
+      <a href="/docs/" class="<%= it.section === 'Documentation' ? 'active' : '' %>" <% if (it.section === 'Documentation') { %>aria-current="page"<% } %>>Documentation</a>
+      <a href="/guide/" class="<%= it.section === 'Guide' ? 'active' : '' %>" <% if (it.section === 'Guide') { %>aria-current="page"<% } %>>Guide</a>
       <a href="https://github.com/floor/teamcli" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
     </nav>
     <button type="button" class="header__search" id="search-trigger" aria-label="Search ⌘K" aria-haspopup="dialog" aria-keyshortcuts="Meta+K Control+K">
@@ -57,8 +58,8 @@
   <button id="overlay" class="overlay" type="button" aria-label="Close navigation" hidden></button>
   <div class="layout">
     <nav class="sidebar" id="sidebar" aria-label="Documentation navigation">
-      <div class="sidebar__group mobile-navigation"><a class="sidebar__link" href="/docs/">Documentation</a><a class="sidebar__link" href="/docs/commands/">Commands</a><a class="sidebar__link" href="https://github.com/floor/teamcli">GitHub ↗</a></div>
-      <% it.nav.forEach(group => { %><div class="sidebar__group"><div class="sidebar__label"><%= group.label %></div><% group.items.forEach(item => { %>
+      <div class="sidebar__group mobile-navigation"><a class="sidebar__link" href="/models/">Models</a><a class="sidebar__link" href="/docs/">Documentation</a><a class="sidebar__link" href="/guide/">Guide</a><a class="sidebar__link" href="https://github.com/floor/teamcli">GitHub ↗</a></div>
+      <% it.nav.forEach(group => { %><div class="sidebar__group"><% if (group.href) { %><a class="sidebar__label" href="<%= group.href %>"<% if (it.path === group.href) { %> aria-current="page"<% } %>><%= group.label %></a><% } else { %><div class="sidebar__label"><%= group.label %></div><% } %><% group.items.forEach(item => { %>
         <a class="sidebar__link <%= it.path === item.href ? 'sidebar__link--active' : '' %>" href="<%= item.href %>" <% if (it.path === item.href) { %>aria-current="page"<% } %>><%= item.name %></a>
       <% }); %></div><% }); %>
       <div class="sidebar__foot">team <%= it.version %> · <a href="https://github.com/floor/teamcli/blob/main/LICENSE">MIT license</a><br>Runs teams in <a href="https://herdr.dev">herdr</a></div>

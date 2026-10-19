@@ -8,8 +8,9 @@ import { Eta } from 'eta';
 import { extname, resolve, sep } from 'node:path';
 import { IMMUTABLE_CACHE, SHORT_CACHE, isImmutableAsset, loadAssetManifest } from './src/server/assets';
 import { materialSheets, type StylesheetBundle } from './src/server/css';
-import { descriptionFor, headline, headlineAccent, headlineLead, heroSubline, homePoints, homeSamples, homeTitle, info, inline, INSTALL_MANAGERS, installMarkup, nav, pages, versionLine } from './src/server/pages';
+import { descriptionFor, headline, headlineAccent, headlineLead, heroSubline, homePoints, homeSamples, homeTitle, info, inline, INSTALL_MANAGERS, installMarkup, navFor, pages, SECTION_HOME, sectionOf, versionLine, type NavGroup } from './src/server/pages';
 import { commandNames } from './src/server/reference';
+import { modelRedirects } from './src/server/models';
 import { fenceHtml } from './src/server/markdown';
 import { searchSite, suggestions } from './src/server/search';
 import { jsonForScript, robotsTxt, SITE, SITE_NAME, sitemapXml, structuredData } from './src/server/seo';
@@ -29,9 +30,9 @@ const escapeHtml = (text: string) => text.replace(/[&<>"]/g, character => ({ '&'
 
 const escapeAttr = (text: string) => escapeHtml(text).replace(/'/g, '&#39;');
 
-/** The previous and next links for a reference page, from the sidebar's own order. */
+/** The previous and next links for a page, from its own section's sidebar order. */
 function pager(path: string): string {
-  const order = nav.flatMap(group => group.items);
+  const order = navFor(sectionOf(path)).flatMap((group: NavGroup) => group.items);
   const index = order.findIndex(item => item.href === path);
   if (index < 0) return '';
   const [prev, next] = [order[index - 1], order[index + 1]];
@@ -54,15 +55,17 @@ function shell(body: { path: string; title: string; description: string; content
     path: body.path, title: body.title, description: body.description, css: body.css, section: body.section ?? 'Documentation',
     site: SITE, siteName: SITE_NAME,
     isHome: Boolean(body.isHome), headerCommand: command && commands.includes(command) ? command : '', rollingCommands,
-    jsonLd: body.jsonLd ?? [], nav, version: info.version, content: body.content, materialSheets, headline,
+    jsonLd: body.jsonLd ?? [], nav: navFor(sectionOf(body.path)), version: info.version, content: body.content, materialSheets, headline,
     installManagers: INSTALL_MANAGERS.map(manager => manager.id),
   });
 }
 /** A documentation page: the page's own content, wrapped with its table of contents and pager. */
 function docPage(path: string, title: string, description: string, content: { html: string; toc: { title: string; id: string }[] }, options: { css?: StylesheetBundle; isHome?: boolean; section?: string; status?: number } = {}): Response {
+  const section = sectionOf(path);
   const inner = eta.render('page', {
     html: content.html, toc: content.toc,
-    pager: options.isHome === undefined && path.startsWith('/docs/') ? pager(path) : '',
+    back: { href: SECTION_HOME[section], label: section },
+    pager: options.isHome === undefined && /^\/(?:docs|models|guide)\//.test(path) ? pager(path) : '',
   });
   return html(shell({
     path, title, description, content: inner, css: options.css ?? 'page', section: options.section, isHome: options.isHome,
@@ -77,6 +80,10 @@ function plainPage(path: string, title: string, description: string, template: s
     jsonLd: structuredData(path, title.replace(/ — team$/, ''), description).map(jsonForScript),
   }));
 }
+
+// The old per-model URLs now redirect, once and for all, to the model's section on its lab page,
+// so a link anyone kept to `/models/<model>/` still lands on the model.
+const MODEL_REDIRECTS = modelRedirects();
 
 const mime: Record<string, string> = { '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.woff2': 'font/woff2' };
 /** The files browsers and link previews ask for at the root, from public/. */
@@ -122,6 +129,9 @@ export async function handleRequest(request: Request): Promise<Response> {
     return new Response(body, { headers: { ...commonHeaders, 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-cache' } });
   }
   if (!path.endsWith('/') && !extname(path)) return new Response(null, { status: 308, headers: { Location: `${url.pathname}/${url.search}` } });
+  // A retired per-model URL moves permanently to its lab-page section.
+  const movedTo = MODEL_REDIRECTS[path];
+  if (movedTo) return new Response(null, { status: 301, headers: { ...commonHeaders, Location: movedTo, 'Cache-Control': 'public, max-age=3600' } });
 
   let response: Response;
   if (path === '/') {

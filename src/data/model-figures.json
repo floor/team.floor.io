@@ -1,0 +1,284 @@
+{
+  "$comment": [
+    "Figures for the model family pages, each value carrying the source it was read from.",
+    "Every source names the page it was read on and the date it was read; the build fails on",
+    "a figure without a source. A field left out is shown as a dash — never guessed. Prices are",
+    "the vendor's own, per million tokens unless the value says otherwise. Independent indices",
+    "and cross-lab benchmark comparisons live on Artificial Analysis's own model pages, linked",
+    "from each family; its terms do not allow republication here. Refresh with",
+    "bun scripts/refresh-model-figures.ts, which re-checks every source and stamps refreshedAt."
+  ],
+  "refreshedAt": "2026-10-19",
+  "sources": {
+    "anthropic-pricing": { "label": "Anthropic — pricing", "href": "https://platform.claude.com/docs/en/about-claude/pricing", "read": "2026-10-19" },
+    "anthropic-models": { "label": "Anthropic — models overview", "href": "https://platform.claude.com/docs/en/about-claude/models/overview", "read": "2026-10-19" },
+    "anthropic-opus-card": { "label": "Anthropic — Claude Opus 5.5 model page", "href": "https://platform.claude.com/docs/en/models/opus-5-5/overview", "read": "2026-10-19" },
+    "anthropic-sonnet-card": { "label": "Anthropic — Claude Sonnet 5.5 model page", "href": "https://platform.claude.com/docs/en/models/sonnet-5-5/overview", "read": "2026-10-19" },
+    "anthropic-haiku-card": { "label": "Anthropic — Claude Haiku 5.5 model page", "href": "https://platform.claude.com/docs/en/models/haiku-5-5/overview", "read": "2026-10-19" },
+    "anthropic-fable-card": { "label": "Anthropic — Claude Fable 5.1 model page", "href": "https://platform.claude.com/docs/en/models/fable-5-1/overview", "read": "2026-10-19" },
+    "anthropic-opus-announce": { "label": "Anthropic — Claude Opus 5.5 announcement", "href": "https://www.anthropic.com/claude-opus-5-5", "read": "2026-10-19" },
+    "anthropic-sonnet-announce": { "label": "Anthropic — Claude Sonnet 5.5 announcement", "href": "https://www.anthropic.com/claude-sonnet-5-5", "read": "2026-10-19" },
+    "anthropic-haiku-announce": { "label": "Anthropic — Claude Haiku 5.5 announcement", "href": "https://www.anthropic.com/claude-haiku-5-5", "read": "2026-10-19" },
+    "google-pricing": { "label": "Google — Gemini API pricing", "href": "https://ai.google.dev/gemini-api/docs/pricing", "read": "2026-10-19" },
+    "google-models": { "label": "Google — Gemini models", "href": "https://ai.google.dev/gemini-api/docs/models", "read": "2026-10-19" },
+    "google-argon-card": { "label": "Google — Gemini 4 Argon model page", "href": "https://ai.google.dev/gemini-api/docs/models/gemini-4-argon", "read": "2026-10-19" },
+    "openai-pricing": { "label": "OpenAI — API pricing", "href": "https://developers.openai.com/api/docs/pricing", "read": "2026-10-19" },
+    "openai-models": { "label": "OpenAI — models", "href": "https://developers.openai.com/api/docs/models", "read": "2026-10-19" },
+    "openai-astra-page": { "label": "OpenAI — GPT-6 Astra model page", "href": "https://developers.openai.com/api/docs/models/gpt-6-astra", "read": "2026-10-19" },
+    "xai-models": { "label": "xAI — Grok models and pricing", "href": "https://docs.x.ai/docs/models", "read": "2026-10-19" },
+    "deepseek-pricing": { "label": "DeepSeek — API pricing", "href": "https://api-docs.deepseek.com/quick_start/pricing", "read": "2026-10-19" },
+    "kimi-models": { "label": "Moonshot — Kimi model list", "href": "https://platform.kimi.ai/docs/models", "read": "2026-10-19" },
+    "kimi-pricing": { "label": "Moonshot — Kimi pricing", "href": "https://platform.kimi.ai/docs/pricing/chat", "read": "2026-10-19" },
+    "zai-glm53-card": { "label": "Z.ai — GLM-5.3 model page", "href": "https://docs.z.ai/guides/llm/glm-5.3", "read": "2026-10-19" },
+    "zai-pricing": { "label": "Z.ai — pricing", "href": "https://docs.z.ai/guides/overview/pricing.md", "read": "2026-10-19" },
+    "meta-dev": { "label": "Meta — developer model pages", "href": "https://dev.meta.ai/", "read": "2026-10-19" }
+  },
+  "families": {
+    "claude-opus": {
+      "versions": [
+        {
+          "name": "Claude Opus 5.5", "anchor": "claude-opus-5-5", "current": true, "apiId": "claude-opus-5-5",
+          "released": { "v": "September 22, 2026", "s": "anthropic-opus-card" },
+          "context": { "v": "1M tokens", "s": "anthropic-opus-card" },
+          "maxOut": { "v": "128K tokens", "s": "anthropic-opus-card" },
+          "priceIn": { "v": "$4 / MTok", "s": "anthropic-pricing", "note": "Batch API 50% off; cache reads $0.20" },
+          "priceOut": { "v": "$20 / MTok", "s": "anthropic-pricing" },
+          "latency": { "v": "Moderate (comparative, within Anthropic's lineup)", "s": "anthropic-models" },
+          "benchmarks": [
+            { "name": "Terminal-Bench 4.0 (agentic coding)", "v": "66.4%", "s": "anthropic-opus-announce", "note": "xhigh effort; ±2.6 pts standard error" },
+            { "name": "FrontierCode v1.1, Main (agentic coding)", "v": "54.4%", "s": "anthropic-opus-announce" },
+            { "name": "CursorBench 4.0 (agentic coding)", "v": "57.8%", "s": "anthropic-opus-announce" },
+            { "name": "Humanity's Last Exam (multidisciplinary reasoning)", "v": "67.7% (with tools)", "s": "anthropic-opus-announce" },
+            { "name": "OSWorld 2.1 (computer use)", "v": "81.8% (partial)", "s": "anthropic-opus-announce" }
+          ]
+        },
+        { "name": "Claude Opus 5", "anchor": "claude-opus-5", "apiId": "claude-opus-5", "priceIn": { "v": "$5 / MTok", "s": "anthropic-pricing" }, "priceOut": { "v": "$25 / MTok", "s": "anthropic-pricing" }, "benchmarks": [ { "name": "Terminal-Bench 4.0 (agentic coding)", "v": "52.3%", "s": "anthropic-opus-announce" }, { "name": "FrontierCode v1.1, Main (agentic coding)", "v": "48.0%", "s": "anthropic-opus-announce" }, { "name": "CursorBench 4.0 (agentic coding)", "v": "46.6%", "s": "anthropic-opus-announce" } ] },
+        { "name": "Claude Opus 4.8", "anchor": "claude-opus-4-8", "priceIn": { "v": "$5 / MTok", "s": "anthropic-pricing" }, "priceOut": { "v": "$25 / MTok", "s": "anthropic-pricing" } },
+        { "name": "Claude Opus 4.7", "anchor": "claude-opus-4-7", "priceIn": { "v": "$5 / MTok", "s": "anthropic-pricing" }, "priceOut": { "v": "$25 / MTok", "s": "anthropic-pricing" } },
+        { "name": "Claude Opus 4.6", "anchor": "claude-opus-4-6", "priceIn": { "v": "$5 / MTok", "s": "anthropic-pricing" }, "priceOut": { "v": "$25 / MTok", "s": "anthropic-pricing" } },
+        { "name": "Claude Opus 4.5", "anchor": "claude-opus-4-5", "priceIn": { "v": "$5 / MTok", "s": "anthropic-pricing" }, "priceOut": { "v": "$25 / MTok", "s": "anthropic-pricing" } }
+      ]
+    },
+    "claude-sonnet": {
+      "versions": [
+        {
+          "name": "Claude Sonnet 5.5", "anchor": "claude-sonnet-5-5", "current": true, "apiId": "claude-sonnet-5-5",
+          "released": { "v": "September 28, 2026", "s": "anthropic-sonnet-card" },
+          "context": { "v": "1M tokens", "s": "anthropic-sonnet-card" },
+          "maxOut": { "v": "128K tokens", "s": "anthropic-sonnet-card" },
+          "priceIn": { "v": "$2 / MTok", "s": "anthropic-pricing", "note": "Batch API 50% off; cache reads $0.10" },
+          "priceOut": { "v": "$10 / MTok", "s": "anthropic-pricing" },
+          "latency": { "v": "Fast (comparative); outputs 30%+ faster than Sonnet 5", "s": "anthropic-sonnet-announce" },
+          "benchmarks": [
+            { "name": "Terminal-Bench 4.0 (agentic coding)", "v": "70.6%", "s": "anthropic-sonnet-announce" },
+            { "name": "FrontierCode 1.1, Main (agentic coding)", "v": "46.2% (max effort)", "s": "anthropic-sonnet-announce" },
+            { "name": "CursorBench 4.0 (agentic coding)", "v": "55.5%", "s": "anthropic-sonnet-announce" },
+            { "name": "GDPval-AA v2.1 (knowledge work, Elo)", "v": "1844", "s": "anthropic-sonnet-announce" },
+            { "name": "OSWorld 2.1 (computer use)", "v": "80.1% (partial)", "s": "anthropic-sonnet-announce" }
+          ]
+        },
+        { "name": "Claude Sonnet 5", "anchor": "claude-sonnet-5", "priceIn": { "v": "$2 / MTok", "s": "anthropic-pricing" }, "priceOut": { "v": "$10 / MTok", "s": "anthropic-pricing" }, "benchmarks": [ { "name": "Terminal-Bench 4.0 (agentic coding)", "v": "10.3%", "s": "anthropic-sonnet-announce" }, { "name": "CursorBench 4.0 (agentic coding)", "v": "34.1%", "s": "anthropic-sonnet-announce" } ] },
+        { "name": "Claude Sonnet 4.6", "anchor": "claude-sonnet-4-6", "priceIn": { "v": "$3 / MTok", "s": "anthropic-pricing" }, "priceOut": { "v": "$15 / MTok", "s": "anthropic-pricing" } }
+      ]
+    },
+    "claude-haiku": {
+      "versions": [
+        {
+          "name": "Claude Haiku 5.5", "anchor": "claude-haiku-5-5", "current": true, "apiId": "claude-haiku-5-5",
+          "released": { "v": "October 7, 2026", "s": "anthropic-haiku-card" },
+          "context": { "v": "1M tokens", "s": "anthropic-haiku-card" },
+          "maxOut": { "v": "128K tokens", "s": "anthropic-haiku-card" },
+          "priceIn": { "v": "$0.10 / MTok", "s": "anthropic-pricing", "note": "Prompts over 100,000 tokens: $0.50 in / $2.50 out" },
+          "priceOut": { "v": "$0.50 / MTok", "s": "anthropic-pricing" },
+          "latency": { "v": "Fastest (comparative); Anthropic's fastest model to date at standard speed", "s": "anthropic-haiku-announce" },
+          "benchmarks": [
+            { "name": "Terminal-Bench 4.0 (agentic coding)", "v": "39.2%", "s": "anthropic-haiku-announce" },
+            { "name": "FrontierCode 1.1, Main (agentic coding)", "v": "46.4%", "s": "anthropic-haiku-announce" },
+            { "name": "GDPval-AA v2.1 (knowledge work, Elo)", "v": "1620", "s": "anthropic-haiku-announce" },
+            { "name": "Humanity's Last Exam", "v": "45.9% no tools / 57.4% with tools", "s": "anthropic-haiku-announce" }
+          ]
+        },
+        { "name": "Claude Haiku 4.5", "anchor": "claude-haiku-4-5", "priceIn": { "v": "$1 / MTok", "s": "anthropic-pricing" }, "priceOut": { "v": "$5 / MTok", "s": "anthropic-pricing" }, "benchmarks": [ { "name": "Terminal-Bench 4.0 (agentic coding)", "v": "0.0%", "s": "anthropic-haiku-announce" } ] }
+      ]
+    },
+    "claude-fable": {
+      "versions": [
+        {
+          "name": "Claude Fable 5.1", "anchor": "claude-fable-5-1", "current": true, "apiId": "claude-fable-5-1",
+          "released": { "v": "September 1, 2026", "s": "anthropic-fable-card" },
+          "context": { "v": "1M tokens", "s": "anthropic-fable-card" },
+          "maxOut": { "v": "128K tokens", "s": "anthropic-fable-card" },
+          "priceIn": { "v": "$10 / MTok", "s": "anthropic-pricing", "note": "Batch API 50% off; cache reads $0.25" },
+          "priceOut": { "v": "$50 / MTok", "s": "anthropic-pricing" },
+          "latency": { "v": "Slower (comparative, within Anthropic's lineup)", "s": "anthropic-models" },
+          "benchmarks": [
+            { "name": "Terminal-Bench 4.0 (agentic coding)", "v": "55.8%", "s": "anthropic-opus-announce" },
+            { "name": "FrontierCode v1.1, Main (agentic coding)", "v": "50.3%", "s": "anthropic-opus-announce" },
+            { "name": "CursorBench 4.0 (agentic coding)", "v": "51.8%", "s": "anthropic-opus-announce" },
+            { "name": "Humanity's Last Exam (multidisciplinary reasoning)", "v": "65.6%", "s": "anthropic-opus-announce" }
+          ]
+        },
+        { "name": "Claude Fable 5", "anchor": "claude-fable-5", "priceIn": { "v": "$10 / MTok", "s": "anthropic-pricing" }, "priceOut": { "v": "$50 / MTok", "s": "anthropic-pricing" } }
+      ]
+    },
+    "claude-mythos": {
+      "versions": [
+        { "name": "Claude Mythos 5.1", "anchor": "claude-mythos-5-1", "current": true, "priceIn": { "v": "$10 / MTok", "s": "anthropic-pricing", "note": "Limited availability; Fable 5.1's specs and pricing" }, "priceOut": { "v": "$50 / MTok", "s": "anthropic-pricing" }, "context": { "v": "1M tokens", "s": "anthropic-fable-card", "note": "Shares Fable 5.1's specifications" }, "maxOut": { "v": "128K tokens", "s": "anthropic-fable-card" } },
+        { "name": "Claude Mythos 5", "anchor": "claude-mythos-5", "priceIn": { "v": "$10 / MTok", "s": "anthropic-pricing", "note": "Limited availability" }, "priceOut": { "v": "$50 / MTok", "s": "anthropic-pricing" } }
+      ]
+    },
+    "gemini-argon": {
+      "versions": [
+        {
+          "name": "Gemini 4 Argon", "anchor": "gemini-4-argon", "current": true, "apiId": "gemini-4-argon",
+          "context": { "v": "1,048,576 tokens (unified)", "s": "google-argon-card" },
+          "maxOut": { "v": "65,536 tokens default; up to 1,048,576 with long decode", "s": "google-argon-card" },
+          "priceIn": { "v": "$2.00 / MTok", "s": "google-pricing", "note": "$4.00 from December 1, 2026" },
+          "priceOut": { "v": "$10.00 / MTok", "s": "google-pricing", "note": "$20.00 from December 1, 2026" }
+        }
+      ]
+    },
+    "gemini-pro": {
+      "versions": [
+        { "name": "Gemini 3.1 Pro (preview)", "anchor": "gemini-3-1-pro", "current": true, "apiId": "gemini-3.1-pro-preview", "priceIn": { "v": "$2.00 / MTok", "s": "google-pricing", "note": "Prompts over 200k tokens: $4.00 in / $18.00 out" }, "priceOut": { "v": "$12.00 / MTok", "s": "google-pricing" } },
+        { "name": "Gemini 2.5 Pro (access limited)", "anchor": "gemini-2-5-pro", "apiId": "gemini-2.5-pro", "priceIn": { "v": "$1.25 / MTok", "s": "google-pricing", "note": "Prompts over 200k tokens: $2.50 in / $15.00 out" }, "priceOut": { "v": "$10.00 / MTok", "s": "google-pricing" } }
+      ]
+    },
+    "gemini-flash": {
+      "versions": [
+        { "name": "Gemini 3.8 Flash", "anchor": "gemini-3-8-flash", "current": true, "apiId": "gemini-3.8-flash", "priceIn": { "v": "$0.75 / MTok", "s": "google-pricing", "note": "$1.50 from January 1, 2027" }, "priceOut": { "v": "$3.75 / MTok", "s": "google-pricing", "note": "$7.50 from January 1, 2027" } },
+        { "name": "Gemini 3.6 Flash", "anchor": "gemini-3-6-flash", "apiId": "gemini-3.6-flash", "priceIn": { "v": "$0.75 / MTok", "s": "google-pricing", "note": "$1.50 from January 1, 2027" }, "priceOut": { "v": "$3.75 / MTok", "s": "google-pricing", "note": "$7.50 from January 1, 2027" } },
+        { "name": "Gemini 3 Flash (preview)", "anchor": "gemini-3-flash", "apiId": "gemini-3-flash-preview", "priceIn": { "v": "$0.50 / MTok", "s": "google-pricing" }, "priceOut": { "v": "$3.00 / MTok", "s": "google-pricing" } },
+        { "name": "Gemini 2.5 Flash (access limited)", "anchor": "gemini-2-5-flash", "apiId": "gemini-2.5-flash", "context": { "v": "1M tokens", "s": "google-pricing" }, "priceIn": { "v": "$0.30 / MTok", "s": "google-pricing" }, "priceOut": { "v": "$2.50 / MTok", "s": "google-pricing" } }
+      ]
+    },
+    "gemini-flash-lite": {
+      "versions": [
+        { "name": "Gemini 3.5 Flash-Lite", "anchor": "gemini-3-5-flash-lite", "current": true, "apiId": "gemini-3.5-flash-lite", "priceIn": { "v": "$0.30 / MTok", "s": "google-pricing" }, "priceOut": { "v": "$2.50 / MTok", "s": "google-pricing" } },
+        { "name": "Gemini 3.1 Flash-Lite", "anchor": "gemini-3-1-flash-lite", "apiId": "gemini-3.1-flash-lite", "priceIn": { "v": "$0.25 / MTok", "s": "google-pricing", "note": "Audio input $0.50" }, "priceOut": { "v": "$1.50 / MTok", "s": "google-pricing" } }
+      ]
+    },
+    "gpt-astra": {
+      "versions": [
+        {
+          "name": "GPT-6 Astra", "anchor": "gpt-6-astra", "current": true, "apiId": "gpt-6-astra",
+          "context": { "v": "1,050,000 tokens (max input 922,000)", "s": "openai-astra-page" },
+          "maxOut": { "v": "128,000 tokens", "s": "openai-astra-page" },
+          "priceIn": { "v": "$10.00 / MTok", "s": "openai-astra-page", "note": "Cached input $1.00; prompts over 272k tokens priced at 2× input, 1.5× output" },
+          "priceOut": { "v": "$50.00 / MTok", "s": "openai-astra-page" }
+        }
+      ]
+    },
+    "gpt-sol": {
+      "versions": [
+        { "name": "GPT-6.1 Sol", "anchor": "gpt-sol-6-1", "current": true, "apiId": "gpt-6.1-sol", "context": { "v": "1.05M tokens", "s": "openai-models" }, "maxOut": { "v": "128K tokens", "s": "openai-models" }, "priceIn": { "v": "$2.00 / MTok", "s": "openai-pricing", "note": "Long context (>272k): $4.00 in / $15.00 out" }, "priceOut": { "v": "$10.00 / MTok", "s": "openai-pricing" } },
+        { "name": "GPT-6 Sol", "anchor": "gpt-6-sol", "apiId": "gpt-6-sol", "priceIn": { "v": "$2.00 / MTok", "s": "openai-pricing", "note": "Long context: $4.00 in / $15.00 out" }, "priceOut": { "v": "$10.00 / MTok", "s": "openai-pricing" } },
+        { "name": "GPT-5.6 Sol", "anchor": "gpt-5-6-sol", "apiId": "gpt-5.6-sol", "priceIn": { "v": "$4.00 / MTok", "s": "openai-pricing", "note": "Promotional at least through November 21, 2026; long context: $8.00 in / $30.00 out" }, "priceOut": { "v": "$20.00 / MTok", "s": "openai-pricing" } }
+      ]
+    },
+    "gpt-terra": {
+      "versions": [
+        { "name": "GPT-5.6 Terra", "anchor": "gpt-terra-5-6", "current": true, "apiId": "gpt-5.6-terra", "priceIn": { "v": "$2.00 / MTok", "s": "openai-pricing", "note": "Long context: $4.00 in / $18.00 out" }, "priceOut": { "v": "$12.00 / MTok", "s": "openai-pricing" } }
+      ]
+    },
+    "gpt-luna": {
+      "versions": [
+        { "name": "GPT-6 Luna", "anchor": "gpt-6-luna", "current": true, "apiId": "gpt-6-luna", "context": { "v": "1.05M tokens", "s": "openai-models" }, "maxOut": { "v": "128K tokens", "s": "openai-models" }, "priceIn": { "v": "$0.10 / MTok", "s": "openai-pricing", "note": "Long context: $0.20 in / $0.75 out" }, "priceOut": { "v": "$0.50 / MTok", "s": "openai-pricing" } },
+        { "name": "GPT-5.6 Luna", "anchor": "gpt-5-6-luna", "apiId": "gpt-5.6-luna", "priceIn": { "v": "$0.20 / MTok", "s": "openai-pricing", "note": "Long context: $0.40 in / $1.80 out" }, "priceOut": { "v": "$1.20 / MTok", "s": "openai-pricing" } }
+      ]
+    },
+    "gpt-codex": {
+      "versions": [
+        { "name": "GPT-5.3 Codex", "anchor": "gpt-5-3-codex", "current": true, "apiId": "gpt-5.3-codex", "priceIn": { "v": "$1.75 / MTok", "s": "openai-pricing", "note": "Fast tier: $3.50 in / $28.00 out" }, "priceOut": { "v": "$14.00 / MTok", "s": "openai-pricing" } }
+      ]
+    },
+    "gpt-cyber": {
+      "versions": [
+        { "name": "GPT-5.6 Cyber (Daybreak)", "anchor": "gpt-5-6-cyber", "current": true, "apiId": "gpt-5.6-cyber", "priceIn": { "v": "$12.50 / MTok", "s": "openai-pricing", "note": "For authorized vulnerability research and security testing" }, "priceOut": { "v": "$75.00 / MTok", "s": "openai-pricing" } },
+        { "name": "GPT-5.5 Cyber", "anchor": "gpt-5-5-cyber", "apiId": "gpt-5.5-cyber", "priceIn": { "v": "$12.50 / MTok", "s": "openai-pricing" }, "priceOut": { "v": "$75.00 / MTok", "s": "openai-pricing" } }
+      ]
+    },
+    "gpt-rosalind": {
+      "versions": [
+        { "name": "GPT-Rosalind Research", "anchor": "gpt-rosalind-research", "current": true, "apiId": "gpt-rosalind-research", "priceIn": { "v": "$5.00 / MTok", "s": "openai-pricing", "note": "Approved organizations only" }, "priceOut": { "v": "$25.00 / MTok", "s": "openai-pricing" } },
+        { "name": "GPT-Rosalind Discovery", "anchor": "gpt-rosalind-discovery", "apiId": "gpt-rosalind-discovery", "priceIn": { "v": "$5.00 / MTok", "s": "openai-pricing" }, "priceOut": { "v": "$25.00 / MTok", "s": "openai-pricing" } }
+      ]
+    },
+    "grok": {
+      "versions": [
+        { "name": "Grok 4.7", "anchor": "grok-4-7", "current": true, "apiId": "grok-4.7", "context": { "v": "500K tokens", "s": "xai-models" }, "priceIn": { "v": "$2.00 / MTok", "s": "xai-models", "note": "Prompts of 200k tokens and up: $4.00 in / $12.00 out; cached input $0.50" }, "priceOut": { "v": "$6.00 / MTok", "s": "xai-models" } },
+        { "name": "Grok 4.6", "anchor": "grok-4-6", "apiId": "grok-4.6", "context": { "v": "500K tokens", "s": "xai-models" }, "priceIn": { "v": "$2.00 / MTok", "s": "xai-models", "note": "200k+ prompts: $4.00 / $12.00" }, "priceOut": { "v": "$6.00 / MTok", "s": "xai-models" } },
+        { "name": "Grok 4.5", "anchor": "grok-4-5", "apiId": "grok-4.5", "context": { "v": "500K tokens", "s": "xai-models" }, "priceIn": { "v": "$2.00 / MTok", "s": "xai-models" }, "priceOut": { "v": "$6.00 / MTok", "s": "xai-models" } },
+        { "name": "Grok 4.3", "anchor": "grok-4-3", "apiId": "grok-4.3", "context": { "v": "1M tokens", "s": "xai-models" }, "priceIn": { "v": "$1.25 / MTok", "s": "xai-models" }, "priceOut": { "v": "$2.50 / MTok", "s": "xai-models" } }
+      ]
+    },
+    "grok-build": {
+      "versions": [
+        { "name": "Grok Build 0.1", "anchor": "grok-build-0-1", "current": true, "apiId": "grok-build-0.1", "context": { "v": "256K tokens", "s": "xai-models" }, "priceIn": { "v": "$1.00 / MTok", "s": "xai-models" }, "priceOut": { "v": "$2.00 / MTok", "s": "xai-models" } }
+      ]
+    },
+    "deepseek-flash": {
+      "versions": [
+        { "name": "DeepSeek V4.1 Flash", "anchor": "deepseek-v4-1-flash", "current": true, "apiId": "deepseek-flash", "context": { "v": "1M tokens", "s": "deepseek-pricing" }, "maxOut": { "v": "384K tokens", "s": "deepseek-pricing" }, "priceIn": { "v": "$0.30 / MTok peak, $0.15 off-peak (cache miss)", "s": "deepseek-pricing", "note": "Cache hit: $0.006 peak / $0.003 off-peak; vision supported; thinking on by default" }, "priceOut": { "v": "$1.20 / MTok peak, $0.60 off-peak", "s": "deepseek-pricing", "note": "Off-peak is half, weekdays outside 01:00–04:00 and 06:00–10:00 UTC" } }
+      ]
+    },
+    "deepseek-pro": {
+      "versions": [
+        { "name": "DeepSeek V4 Pro", "anchor": "deepseek-v4-pro", "current": true, "apiId": "deepseek-v4-pro", "context": { "v": "1M tokens", "s": "deepseek-pricing" }, "maxOut": { "v": "384K tokens", "s": "deepseek-pricing" }, "priceIn": { "v": "$1.32 / MTok peak, $0.66 off-peak (cache miss)", "s": "deepseek-pricing", "note": "Cache hit: $0.044 peak / $0.022 off-peak; no vision" }, "priceOut": { "v": "$3.96 / MTok peak, $1.98 off-peak", "s": "deepseek-pricing" } }
+      ]
+    },
+    "kimi-k3": {
+      "versions": [
+        { "name": "Kimi K3", "anchor": "kimi-k3", "current": true, "apiId": "kimi-k3", "context": { "v": "1,048,576 tokens", "s": "kimi-pricing" }, "priceIn": { "v": "$3.00 / MTok", "s": "kimi-pricing", "note": "Cached input $0.30; cache writes $3.00 (5m) / $6.00 (1h)" }, "priceOut": { "v": "$15.00 / MTok", "s": "kimi-pricing" } }
+      ]
+    },
+    "kimi-k2": {
+      "versions": [
+        { "name": "Kimi K2.7 Code", "anchor": "kimi-k2-7-code", "current": true, "apiId": "kimi-k2.7-code", "context": { "v": "262,144 tokens", "s": "kimi-models" }, "priceIn": { "v": "$0.95 / MTok (cache miss)", "s": "kimi-pricing", "note": "Cache hit $0.19. Highspeed variant: $1.90 in / $8.00 out" }, "priceOut": { "v": "$4.00 / MTok", "s": "kimi-pricing" }, "speed": { "v": "Highspeed variant: ~180 tokens/s output, up to 260 in short context", "s": "kimi-models" } },
+        { "name": "Kimi K2.6", "anchor": "kimi-k2-6", "apiId": "kimi-k2.6", "context": { "v": "262,144 tokens", "s": "kimi-models" }, "priceIn": { "v": "$0.95 / MTok (cache miss)", "s": "kimi-pricing", "note": "Cache hit $0.16" }, "priceOut": { "v": "$4.00 / MTok", "s": "kimi-pricing" } }
+      ]
+    },
+    "glm": {
+      "versions": [
+        { "name": "GLM-5.3", "anchor": "glm-5-3", "current": true, "apiId": "glm-5.3", "context": { "v": "1M tokens", "s": "zai-glm53-card" }, "maxOut": { "v": "128K tokens", "s": "zai-glm53-card" }, "priceIn": { "v": "$1.40 / MTok", "s": "zai-pricing", "note": "Cached input $0.26; text-only input; reasoning always on (low/high/max, default max)" }, "priceOut": { "v": "$4.40 / MTok", "s": "zai-pricing" }, "benchmarks": [
+          { "name": "Z.ai Code Bench (max effort)", "v": "34.5% at ~75K output tokens (GLM-5.2: 23.4%)", "s": "zai-glm53-card" },
+          { "name": "Terminal-Bench 3.0 (agentic coding)", "v": "28.3 (GLM-5.2: 4.6)", "s": "zai-glm53-card" },
+          { "name": "DeepSWE v1.1 (agentic coding)", "v": "66.9 (GLM-5.2: 46.2)", "s": "zai-glm53-card" },
+          { "name": "Agents' Last Exam", "v": "28.5 (GLM-5.2: 23.8)", "s": "zai-glm53-card" }
+        ] },
+        { "name": "GLM-5.2", "anchor": "glm-5-2", "apiId": "glm-5.2", "priceIn": { "v": "$1.40 / MTok", "s": "zai-pricing", "note": "GLM-5.3's base model; 5.3 is post-training on it" }, "priceOut": { "v": "$4.40 / MTok", "s": "zai-pricing" } },
+        { "name": "GLM-5.1", "anchor": "glm-5-1", "priceIn": { "v": "$1.40 / MTok", "s": "zai-pricing" }, "priceOut": { "v": "$4.40 / MTok", "s": "zai-pricing" } },
+        { "name": "GLM-5", "anchor": "glm-5", "priceIn": { "v": "$1.00 / MTok", "s": "zai-pricing" }, "priceOut": { "v": "$3.20 / MTok", "s": "zai-pricing" } },
+        { "name": "GLM-4.7", "anchor": "glm-4-7", "priceIn": { "v": "$0.60 / MTok", "s": "zai-pricing" }, "priceOut": { "v": "$2.20 / MTok", "s": "zai-pricing" } },
+        { "name": "GLM-4.6", "anchor": "glm-4-6", "priceIn": { "v": "$0.60 / MTok", "s": "zai-pricing" }, "priceOut": { "v": "$2.20 / MTok", "s": "zai-pricing" } },
+        { "name": "GLM-4.5", "anchor": "glm-4-5", "priceIn": { "v": "$0.60 / MTok", "s": "zai-pricing" }, "priceOut": { "v": "$2.20 / MTok", "s": "zai-pricing" } }
+      ]
+    },
+    "glm-flash": {
+      "versions": [
+        { "name": "GLM-5.3 Flash", "anchor": "glm-5-3-flash", "current": true, "apiId": "glm-5.3-flash", "priceIn": { "v": "$0.15 / MTok", "s": "zai-pricing", "note": "Cached input $0.03" }, "priceOut": { "v": "$0.50 / MTok", "s": "zai-pricing" } },
+        { "name": "GLM-5.3 FlashX", "anchor": "glm-5-3-flashx", "apiId": "glm-5.3-flashx", "priceIn": { "v": "$0.37 / MTok", "s": "zai-pricing", "note": "The faster Flash variant" }, "priceOut": { "v": "$1.25 / MTok", "s": "zai-pricing" } },
+        { "name": "GLM-4.7 Flash", "anchor": "glm-4-7-flash", "priceIn": { "v": "Free", "s": "zai-pricing" }, "priceOut": { "v": "Free", "s": "zai-pricing" } }
+      ]
+    },
+    "muse-wonder": {
+      "versions": [
+        { "name": "Muse Wonder Full", "anchor": "muse-wonder-full", "current": true, "note": "Meta's most advanced model; tops agentic and coding benchmarks including DeepSWE and SWE-Marathon in third-party runs, per Meta" },
+        { "name": "Muse Wonder 1.0", "anchor": "muse-wonder-1-0", "note": "The version the Muse CLI runs; version numbering is TeamCLI's reading of the line, not Meta's" }
+      ]
+    },
+    "muse-spark": {
+      "versions": [
+        { "name": "Muse Spark 1.3", "anchor": "muse-spark-1-3", "current": true },
+        { "name": "Muse Spark 1.2", "anchor": "muse-spark-1-2" },
+        { "name": "Muse Spark 1.1", "anchor": "muse-spark-1-1" },
+        { "name": "Muse Spark Open", "anchor": "muse-spark-open", "note": "816B open-weight — the most capable US open-weight model to date, per Meta; SGLang, vLLM, Apple MLX" }
+      ]
+    },
+    "muse-glimmer": {
+      "versions": [
+        { "name": "Muse Glimmer", "anchor": "muse-glimmer", "current": true, "note": "Built for always-on local agents; on Hugging Face" }
+      ]
+    }
+  }
+}

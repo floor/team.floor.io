@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "test": "bun test test/",
     "links:check": "bun scripts/check-links.ts",
+    "refresh:models": "bun scripts/refresh-model-figures.ts",
     "docs:check": "bun scripts/check-docs.ts",
     "seo:check": "bun scripts/check-seo.ts",
     "test:browser": "bun scripts/check-browser.ts",

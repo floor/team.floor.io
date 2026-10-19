@@ -8,6 +8,7 @@
 import { bullet, commandNames, commandPage, commandTable, fenceWith, paragraph, profileNames, section, sentence, README, ReferenceError } from './reference';
 import { escapeHtml, fenceHtml, renderMarkdown, slug, type Fence, type Rendered } from './markdown';
 import { contentReady, packageVersion, read, refInfo } from './team';
+import { familiesOf, familyHref, familyPage, guideIndex, LABS, labHref, labPage, modelsOverview } from './models';
 
 if (!contentReady()) throw new Error('content/team is missing: run `bun run content` (scripts/content.ts) first.');
 
@@ -646,34 +647,80 @@ export function clis(): Rendered {
 
 // ---------------------------------------------------------------- the site's own list
 
-export interface NavGroup { label: string; items: { name: string; href: string }[] }
+export interface NavGroup { label: string; href?: string; items: { name: string; href: string }[] }
 export interface PageMeta extends Rendered {
   path: string; title: string; description: string; priority: string; section: string; nav: NavGroup[]; files: string[];
 }
 
-export const nav: NavGroup[] = [
-  {
-    label: 'Documentation',
-    items: [
-      { name: 'Getting started', href: '/docs/' },
-      { name: 'The team file', href: '/docs/file/' },
-      { name: 'The registries', href: '/docs/concepts/registry/' },
-      { name: 'Safety', href: '/docs/safety/' },
-      { name: 'Supported CLIs', href: '/docs/clis/' },
-    ],
-  },
-  {
-    label: 'Commands',
-    items: [{ name: 'Overview', href: '/docs/commands/' }, ...commandNames().map(name => ({ name: `team ${name}`, href: `/docs/commands/${name}/` }))],
-  },
-];
-/** The reading order, for the previous and next links under a page. */
+/** The three sections of the site, in the top navigation's order. */
+export const SECTIONS = ['Models', 'Documentation', 'Guide'] as const;
+export type Section = typeof SECTIONS[number];
+/** The landing of each section: the href the top-navigation link points at, and where a page's section is read back from its path. */
+export const SECTION_HOME: Record<Section, string> = { Models: '/models/', Documentation: '/docs/', Guide: '/guide/' };
+
+/** The section a path belongs to: its top-navigation home, and the sidebar it carries. */
+export function sectionOf(path: string): Section {
+  if (path.startsWith('/models/')) return 'Models';
+  if (path.startsWith('/guide/')) return 'Guide';
+  return 'Documentation';
+}
+
+/** The sidebar groups for one section. Each section has its own; the top navigation chooses which shows. */
+export function navFor(section: Section): NavGroup[] {
+  if (section === 'Models') {
+    return [
+      { label: 'Models', items: [{ name: 'Overview', href: '/models/' }] },
+      ...LABS.map(lab => ({
+        label: lab.name,
+        href: labHref(lab.slug),
+        // The sidebar names families, never versions — the version detail lives on each family's page.
+        items: familiesOf(lab.vendor).map(family => ({ name: family.name, href: familyHref(lab.slug, family.slug) })),
+      })),
+    ];
+  }
+  if (section === 'Guide') {
+    return [{ label: 'Guide', items: [{ name: 'Overview', href: '/guide/' }] }];
+  }
+  return [
+    {
+      label: 'Documentation',
+      items: [
+        { name: 'Getting started', href: '/docs/' },
+        { name: 'The team file', href: '/docs/file/' },
+        { name: 'The registries', href: '/docs/concepts/registry/' },
+        { name: 'Safety', href: '/docs/safety/' },
+        { name: 'Supported CLIs', href: '/docs/clis/' },
+      ],
+    },
+    {
+      label: 'Commands',
+      items: [{ name: 'Overview', href: '/docs/commands/' }, ...commandNames().map(name => ({ name: `team ${name}`, href: `/docs/commands/${name}/` }))],
+    },
+  ];
+}
+
+/** The Documentation sidebar, kept as `nav` for the pages and checks that name it directly. */
+export const nav: NavGroup[] = navFor('Documentation');
+/** The reading order within the Documentation section, for the previous and next links under a page. */
 export const readingOrder = nav.flatMap(group => group.items);
 
 /** The page list: every public page, its content, and the sources its lastmod is read from. */
 export function pages(): PageMeta[] {
-  const page = (path: string, title: string, priority: string, content: Rendered, files: string[]): PageMeta =>
-    ({ path, title, description: descriptionFor(path), priority, section: 'Documentation', nav, files, ...content });
+  const page = (path: string, title: string, priority: string, content: Rendered, files: string[]): PageMeta => {
+    const section = sectionOf(path);
+    return { path, title, description: descriptionFor(path), priority, section, nav: navFor(section), files, ...content };
+  };
+  // Models: the overview — "Set up your agents" first, then the matrix — one page per lab, the
+  // overview of its families and routes, and one page per family, holding the versions with
+  // their figures. All read from the catalog and the dated figures file beside it.
+  const modelFiles = ['src/server/models.ts', 'src/data/models.json', 'src/data/model-figures.json', 'scripts/refresh-model-figures.ts'];
+  const models = [
+    page('/models/', 'Models — team', '0.9', modelsOverview(), modelFiles),
+    ...LABS.flatMap(lab => [
+      page(labHref(lab.slug), `${lab.name} — team`, '0.7', labPage(lab.slug), modelFiles),
+      ...familiesOf(lab.vendor).map(family => page(familyHref(lab.slug, family.slug), `${family.name} — team`, '0.6', familyPage(lab.slug, family.slug), modelFiles)),
+    ]),
+  ];
   const group = [
     page('/docs/', 'Getting started — team', '0.9', gettingStarted(), ['src/server/pages.ts']),
     page('/docs/file/', 'The team file — team', '0.8', teamFile(), ['src/server/pages.ts']),
@@ -686,7 +733,9 @@ export function pages(): PageMeta[] {
   // Every command is the one page the reference gives it, in the table's order.
   const commands = commandNames().map(name =>
     page(`/docs/commands/${name}/`, `team ${name} — team`, '0.8', commandPageContent(name), [`content/team/docs/commands/${name}.md`]));
-  return [...group, ...commands];
+  // Guide: the section's index; its first guides come later.
+  const guide = [page('/guide/', 'Guide — team', '0.6', guideIndex(), ['src/server/models.ts'])];
+  return [...models, ...group, ...commands, ...guide];
 }
 
 /**
@@ -737,8 +786,26 @@ const DESCRIPTIONS: Record<string, string> = {
   unlock: 'Releases a lock team lock took, and only that caller’s: the holder file has to name the same project and by line; anyone else is refused.',
   usage: 'What this machine holds: every team with an approval store here, its accounts and windows, what is left and used, and when each figure was read.',
 };
+/** Build once, on first use: this module and the models module read each other — the models
+ *  module renders its pages through Doc from here, and this one reads the catalog from there —
+ *  so a map built at module level races whichever of the two loads first. */
+const lazy = <T>(build: () => T): (() => T) => {
+  let value: T | undefined;
+  return () => (value ??= build());
+};
+/** A lab page's description: the site's own one line, built from the lab's name. */
+const labDescriptions = lazy((): Record<string, string> => Object.fromEntries(
+  LABS.map(lab => [lab.slug, `${lab.name} with TeamCLI: its families, the ways in, how to subscribe or get an API key, and its known quirks.`]),
+));
+/** A family page's description: the family's own tagline, which already names its lab. */
+const familyDescriptions = lazy((): Record<string, string> => Object.fromEntries(
+  LABS.flatMap(lab => familiesOf(lab.vendor).map(family => [`${lab.slug}/${family.slug}`, family.tagline])),
+));
+
 const SITE_PAGES: Record<string, string> = {
   '/privacy/': 'How teamcli.io reaches you, and what stays in your browser.',
+  '/models/': 'Set up your agents: install the CLI or app, get the key, log in — then every lab\'s model families against each way in, each row linking to its family page.',
+  '/guide/': 'Task guides for running a team with TeamCLI — your first team, and running a release — with an index now and the first guides coming soon.',
   '/docs/': 'Your first team in five minutes: install team, write .agents/team.yaml, and start the session from the owner’s terminal.',
   '/docs/file/': 'The team file, section by section: tasks, seats, delivery order, grant, delegates and tempo — then the format by example and its other fields.',
   '/docs/file/tasks/': 'The team file’s tasks section: one task source, the policy that decides which fields cross a broker, and the pull, fallback and cadence rules.',
@@ -759,6 +826,8 @@ export function descriptionFor(path: string): string {
     ? 'Set up and run a team of specialized AI agents in herdr: you set the roster, agents do the work, and you decide.'
     : path.startsWith('/docs/commands/') && path !== '/docs/commands/'
     ? DESCRIPTIONS[path.slice('/docs/commands/'.length, -1)]
+    : path.startsWith('/models/') && path !== '/models/'
+    ? familyDescriptions()[path.slice('/models/'.length, -1)] ?? labDescriptions()[path.slice('/models/'.length, -1)]
     : SITE_PAGES[path];
   if (!description) throw new ReferenceError(`no description for ${path}`);
   return description;
