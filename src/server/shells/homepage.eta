@@ -17,8 +17,8 @@
     <p class="samples__foot">The file and the reading come from the <a href="/docs/commands/status/">team status</a> page, and the plan from the <a href="/docs/commands/down/">team down</a> page, each of which runs it against its own fixture team.</p>
   </section>
   <div class="landing-next">
-    <a class="doc-entry" href="/docs/file/"><span class="doc-entry__name">The team file</span><span class="doc-entry__summary">Six sections of <code>.agents/team.yaml</code>, then the format and the other fields.</span></a>
-    <a class="doc-entry" href="/docs/safety/"><span class="doc-entry__name">Safety</span><span class="doc-entry__summary">The owner, the live file as the record, grants and delegates, and what team never does.</span></a>
+    <a class="doc-entry" href="/docs/config/"><span class="doc-entry__name">Team configuration</span><span class="doc-entry__summary">The team’s registry record, edited with <code>team config</code>: six sections, then the format and the other fields.</span></a>
+    <a class="doc-entry" href="/docs/safety/"><span class="doc-entry__name">Safety</span><span class="doc-entry__summary">The owner, the live record, grants and delegates, and what team never does.</span></a>
     <a class="doc-entry" href="/docs/clis/"><span class="doc-entry__name">Supported CLIs</span><span class="doc-entry__summary">claude-code, codex, cursor and antigravity.</span></a>
   </div>
 </div>

@@ -438,7 +438,7 @@ try {
   const NEGATIVE = [
     { what: 'the documentation toolbar link', path: '/docs/', selector: '.doc-toolbar a' },
     { what: 'the table-of-contents link', path: '/docs/', selector: '.doc-toc a' },
-    { what: 'the pager link', path: '/docs/file/', selector: '.page-nav a' },
+    { what: 'the pager link', path: '/docs/config/', selector: '.page-nav a' },
     { what: 'the card link', path: '/docs/commands/', selector: '.doc-entry' },
     { what: 'the header navigation link', path: '/docs/', selector: '.header__nav a' },
     { what: 'the sidebar navigation link', path: '/docs/', selector: '.sidebar__link' },
@@ -704,7 +704,7 @@ try {
     const wanted = ['hljs-attr', 'hljs-string', 'hljs-comment', 'hljs-built_in'];
     const seen = new Set<string>();
     const worst = new Map<string, number>();
-    for (const path of ['/', '/docs/', '/docs/commands/up/', '/docs/file/']) {
+    for (const path of ['/', '/docs/', '/docs/commands/up/', '/docs/config/']) {
       await page.goto(`${origin}${path}`, { waitUntil: 'load' });
       const tokens = await page.evaluate(() => [...document.querySelectorAll<HTMLElement>('[class*="hljs-"]')].map(element => {
         const backgrounds: string[] = [];

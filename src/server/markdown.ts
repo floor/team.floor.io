@@ -99,7 +99,9 @@ export function fenceHtml(fence: Fence): string {
   const label = attribute(fence, 'file');
   switch (fence.lang) {
     case 'console': return terminal(fence);
-    case 'yaml': return codeBlock(fence.text, 'yaml', label || 'team.yaml');
+    // The examples' team is a fixture written as a file; to a reader it is the team's
+    // configuration, the YAML `team config edit` shows, so the label says that.
+    case 'yaml': return codeBlock(fence.text, 'yaml', !label || label === '.agents/team.yaml' ? 'team config edit' : label);
     case 'file': return codeBlock(fence.text, extensionLanguage[label.slice(label.lastIndexOf('.'))] ?? '', label);
     case 'commit': return codeBlock(fence.text, 'text', 'the commit message');
     case 'git': return codeBlock(fence.text, 'bash', 'Shell');
@@ -204,10 +206,10 @@ export function localHref(href: string): string {
   if (href === '../concepts/registry.md') return '/docs/concepts/registry/';
   // The team file's format section is the hub's "The format, by example"; its sections
   // are pages of their own, and the delivery order's is the one linked by name.
-  if (href === '../README.md#the-files-format') return '/docs/file/#the-format-by-example';
-  if (href === '../team-file.md#delivery_order' || href === '#delivery_order') return '/docs/file/delivery-order/';
+  if (href === '../README.md#the-files-format' || href === '#the-records-format' || href === '../team-file.md#the-records-format') return '/docs/config/#the-format-by-example';
+  if (href === '../team-file.md#delivery_order' || href === '#delivery_order') return '/docs/config/delivery-order/';
   // The team file's seats section is a page of its own, like the delivery order's.
-  if (href === '../team-file.md#seats') return '/docs/file/seats/';
+  if (href === '../team-file.md#seats') return '/docs/config/seats/';
   if (href === '../README.md') return '/docs/';
   // A file the site does not serve: the reference's own page in the repository.
   if (href === '../src/profiles/efforts.json') return 'https://github.com/floor/teamcli/blob/main/src/profiles/efforts.json';

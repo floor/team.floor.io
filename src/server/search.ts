@@ -38,7 +38,7 @@ export const documents = searchDocuments();
  * hub or a top-level doc page. A long command page is split into a hub plus these, and each
  * holds one slice of the command's detail: short, and dense in the one term it is about. Left
  * to raw relevance those short dense pages outrank the page a reader actually starts from —
- * `/docs/file/` fell out of the results for "seat" as the split sweep added them. So a hub or
+ * `/docs/config/` fell out of the results for "seat" as the split sweep added them. So a hub or
  * a top-level page outranks a deep sub-page for any term; a sub-page still wins where it is the
  * match (its own title, e.g. "refusals" for a search of that word).
  */

@@ -62,9 +62,9 @@ describe('structured data', () => {
   });
 
   test('a documentation page is a trail home, through the docs, to itself', () => {
-    const [trail] = structuredData('/docs/file/', 'The team file — team', 'x') as { itemListElement: { position: number; name: string; item: string }[] }[];
-    expect(trail!.itemListElement.map(step => step.name)).toEqual(['Home', 'Documentation', 'The team file — team']);
-    expect(trail!.itemListElement.map(step => step.item)).toEqual([`${SITE}/`, `${SITE}/docs/`, `${SITE}/docs/file/`]);
+    const [trail] = structuredData('/docs/config/', 'Team configuration — team', 'x') as { itemListElement: { position: number; name: string; item: string }[] }[];
+    expect(trail!.itemListElement.map(step => step.name)).toEqual(['Home', 'Documentation', 'Team configuration — team']);
+    expect(trail!.itemListElement.map(step => step.item)).toEqual([`${SITE}/`, `${SITE}/docs/`, `${SITE}/docs/config/`]);
     expect(trail!.itemListElement.map(step => step.position)).toEqual([1, 2, 3]);
   });
 

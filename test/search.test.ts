@@ -12,13 +12,13 @@ describe('the index', () => {
   });
 
   test('a document carries the text a reader sees, not the markup', () => {
-    const file = documents.find(document => document.id === '/docs/file/')!;
+    const file = documents.find(document => document.id === '/docs/config/')!;
     expect(file.text).toContain('seats');
     // The reference's prose shows metavariable placeholders as reader-visible text
     // (<home>, <entity>, <iso>, <name>, rendered from code spans). Those aren't real
     // HTML elements, so any OTHER tag-shaped token is leaked markup — which must never
     // reach the search text. A plain `no <` guard would false-trip on the placeholders.
-    const placeholders = new Set(['<home>', '<entity>', '<iso>', '<name>']);
+    const placeholders = new Set(['<home>', '<entity>', '<iso>', '<name>', '<team id>', '<path>', '<value>']);
     const tags = (file.text.match(/<\/?[a-zA-Z][^<>]*>/g) ?? []).filter(tag => !placeholders.has(tag));
     expect(tags).toEqual([]);
     expect(file.text).not.toContain('&amp;');
@@ -27,7 +27,7 @@ describe('the index', () => {
 
   test('the commands group is named, so a result can say what it is', () => {
     expect(documents.find(document => document.id === '/docs/commands/up/')?.kind).toBe('Commands');
-    expect(documents.find(document => document.id === '/docs/file/')?.kind).toBe('Documentation');
+    expect(documents.find(document => document.id === '/docs/config/')?.kind).toBe('Documentation');
   });
 });
 
@@ -36,7 +36,7 @@ describe('a query', () => {
     const results = searchSite('seat');
     expect(results.length).toBeGreaterThan(0);
     expect(results.every(result => routes.has(result.path))).toBe(true);
-    expect(results.map(result => result.path)).toContain('/docs/file/seats/');
+    expect(results.map(result => result.path)).toContain('/docs/config/seats/');
   });
 
   test("a command's own name finds its page", () => {
