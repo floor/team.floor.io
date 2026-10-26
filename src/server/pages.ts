@@ -17,6 +17,7 @@ export const info = refInfo();
 /** The docs pages beside the command reference, as the reference ships them. */
 const TEAM_FILE_DOC = read('docs/team-file.md');
 const REGISTRY_DOC = read('docs/concepts/registry.md');
+const COMMANDS_DOC = read('docs/commands/README.md');
 
 /** The home page's eyebrow. The version is the package's own, and it has to be the version the reference record carries: the two are written together, and a page that showed one of them stale would be wrong. */
 export function versionLine(): string {
@@ -205,10 +206,10 @@ export function gettingStarted(): Rendered {
     .md(paragraph(README, '`team` is a small command-line tool'))
     .heading('Install')
     .md(section(README, 'Install'))
-    .heading('The file is private to each clone')
-    .md(section(README, 'The file is private to each clone'))
     .heading('Your first team in five minutes')
     .md(section(README, 'Your first team in five minutes'))
+    .heading('The few ideas')
+    .md(section(README, 'The few ideas'))
     .render();
 }
 
@@ -224,7 +225,7 @@ const FILE_SECTIONS: { path: string; heading: string; name: string; title: strin
 
 /** /docs/file/ — the team file: the sections in the reference's own words, and the format by example. */
 export function teamFile(): Rendered {
-  const format = section(README, "The file's format");
+  const format = section(TEAM_FILE_DOC, "The file's format");
   const bullets = ['`session` names', '`in_project` names', '`coordinator` and `operator`', '`identity.signature`', '`seats[*].cli`', '`launch` is the plain command', '`workspace.mode` is']
     .map(startsWith => bullet(format, startsWith)).join('\n');
   const cards = FILE_SECTIONS.map(card =>
@@ -236,15 +237,15 @@ export function teamFile(): Rendered {
     .heading('The sections')
     .raw(`<div class="doc-grid">${cards}</div>\n`)
     .heading('The format, by example')
-    .md(paragraph(README, 'A documented subset of YAML'))
+    .md(paragraph(TEAM_FILE_DOC, 'A documented subset of YAML'))
     .block(fenceWith(format, 'yaml', 'format: 1'))
     .md(bullets)
     .heading('budgets')
-    .md(paragraph(README, '`budgets` is the owner\'s'))
-    .md(paragraph(README, '`examples/checks/codex-quota` is a check'))
+    .md(paragraph(TEAM_FILE_DOC, '`budgets` is the owner\'s'))
+    .md(paragraph(TEAM_FILE_DOC, '`examples/checks/codex-quota` is a check'))
     .block(fenceWith(format, 'yaml', 'openai:'))
     .heading('More fields')
-    .md(paragraph(README, 'More fields exist'))
+    .md(paragraph(TEAM_FILE_DOC, 'More fields exist'))
     .render();
 }
 
@@ -292,16 +293,20 @@ function registry(): string {
 
 /**
  * A command's who line for its card: the README's table row where it has one, and
- * otherwise the page's own "Who may run it" — the first table row's caller, or the
+ * otherwise the page's own "Who may run it" — each caller its table admits, or the
  * section's first sentence. A command whose page carries neither keeps an empty line.
  */
 function whoFor(name: string, row: ReturnType<typeof commandTable>[number] | undefined): string {
-  if (row) return row.who;
+  if (row?.who) return row.who;
   const page = commandPage(name);
   if (!page.includes('## Who may run it')) return '';
   const who = section(page, 'Who may run it');
-  const first = who.split('\n').filter(line => line.startsWith('|')).slice(2)[0];
-  return first?.split('|').slice(1, -1)[0]?.trim() || firstSentence(who);
+  // Each caller the table admits, in its order: a row whose answer is nothing or a refusal is left out.
+  const callers = who.split('\n').filter(line => line.startsWith('|')).slice(2)
+    .map(line => line.split('|').slice(1, -1).map(cell => cell.trim()))
+    .filter(([caller, may = '']) => caller && !/does not admit|no terminal/.test(caller) && !/^(nothing|a real run is refused|refused)/.test(may))
+    .map(([caller]) => caller!);
+  return callers.length ? callers.join('; ') : firstSentence(who);
 }
 
 /** /docs/commands/ — the command reference's index: every page, its first sentence and its caller. */
@@ -313,7 +318,7 @@ export function commandIndex(): Rendered {
       `<span class="doc-entry__summary">${inline(firstSentence(summaryOf(name)))}</span>` +
       `<span class="doc-entry__who">${inline(whoFor(name, row))}</span></a>`;
   });
-  return new Doc().h1('Commands').md(paragraph(README, 'Each command has its own page')).raw(`<div class="doc-grid">${cards.join('')}</div>\n`).render();
+  return new Doc().h1('Commands').md(paragraph(COMMANDS_DOC, 'One page per command')).raw(`<div class="doc-grid">${cards.join('')}</div>\n`).render();
 }
 
 /**
@@ -322,7 +327,11 @@ export function commandIndex(): Rendered {
  * `docs/internal` after the strip stops the build.
  */
 export function withoutInternal(markdown: string): string {
-  const stripped = markdown.replace(/\n*Rationale, behaviour, refusals and known limits: \[docs\/internal\/[a-z-]+\.md\]\(\.\.\/internal\/[a-z-]+\.md\)\.\s*$/g, '\n');
+  // The closing "Rationale…" paragraph that points at docs/internal (one or two links, on
+  // one or more lines) is dropped whole; a link to it inside prose keeps its words, unlinked.
+  const stripped = markdown
+    .replace(/\n*Rationale[^\n]*(?:\n[^\n]+)*?\]\(\.\.\/internal\/[a-z-]+\.md\)\.\s*$/g, '\n')
+    .replace(/\[([^\]]+)\]\(\.\.\/internal\/[a-z-]+\.md(?:#[a-z0-9-]+)?\)/g, (_, text: string) => /docs\/internal/.test(text) ? '' : text);
   if (/docs\/internal|\.\.\/internal\//.test(stripped)) throw new ReferenceError('a reference page still links to the private docs');
   return stripped;
 }
@@ -343,6 +352,22 @@ export function commandPageContent(name: string): Rendered {
   return renderMarkdown(withoutDevMode(withoutInternal(commandPage(name))), { skip: fence => fence.lang === 'fixture' });
 }
 
+/**
+ * /docs/whats-new/ — the README's own "What's new in <version>" section, whichever version
+ * the ref is. The heading is found, never typed, so a new release brings its own notes.
+ */
+export function whatsNew(): Rendered {
+  const heading = README.split('\n').find(line => /^## What's new in /.test(line));
+  if (!heading) throw new ReferenceError('the team reference at TEAM_REF no longer has a "What\'s new in …" section');
+  const title = heading.slice(3).trim();
+  return new Doc()
+    .h1('What’s new')
+    .heading(title)
+    .md(section(README, title))
+    .md('Every change, release by release, is in [the changelog](CHANGELOG.md).')
+    .render();
+}
+
 // ---------------------------------------------------------------- safety and CLIs
 
 /**
@@ -359,32 +384,28 @@ export function safety(): Rendered {
   const grant = paragraph(section(TEAM_FILE_DOC, '`grant`'), 'Records the grant the owner gives the orchestrator\'s seat');
   const delegates = paragraph(section(TEAM_FILE_DOC, '`delegates`'), 'Names panes outside the team\'s session');
   const never = [
-    sentence(README, 'Nothing writes a lab\'s config'),
-    sentence(README, 'It never answers prompts'),
-    sentence(README, 'A file you receive from someone else'),
-    sentence(README, '`up`, `down` and `add` take `--dry-run`'),
+    sentence(TEAM_FILE_DOC, 'Nothing writes a lab\'s config'),
+    sentence(README, 'Read a file you receive'),
+    sentence(README, 'Approvals guard against mistakes'),
   ];
   return new Doc()
     .h1('Safety')
     .heading('The owner')
-    .md(paragraph(README, 'The owner is a terminal outside herdr'))
+    .md(paragraph(README, '**Owner, grants, policies.**'))
     .md(section(up, 'Who may run it'))
-    .heading('The live file is the record')
-    .md(section(README, 'The live file is the record'))
     .heading('The file is private to each clone')
-    .md(section(README, 'The file is private to each clone'))
+    .md(paragraph(README, 'The file stays private to the clone'))
     .heading('Grants and delegates, the owner\'s alone')
     .md(grant)
     .md(delegates)
     .heading('What team never does')
     .md(never.map(text => `- ${text}`).join('\n'))
-    .note(inline(sentence(README, 'Launching a Cursor seat')))
+    .note(inline(sentence(TEAM_FILE_DOC, 'Launching a Cursor seat')))
     .note(inline(sentence(watch, 'A screen hatch is an escape hatch')))
     .heading('Who may run what')
-    .table('Who may run each command', ['Command', 'Who may run it'], commandTable().map(row => [`<code>team ${row.name}</code>`, inline(row.who)]))
+    .table('Who may run each command', ['Command', 'Who may run it'], commandNames().map(name => [`<code>team ${name}</code>`, inline(whoFor(name, commandTable().find(row => row.name === name)))]))
     .heading('What this version builds')
-    .md(paragraph(README, '**Status: early'))
-    .md(paragraph(README, '`team up`, `team down`'))
+    .md(paragraph(README, '`team` is a small command-line tool'))
     .render();
 }
 
@@ -477,10 +498,13 @@ function launchFacts(profile: LaunchProfile): { binary: string; unattended: stri
 export function clis(): Rendered {
   const doctor = commandPage('doctor');
   const watch = commandPage('watch');
-  const login = paragraph(README, '`team doctor --login` checks read-only');
+  const login = paragraph(doctor, '`--login` reads the logins alone');
   const facts = PROFILES.map(profile => ({ profile, ...launchFacts(profile) }));
+  // Up to 0.5.0 the README's login paragraph named every profile's check command, and this
+  // held the table to it. From 0.5.3 the doctor page states the rule and each command comes
+  // from the profile's own YAML (launchFacts), so a named check is held only where the prose names one.
   for (const { check } of facts) {
-    if (check && !login.includes(check)) throw new ReferenceError(`the login paragraph no longer names "${check}"`);
+    if (check && /`[a-z-]+ [a-z]+`/.test(login) && !login.includes(check)) throw new ReferenceError(`the login paragraph no longer names "${check}"`);
   }
   // The table is the whole set of launch profiles the build ships, and only those — the seven
   // screen CLIs above plus Jules, read apart below. This stops on a profile the page misses and
@@ -495,10 +519,10 @@ export function clis(): Rendered {
     if (!described.includes(cli)) throw new ReferenceError(`the build ships a launch profile for "${cli}" the page does not describe: give it a line in PROFILES and a section of its own`);
     if (/kimi/.test(cli)) throw new ReferenceError(`the build now ships a launch profile for "${cli}": the "Not seat kinds yet" section is stale`);
   }
-  // The two pieces of the README the "Other labs" note leans on: its own example of a launcher
+  // The two pieces of the team file reference (the README's until 0.5.0) the "Other labs" note leans on: its own example of a launcher
   // on the PATH, and the field that says the launcher picks the model.
   for (const piece of ['a launcher on the PATH', 'model_from: launcher']) {
-    if (!README.includes(piece)) throw new ReferenceError(`the README no longer says "${piece}"`);
+    if (!TEAM_FILE_DOC.includes(piece)) throw new ReferenceError(`docs/team-file.md no longer says "${piece}"`);
   }
   const factOf = (cli: string): (typeof facts)[number] => {
     const found = facts.find(fact => fact.profile.cli === cli);
@@ -583,7 +607,7 @@ export function clis(): Rendered {
   // what the others still need; the table shows all eight. A bridging note reconciles the two —
   // the three the table adds are those others. The split is guarded against the bullet and the
   // shipped set, so it cannot silently go stale.
-  const formatBullet = bullet(section(README, "The file's format"), '`seats[*].cli`');
+  const formatBullet = bullet(section(TEAM_FILE_DOC, "The file's format"), '`seats[*].cli`');
   const availableClis = ['claude-code', 'codex', 'cursor', 'antigravity', 'grok'];
   const otherClis = ['gemini', 'muse', 'jules'];
   for (const cli of availableClis) if (!formatBullet.includes(`\`${cli}\``)) throw new ReferenceError(`the file's-format bullet no longer lists "${cli}" among the available profiles`);
@@ -608,14 +632,14 @@ export function clis(): Rendered {
     .md(login)
     .block(fenceWith(doctor, 'console', 'team doctor --login'))
     .heading('Codex')
-    .md(paragraph(README, 'The Codex profile is tested with CLI 0.157.0'))
+    .md(paragraph(TEAM_FILE_DOC, 'The Codex profile is tested with CLI 0.157.0'))
     .heading('Antigravity')
-    .md(paragraph(README, 'The Antigravity profile is tested with CLI 1.2.16'))
+    .md(paragraph(TEAM_FILE_DOC, 'The Antigravity profile is tested with CLI 1.2.16'))
     // The model flag is read from antigravity.yaml by name; the reference carries no prose about
     // which models it serves, so the page claims none.
     .note(`The Antigravity profile sets its model with <code>${escapeHtml(modelFlag('antigravity'))}</code>.`)
     .heading('Cursor')
-    .md(paragraph(README, 'Launching a Cursor seat'))
+    .md(paragraph(TEAM_FILE_DOC, 'Launching a Cursor seat'))
     .heading('Grok')
     // Grok has no README prose section; its lines are read from grok.yaml by name (above), and
     // the Cursor alternative from cursor.yaml, so the page cannot claim a model it does not read.
@@ -688,6 +712,7 @@ export function navFor(section: Section): NavGroup[] {
         { name: 'Getting started', href: '/docs/' },
         { name: 'The team file', href: '/docs/file/' },
         { name: 'The registries', href: '/docs/concepts/registry/' },
+        { name: 'What’s new', href: '/docs/whats-new/' },
         { name: 'Safety', href: '/docs/safety/' },
         { name: 'Supported CLIs', href: '/docs/clis/' },
       ],
@@ -727,6 +752,7 @@ export function pages(): PageMeta[] {
     ...FILE_SECTIONS.map(card => page(card.path, card.title, '0.6', card.path === '/docs/file/delivery-order/' ? deliveryOrderPage() : fileSectionPage(card), ['src/server/pages.ts'])),
     page('/docs/concepts/registry/', 'The agent, team and project registries — team', '0.7', registryPage(), ['src/server/pages.ts']),
     page('/docs/commands/', 'Commands — team', '0.9', commandIndex(), ['src/server/pages.ts']),
+    page('/docs/whats-new/', 'What’s new — team', '0.8', whatsNew(), ['src/server/pages.ts', 'content/team/README.md']),
     page('/docs/safety/', 'Safety — team', '0.7', safety(), ['src/server/pages.ts']),
     page('/docs/clis/', 'Supported CLIs — team', '0.7', clis(), ['src/server/pages.ts']),
   ];
@@ -744,6 +770,28 @@ export function pages(): PageMeta[] {
  * signpost to it. docs:check holds each to one line of at most 160 characters.
  */
 const DESCRIPTIONS: Record<string, string> = {
+  ack: 'Marks a message record read without printing it: the same signed read receipt team messages publishes, written once in the addressee’s own folder.',
+  archive: 'Snapshots the team — the team file, the state and the send queues — into one archive folder, then stops it with team down in the same run.',
+  brief: 'Delivers TeamCLI’s general seat brief to the team’s declared seats without a launch: the built-in first text every seat gets.',
+  bus: 'Runs the process that owns the project’s event log, reconciles durable message and seat records, and serves publish and subscribe on the bus socket.',
+  client: 'The app-key side of a client grant: keygen writes one Ed25519 pair for a client app, the private half mode 0600, and never replaces it.',
+  config: 'The settings registry: each setting TeamCLI knows, the levels it may be set at, what it accepts, its release default and when a change takes effect.',
+  daemon: 'The one machine-wide TeamCLI daemon: one process serves every team and checkout on this machine over the one machine socket.',
+  'development-mode': 'Reads or sets the one machine-wide development mode — local-fast, pr-per-change or off — that governs the caller gates and owner-gate admission.',
+  drops: 'Lists the drop files waiting in the calling seat’s own drop folder: each one signed message record another seat’s team send left there.',
+  import: 'Makes a team file this team’s registry record — .agents/team.yaml by default: the repair check and status name, or the first import without migrate.',
+  migrate: 'Moves this team’s definition from .agents/team.yaml into the registry, once; every command then reads the team from the registry.',
+  'owner-seat': 'Sets up the owner’s own seat: an agent runs it on the owner’s behalf, and every step that needs the owner ends in a native prompt on their device.',
+  pause: 'Stops the whole team, or one seat, taking new work: kept in the team state, never the file; ongoing work finishes and nothing new is claimed.',
+  queue: 'Adds one record to the team’s local task queue, or lists it: the task source when the team file declares none.',
+  raise: 'A lead’s own line to the owner, delivered at once: release.ready when a release needs the owner’s go, decision.needed when a call is theirs.',
+  reply: 'Answers the sender of a message record, or closes its thread: one signed record in the seat it answers, on the same thread.',
+  resume: 'Clears the pause team pause placed, for the team or one seat: team next claims again and the watch dispatches work to idle seats.',
+  seat: 'One seat as an object: its settings and where each value comes from, its team seats row, its last turn and its newest recorded session.',
+  sessions: 'Lists the sessions TeamCLI recorded for each seat: one append-only record per CLI session, written by the launch and stop commands themselves.',
+  settings: 'One seat’s settings, each with where its value comes from: a signed record at the seat, team, project or entity level, the file or the default.',
+  swap: 'Brings a seat back within the entity’s model rule: it takes the model fields of a donor seat that already runs an allowed model.',
+  workflow: 'Checks, dry-runs or replays a workflow definition: its schema, its transition graph, reachability, ordering and hook effects.',
   init: 'Writes the team file: a skeleton for this project, or the copy you last approved, kept out of git.',
   commits: 'Checks a commit, or a range of commits, against the signature rule and forbidden patterns; exit 1 when a commit is refused.',
   pr: 'Checks a pull request body against the signature rule and forbidden patterns, needing no repository; exit 1 when refused.',
@@ -816,6 +864,7 @@ const SITE_PAGES: Record<string, string> = {
   '/docs/file/tempo/': 'The team file’s tempo: relaxed, normal or urgent — which waits the word scales, and when it takes effect.',
   '/docs/concepts/registry/': 'The agent, team and project records this machine keeps: what each field means, and why an id is the identity.',
   '/docs/commands/': 'Every command of team: what each reads and writes, who may run it, its refusals, its exit codes and its examples.',
+  '/docs/whats-new/': 'What the release this site documents adds: the README’s own “What’s new” section, and a pointer to the full changelog.',
   '/docs/safety/': 'Why team is safe to run: the owner outside herdr, the live file as the record, grants and delegates the owner alone, and what team never does.',
   '/docs/clis/': 'Every launch profile team ships — claude-code, codex, cursor, antigravity, grok, gemini, muse and jules: the command, the flags, and the sign-in check.',
 };

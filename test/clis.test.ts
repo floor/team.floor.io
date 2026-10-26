@@ -162,7 +162,7 @@ describe('/docs/clis/, the notes the profiles carry', () => {
   test('a bridging note reconciles the five available profiles with the eight in the table', () => {
     // The file's-format bullet names five available; the table shows eight. The note names the
     // three the table adds as the "others" doctor reports, tied to the bullet so it cannot drift.
-    const bullet = read('README.md');
+    const bullet = read('docs/team-file.md');
     for (const cli of ['claude-code', 'codex', 'cursor', 'antigravity', 'grok']) expect(bullet).toContain(`\`${cli}\``);
     expect(page).toContain('<code>gemini</code>, <code>muse</code> and <code>jules</code> — are the others <code>team doctor</code> reports on');
     expect(page).toContain('The native Kimi CLI is not a seat kind in this build');
@@ -173,8 +173,8 @@ describe('/docs/clis/, the notes the profiles carry', () => {
     expect(page).toContain('reads that account’s API key from the OS keychain');
     expect(page).toContain('beside <code>cli: claude-code</code>: <code>launch: my-lab-claude</code>');
     expect(page).toContain('<code>model_from: launcher</code>');
-    // The README carries the shape the note points at: a launcher on the PATH picks the model.
-    const readme = read('README.md');
+    // The team file reference carries the shape the note points at: a launcher on the PATH picks the model.
+    const readme = read('docs/team-file.md');
     expect(readme).toContain('a launcher on the PATH');
     expect(readme).toContain('model_from: launcher');
     // One starter, and it is the generic one: the page names no lab's script, path or key.
