@@ -167,7 +167,7 @@ export function installMarkup(): string {
 
 export interface Sample { label: string; caption: string; fence: Fence }
 /**
- * The home page's samples: the shortest team file the reference shows, a plan a dry
+ * The home page's samples: the shortest team record the reference shows, a plan a dry
  * run prints, and what `team status` reads back. Each is one whole fence of a tested
  * page, so the home page shows exactly what `bun test` runs.
  */
@@ -175,7 +175,7 @@ export function homeSamples(): Sample[] {
   const status = commandPage('status');
   const down = commandPage('down');
   return [
-    { label: 'The file', caption: '.agents/team.yaml — the project\'s whole team', fence: fenceWith(status, 'yaml', 'project: beacon') },
+    { label: 'The team', caption: 'team config edit — the project\'s whole team, as YAML', fence: fenceWith(status, 'yaml', 'project: beacon') },
     { label: 'The plan', caption: 'team down --dry-run — every command a stop would run, and what it leaves alone', fence: fenceWith(down, 'console', 'team down --dry-run') },
     { label: 'The reading', caption: 'team status — the seats, and the repair for each difference', fence: fenceWith(status, 'console', 'team status ; echo "exit $?"') },
   ];
@@ -199,7 +199,7 @@ export function homePoints(): { title: string; text: string }[] {
 
 // ---------------------------------------------------------------- the documentation
 
-/** /docs/ — getting started: the install, where the file lives, the five minutes. */
+/** /docs/ — getting started: the install, where the team lives, the five minutes. */
 export function gettingStarted(): Rendered {
   return new Doc()
     .h1('Getting started')
@@ -213,27 +213,27 @@ export function gettingStarted(): Rendered {
     .render();
 }
 
-/** The six sections docs/team-file.md documents, each its own page under /docs/file/. */
+/** The six sections docs/team-file.md documents, each its own page under /docs/config/. */
 const FILE_SECTIONS: { path: string; heading: string; name: string; title: string; summary: string }[] = [
-  { path: '/docs/file/tasks/', heading: '`tasks`', name: 'Tasks', title: 'The team file: tasks — team', summary: 'The team\'s one task source — a file the owner committed, or a tracker behind the owner\'s broker — and the policy that decides what crosses.' },
-  { path: '/docs/file/seats/', heading: '`seats`', name: 'Seats', title: 'The team file: seats — team', summary: 'Each seat\'s model and launch, its label and the pane\'s two lines, and the effort word its lab allows.' },
-  { path: '/docs/file/delivery-order/', heading: '`delivery_order`', name: 'Delivery order', title: 'The team file: delivery order — team', summary: 'The legs a send to a seat walks — native, mcp-inbox, typed — and how each level of the chain may drop or reorder them, never add one.' },
-  { path: '/docs/file/grant/', heading: '`grant`', name: 'Grant', title: 'The team file: grant — team', summary: 'The one grant the owner gives the orchestrator\'s seat, its closed scope, and what each act in it admits.' },
-  { path: '/docs/file/delegates/', heading: '`delegates`', name: 'Delegates', title: 'The team file: delegates — team', summary: 'Panes outside the team\'s session that may run some operational commands, and the allowlist guard on a delegated approval.' },
-  { path: '/docs/file/tempo/', heading: 'tempo', name: 'Tempo', title: 'The team file: tempo — team', summary: 'Relaxed, normal or urgent: the word that scales the watch\'s idle and nudge waits, and when it takes effect.' },
+  { path: '/docs/config/tasks/', heading: '`tasks`', name: 'Tasks', title: 'Team configuration: tasks — team', summary: 'The team\'s one task source — a file the owner committed, or a tracker behind the owner\'s broker — and the policy that decides what crosses.' },
+  { path: '/docs/config/seats/', heading: '`seats`', name: 'Seats', title: 'Team configuration: seats — team', summary: 'Each seat\'s model and launch, its label and the pane\'s two lines, and the effort word its lab allows.' },
+  { path: '/docs/config/delivery-order/', heading: '`delivery_order`', name: 'Delivery order', title: 'Team configuration: delivery order — team', summary: 'The legs a send to a seat walks — native, mcp-inbox, typed — and how each level of the chain may drop or reorder them, never add one.' },
+  { path: '/docs/config/grant/', heading: '`grant`', name: 'Grant', title: 'Team configuration: grant — team', summary: 'The one grant the owner gives the orchestrator\'s seat, its closed scope, and what each act in it admits.' },
+  { path: '/docs/config/delegates/', heading: '`delegates`', name: 'Delegates', title: 'Team configuration: delegates — team', summary: 'Panes outside the team\'s session that may run some operational commands, and the allowlist guard on a delegated approval.' },
+  { path: '/docs/config/tempo/', heading: 'tempo', name: 'Tempo', title: 'Team configuration: tempo — team', summary: 'Relaxed, normal or urgent: the word that scales the watch\'s idle and nudge waits, and when it takes effect.' },
 ];
 
-/** /docs/file/ — the team file: the sections in the reference's own words, and the format by example. */
+/** /docs/config/ — the team’s configuration: the sections in the reference's own words, and the format by example. */
 export function teamFile(): Rendered {
-  const format = section(TEAM_FILE_DOC, "The file's format");
+  const format = section(TEAM_FILE_DOC, "The record's format");
   const bullets = ['`session` names', '`in_project` names', '`coordinator` and `operator`', '`identity.signature`', '`seats[*].cli`', '`launch` is the plain command', '`workspace.mode` is']
     .map(startsWith => bullet(format, startsWith)).join('\n');
   const cards = FILE_SECTIONS.map(card =>
     `<a class="doc-entry" href="${card.path}"><span class="doc-entry__name">${escapeHtml(card.name)}</span><span class="doc-entry__summary">${escapeHtml(card.summary)}</span></a>`,
   ).join('');
   return new Doc()
-    .h1('The team file')
-    .md(paragraph(TEAM_FILE_DOC, '`team` reads one team file per clone'))
+    .h1('Team configuration')
+    .md(paragraph(TEAM_FILE_DOC, 'Since 0.5.5 a team'))
     .heading('The sections')
     .raw(`<div class="doc-grid">${cards}</div>\n`)
     .heading('The format, by example')
@@ -253,7 +253,7 @@ export function teamFile(): Rendered {
 export function fileSectionPage(card: typeof FILE_SECTIONS[number]): Rendered {
   return new Doc()
     .h1(card.name)
-    .note(`Part of <a href="/docs/file/">the team file</a> — ${escapeHtml(card.summary)}`)
+    .note(`Part of <a href="/docs/config/">team configuration</a> — ${escapeHtml(card.summary)}`)
     .md(section(TEAM_FILE_DOC, card.heading))
     .render();
 }
@@ -266,7 +266,7 @@ export function fileSectionPage(card: typeof FILE_SECTIONS[number]): Rendered {
  */
 export function deliveryOrderPage(): Rendered {
   const whole = section(TEAM_FILE_DOC, '`delivery_order`');
-  const card = FILE_SECTIONS.find(entry => entry.path === '/docs/file/delivery-order/')!;
+  const card = FILE_SECTIONS.find(entry => entry.path === '/docs/config/delivery-order/')!;
   const rules = [
     bullet(whole, 'The word is one or more of'),
     bullet(whole, 'The receiving seat\'s chain is read outermost first'),
@@ -274,7 +274,7 @@ export function deliveryOrderPage(): Rendered {
   ].join('\n');
   return new Doc()
     .h1(card.name)
-    .note(`Part of <a href="/docs/file/">the team file</a> — ${escapeHtml(card.summary)}`)
+    .note(`Part of <a href="/docs/config/">team configuration</a> — ${escapeHtml(card.summary)}`)
     .md(paragraph(whole, 'The order a send to this team\'s seats walks'))
     .block(fenceWith(whole, 'yaml', 'delivery_order: [typed]'))
     .md(rules)
@@ -385,7 +385,7 @@ export function safety(): Rendered {
   const delegates = paragraph(section(TEAM_FILE_DOC, '`delegates`'), 'Names panes outside the team\'s session');
   const never = [
     sentence(TEAM_FILE_DOC, 'Nothing writes a lab\'s config'),
-    sentence(README, 'Read a file you receive'),
+    sentence(TEAM_FILE_DOC, 'A write that does not validate is refused whole'),
     sentence(README, 'Approvals guard against mistakes'),
   ];
   return new Doc()
@@ -393,8 +393,8 @@ export function safety(): Rendered {
     .heading('The owner')
     .md(paragraph(README, '**Owner, grants, policies.**'))
     .md(section(up, 'Who may run it'))
-    .heading('The file is private to each clone')
-    .md(paragraph(README, 'The file stays private to the clone'))
+    .heading('The team lives in the registry')
+    .md(paragraph(README, 'The team lives in this machine\'s registry'))
     .heading('Grants and delegates, the owner\'s alone')
     .md(grant)
     .md(delegates)
@@ -607,7 +607,7 @@ export function clis(): Rendered {
   // what the others still need; the table shows all eight. A bridging note reconciles the two —
   // the three the table adds are those others. The split is guarded against the bullet and the
   // shipped set, so it cannot silently go stale.
-  const formatBullet = bullet(section(TEAM_FILE_DOC, "The file's format"), '`seats[*].cli`');
+  const formatBullet = bullet(section(TEAM_FILE_DOC, "The record's format"), '`seats[*].cli`');
   const availableClis = ['claude-code', 'codex', 'cursor', 'antigravity', 'grok'];
   const otherClis = ['gemini', 'muse', 'jules'];
   for (const cli of availableClis) if (!formatBullet.includes(`\`${cli}\``)) throw new ReferenceError(`the file's-format bullet no longer lists "${cli}" among the available profiles`);
@@ -710,7 +710,7 @@ export function navFor(section: Section): NavGroup[] {
       label: 'Documentation',
       items: [
         { name: 'Getting started', href: '/docs/' },
-        { name: 'The team file', href: '/docs/file/' },
+        { name: 'Team configuration', href: '/docs/config/' },
         { name: 'The registries', href: '/docs/concepts/registry/' },
         { name: 'What’s new', href: '/docs/whats-new/' },
         { name: 'Safety', href: '/docs/safety/' },
@@ -748,8 +748,8 @@ export function pages(): PageMeta[] {
   ];
   const group = [
     page('/docs/', 'Getting started — team', '0.9', gettingStarted(), ['src/server/pages.ts']),
-    page('/docs/file/', 'The team file — team', '0.8', teamFile(), ['src/server/pages.ts']),
-    ...FILE_SECTIONS.map(card => page(card.path, card.title, '0.6', card.path === '/docs/file/delivery-order/' ? deliveryOrderPage() : fileSectionPage(card), ['src/server/pages.ts'])),
+    page('/docs/config/', 'Team configuration — team', '0.8', teamFile(), ['src/server/pages.ts']),
+    ...FILE_SECTIONS.map(card => page(card.path, card.title, '0.6', card.path === '/docs/config/delivery-order/' ? deliveryOrderPage() : fileSectionPage(card), ['src/server/pages.ts'])),
     page('/docs/concepts/registry/', 'The agent, team and project registries — team', '0.7', registryPage(), ['src/server/pages.ts']),
     page('/docs/commands/', 'Commands — team', '0.9', commandIndex(), ['src/server/pages.ts']),
     page('/docs/whats-new/', 'What’s new — team', '0.8', whatsNew(), ['src/server/pages.ts', 'content/team/README.md']),
@@ -771,7 +771,7 @@ export function pages(): PageMeta[] {
  */
 const DESCRIPTIONS: Record<string, string> = {
   ack: 'Marks a message record read without printing it: the same signed read receipt team messages publishes, written once in the addressee’s own folder.',
-  archive: 'Snapshots the team — the team file, the state and the send queues — into one archive folder, then stops it with team down in the same run.',
+  archive: 'Snapshots the team — the team’s configuration, the state and the send queues — into one archive folder, then stops it with team down in the same run.',
   brief: 'Delivers TeamCLI’s general seat brief to the team’s declared seats without a launch: the built-in first text every seat gets.',
   bus: 'Runs the process that owns the project’s event log, reconciles durable message and seat records, and serves publish and subscribe on the bus socket.',
   client: 'The app-key side of a client grant: keygen writes one Ed25519 pair for a client app, the private half mode 0600, and never replaces it.',
@@ -779,27 +779,27 @@ const DESCRIPTIONS: Record<string, string> = {
   daemon: 'The one machine-wide TeamCLI daemon: one process serves every team and checkout on this machine over the one machine socket.',
   'development-mode': 'Reads or sets the one machine-wide development mode — local-fast, pr-per-change or off — that governs the caller gates and owner-gate admission.',
   drops: 'Lists the drop files waiting in the calling seat’s own drop folder: each one signed message record another seat’s team send left there.',
-  import: 'Makes a team file this team’s registry record — .agents/team.yaml by default: the repair check and status name, or the first import without migrate.',
+  import: 'Legacy: makes a leftover .agents/team.yaml this team’s registry record — the repair check and status name, or the first import without migrate.',
   migrate: 'Moves this team’s definition from .agents/team.yaml into the registry, once; every command then reads the team from the registry.',
   'owner-seat': 'Sets up the owner’s own seat: an agent runs it on the owner’s behalf, and every step that needs the owner ends in a native prompt on their device.',
-  pause: 'Stops the whole team, or one seat, taking new work: kept in the team state, never the file; ongoing work finishes and nothing new is claimed.',
-  queue: 'Adds one record to the team’s local task queue, or lists it: the task source when the team file declares none.',
+  pause: 'Stops the whole team, or one seat, taking new work: kept in the team state, never the configuration; ongoing work finishes and nothing new is claimed.',
+  queue: 'Adds one record to the team’s local task queue, or lists it: the task source when the team declares none.',
   raise: 'A lead’s own line to the owner, delivered at once: release.ready when a release needs the owner’s go, decision.needed when a call is theirs.',
   reply: 'Answers the sender of a message record, or closes its thread: one signed record in the seat it answers, on the same thread.',
   resume: 'Clears the pause team pause placed, for the team or one seat: team next claims again and the watch dispatches work to idle seats.',
   seat: 'One seat as an object: its settings and where each value comes from, its team seats row, its last turn and its newest recorded session.',
   sessions: 'Lists the sessions TeamCLI recorded for each seat: one append-only record per CLI session, written by the launch and stop commands themselves.',
-  settings: 'One seat’s settings, each with where its value comes from: a signed record at the seat, team, project or entity level, the file or the default.',
+  settings: 'One seat’s settings, each with where its value comes from: a signed record at the seat, team, project or entity level, the team’s configuration or the default.',
   swap: 'Brings a seat back within the entity’s model rule: it takes the model fields of a donor seat that already runs an allowed model.',
   workflow: 'Checks, dry-runs or replays a workflow definition: its schema, its transition graph, reachability, ordering and hook effects.',
-  init: 'Writes the team file: a skeleton for this project, or the copy you last approved, kept out of git.',
+  init: 'Writes a new team into the registry: a skeleton record for this project, or with --restore the copy this machine stored; never a file.',
   commits: 'Checks a commit, or a range of commits, against the signature rule and forbidden patterns; exit 1 when a commit is refused.',
   pr: 'Checks a pull request body against the signature rule and forbidden patterns, needing no repository; exit 1 when refused.',
   doctor: 'What this machine still needs: herdr, each CLI, its version and login, each launch’s model, and the watch.',
-  status: 'The team as it stands: one line per seat, every difference between the file, the state and the live session, and each repair.',
+  status: 'The team as it stands: one line per seat, every difference between the team’s configuration, the state and the live session, and each repair.',
   list: 'The herdr sessions on this machine, the running ones by default; --all includes stopped sessions, and nothing is changed.',
   projects: 'The projects this machine’s registry holds: each immutable id, display name, entity, lead by agent id and teams; --json prints them.',
-  up: 'Starts the session, a workspace and each seat the file declares, plus the watch; --dry-run prints the plan and the refusals.',
+  up: 'Starts the session, a workspace and each seat the team declares, plus the watch; --dry-run prints the plan and the refusals.',
   down: 'Stops the team: asks every free seat to exit, closes its workspace, stops the watch, and stops the session.',
   hold: 'A note on the team’s work — why, who and until when — kept in the state, printed first by team status and last by team doctor.',
   watch: 'Watches a running team: reports idle seats and nudges the operator, in one fixed line, into an empty idle prompt only.',
@@ -809,26 +809,26 @@ const DESCRIPTIONS: Record<string, string> = {
   issues: 'Lists the typed records in the one file the team names: file order, priorities shown and not reordering, nothing claimed.',
   next: 'Claims one record from the team’s one task source, with a lease in this clone; the source is a file the owner committed or a broker’s read.',
   plan: 'Prints the queue a claim would consider, in the order team next would consider it; it claims nothing and writes no lease.',
-  broker: 'Holds the tracker credential and answers team next over a local socket, filtering every record through the file’s tasks.policy.',
+  broker: 'Holds the tracker credential and answers team next over a local socket, filtering every record through the team’s tasks.policy.',
   policy: 'Reads and resolves the effective policies for a team or seat across the tighten-only chain, or sets and unsets owner-signed policy declarations.',
   add: 'Starts one declared seat, or a temporary one beside the team with --temporary --like <seat> --until <result:path|merged:branch>.',
   register: 'Writes the record for a seat that is already running, so team send, team seats, team watch and team down can address it; types nothing.',
-  answer: 'Presses the one recorded key of a seat’s folder-trust dialog when the file allows it; every check has to pass, and anything else sends nothing.',
-  release: 'Checks a release on npm and GitHub. When the file has the pairs: Linear milestone, qualifying status update, and the release marker in the public activity file.',
-  remove: 'Stops one seat and takes it out of the file; --keep leaves it stopped; --abandon is the owner’s, and types nothing.',
-  rename: 'Renames a seat, or renumbers numbered seats with --renumber, carrying its identity and records across the team file, state, registry, herdr and seat files.',
+  answer: 'Presses the one recorded key of a seat’s folder-trust dialog when the team allows it; every check has to pass, and anything else sends nothing.',
+  release: 'Checks a release on npm and GitHub. When the team has the pairs: Linear milestone, qualifying status update, and the release marker in the public activity file.',
+  remove: 'Stops one seat and takes it out of the team; --keep leaves it stopped; --abandon is the owner’s, and types nothing.',
+  rename: 'Renames a seat, or renumbers numbered seats with --renumber, carrying its identity and records across the team’s record, state, registry, herdr and seat files.',
   worktree: 'Creates a task worktree from an up-to-date base, or removes one; the branch is never deleted.',
   'ask-show': 'Prints the question a signed ask carries, once the marker’s HMAC and its expiry check out; a marker that does not verify prints nothing.',
   check: 'One answer to one question: is anything wrong with this team that someone should act on? It reads and reports; it grants nothing.',
-  delegate: 'Adds or replaces one external delegate in the current team file; replacing an entry sets its complete command list, and other entries keep theirs.',
+  delegate: 'Adds or replaces one external delegate in the team’s configuration; replacing an entry sets its complete command list, and other entries keep theirs.',
   feed: 'Reads and follows the project’s message history: the JSONL file, the briefs and Desk audit lines beside it, and the deliveries team send wrote.',
-  grant: 'Writes an authority record: the file’s one grant by --scope, or a standing owner-signed --capabilities record naming the grantee by registry id.',
+  grant: 'Writes an authority record: the team’s one grant by --scope, or a standing owner-signed --capabilities record naming the grantee by registry id.',
   lock: 'Takes a named lock on this machine so one heavy run holds it at a time; the take is one mkdir, and a second caller is refused.',
   mcp: 'Reads the MCP bridge’s local state — the helper, every lobby config, the seat guards and the public front — and reports it without changing a thing.',
   proc: 'The processes a team’s seats started, kept as a register in the team’s state: one record per name, with its seat, time, pid and note.',
-  reload: 'Closes one running seat and launches it again when the file’s model, version or effort differs from the seat’s last launch.',
-  restart: 'Restarts one declared seat in place, without editing the team file; a busy seat is left as it is unless --abandon is given.',
-  revoke: 'Removes a grant or one external delegate from the team file, or ends a standing grant; an absent target is a successful no-op.',
+  reload: 'Closes one running seat and launches it again when the team’s model, version or effort differs from the seat’s last launch.',
+  restart: 'Restarts one declared seat in place, without editing the team’s configuration; a busy seat is left as it is unless --abandon is given.',
+  revoke: 'Removes a grant or one external delegate from the team’s configuration, or ends a standing grant; an absent target is a successful no-op.',
   route: 'Answers one seat’s address for the native channel, and records that it handed the address out; the CLI delivers nothing itself.',
   seats: 'The seat registry for the team: each seat’s stable seat handle, role, CLI, model, effort, status, state, last active time and pane.',
   unlock: 'Releases a lock team lock took, and only that caller’s: the holder file has to name the same project and by line; anyone else is refused.',
@@ -854,18 +854,18 @@ const SITE_PAGES: Record<string, string> = {
   '/privacy/': 'How teamcli.io reaches you, and what stays in your browser.',
   '/models/': 'Set up your agents: install the CLI or app, get the key, log in — then every lab\'s model families against each way in, each row linking to its family page.',
   '/guide/': 'Task guides for running a team with TeamCLI — your first team, and running a release — with an index now and the first guides coming soon.',
-  '/docs/': 'Your first team in five minutes: install team, write .agents/team.yaml, and start the session from the owner’s terminal.',
-  '/docs/file/': 'The team file, section by section: tasks, seats, delivery order, grant, delegates and tempo — then the format by example and its other fields.',
-  '/docs/file/tasks/': 'The team file’s tasks section: one task source, the policy that decides which fields cross a broker, and the pull, fallback and cadence rules.',
-  '/docs/file/seats/': 'The team file’s seats section: each seat’s model and launch, its label and the pane’s two lines, and the effort word its lab allows.',
-  '/docs/file/delivery-order/': 'The team file’s delivery order: the legs a send walks, and how each level of the chain may drop or reorder them but never add one.',
-  '/docs/file/grant/': 'The team file’s grant: the one authority record the owner gives the orchestrator’s seat, its closed scope, and what each act admits.',
-  '/docs/file/delegates/': 'The team file’s delegates: panes outside the session that may run some commands, the allowlist guard, and the placement that is an accident guard.',
-  '/docs/file/tempo/': 'The team file’s tempo: relaxed, normal or urgent — which waits the word scales, and when it takes effect.',
+  '/docs/': 'Your first team in five minutes: install team, write the team with team init and team config, and start the session from the owner’s terminal.',
+  '/docs/config/': 'The team’s registry record, edited with team config: tasks, seats, delivery order, grant, delegates and tempo — then the format by example and its other fields.',
+  '/docs/config/tasks/': 'The team configuration’s tasks section: one task source, the policy that decides which fields cross a broker, and the pull, fallback and cadence rules.',
+  '/docs/config/seats/': 'The team configuration’s seats section: each seat’s model and launch, its label and the pane’s two lines, and the effort word its lab allows.',
+  '/docs/config/delivery-order/': 'The team configuration’s delivery order: the legs a send walks, and how each level of the chain may drop or reorder them but never add one.',
+  '/docs/config/grant/': 'The team configuration’s grant: the one authority record the owner gives the orchestrator’s seat, its closed scope, and what each act admits.',
+  '/docs/config/delegates/': 'The team configuration’s delegates: panes outside the session that may run some commands, the allowlist guard, and the placement that is an accident guard.',
+  '/docs/config/tempo/': 'The team configuration’s tempo: relaxed, normal or urgent — which waits the word scales, and when it takes effect.',
   '/docs/concepts/registry/': 'The agent, team and project records this machine keeps: what each field means, and why an id is the identity.',
   '/docs/commands/': 'Every command of team: what each reads and writes, who may run it, its refusals, its exit codes and its examples.',
   '/docs/whats-new/': 'What the release this site documents adds: the README’s own “What’s new” section, and a pointer to the full changelog.',
-  '/docs/safety/': 'Why team is safe to run: the owner outside herdr, the live file as the record, grants and delegates the owner alone, and what team never does.',
+  '/docs/safety/': 'Why team is safe to run: the owner outside herdr, the live record, grants and delegates the owner alone, and what team never does.',
   '/docs/clis/': 'Every launch profile team ships — claude-code, codex, cursor, antigravity, grok, gemini, muse and jules: the command, the flags, and the sign-in check.',
 };
 

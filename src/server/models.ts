@@ -303,10 +303,10 @@ export function modelsOverview(): Rendered {
   doc.md('Every model family the labs offer, and the ways in. Set a route up once and it serves every model on it — the set-up below walks each route in, and the matrix then shows which families it reaches.');
 
   doc.heading('Set up your agents');
-  doc.md('A TeamCLI seat is a model reached by a route. Install the CLI or app the route uses, get the subscription or API key it spends, log in, and name the model in the team file.');
+  doc.md('A TeamCLI seat is a model reached by a route. Install the CLI or app the route uses, get the subscription or API key it spends, log in, and name the model in the team’s configuration.');
 
   doc.heading('The seat line');
-  doc.md('In the team file, each seat names its model and how it is launched — the same six fields whichever route carries the model:');
+  doc.md('In the team’s configuration, each seat names its model and how it is launched — the same six fields whichever route carries the model:');
   doc.raw(mdTable(
     ['Field', 'What it is'],
     [
@@ -318,7 +318,7 @@ export function modelsOverview(): Rendered {
       [code('launch'), 'The command that starts the seat.'],
     ],
   ));
-  doc.note('A launcher script, an account, a token or a key never goes in the team file. An Anthropic-compatible endpoint reads its key from the OS keychain through a small launcher on the PATH, and marks the seat <code>model_from: launcher</code>.');
+  doc.note('A launcher script, an account, a token or a key never goes in the team’s configuration. An Anthropic-compatible endpoint reads its key from the OS keychain through a small launcher on the PATH, and marks the seat <code>model_from: launcher</code>.');
 
   for (const way of WAYS) {
     const transports = Object.entries(TRANSPORTS).filter(([, transport]) => transport.way === way.id);
@@ -640,7 +640,7 @@ export function guideIndex(): Rendered {
     .h1('Guide')
     .md('Task guides for running a team with TeamCLI, start to finish. The first guides are on their way.')
     .heading('Guides')
-    .md('- **Your first team** — write `.agents/team.yaml`, start the session, and watch the seats come up.\n- **Running a release with TeamCLI** — take a change from a task to a reviewed, shipped release.')
+    .md('- **Your first team** — write the team with `team init` and `team config`, start the session, and watch the seats come up.\n- **Running a release with TeamCLI** — take a change from a task to a reviewed, shipped release.')
     .note('These first guides are coming. Until then, start with <a href="/docs/">the documentation</a> and <a href="/models/">the models</a>.')
     .render();
 }

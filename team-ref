@@ -1,0 +1,3 @@
+# The teamcli commit the docs are built from (floor/teamcli main after #717).
+# Its package.json must say the version npm publishes. TEAM_REF overrides it.
+0c33e4024e368f5ffe4880ec8bc2a1ec1327ae8e

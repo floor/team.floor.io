@@ -40,7 +40,7 @@ describe('the page list', () => {
 
   test('one page per command, the docs\' own pages, and the Models and Guide sections beside them', () => {
     for (const name of commandNames()) expect(byPath.has(`/docs/commands/${name}/`), name).toBe(true);
-    for (const path of ['/docs/', '/docs/file/', '/docs/file/tasks/', '/docs/file/seats/', '/docs/file/delivery-order/', '/docs/file/grant/', '/docs/file/delegates/', '/docs/file/tempo/', '/docs/concepts/registry/', '/docs/commands/', '/docs/whats-new/', '/docs/safety/', '/docs/clis/', '/models/', '/guide/']) {
+    for (const path of ['/docs/', '/docs/config/', '/docs/config/tasks/', '/docs/config/seats/', '/docs/config/delivery-order/', '/docs/config/grant/', '/docs/config/delegates/', '/docs/config/tempo/', '/docs/concepts/registry/', '/docs/commands/', '/docs/whats-new/', '/docs/safety/', '/docs/clis/', '/models/', '/guide/']) {
       expect(byPath.has(path), path).toBe(true);
     }
     for (const lab of LABS) expect(byPath.has(`/models/${lab.slug}/`), lab.slug).toBe(true);
@@ -101,7 +101,7 @@ describe('the page list', () => {
     expect(html).not.toContain('Agents propose. You decide.');
     expect(html).toContain('name="description" content="Set up and run a team of specialized AI agents in herdr: you set the roster, agents do the work, and you decide."');
     const own = [headline, headlineLead, headlineAccent, homeTitle, versionLine(),
-      ...['/', '/privacy/', '/docs/', '/docs/file/', '/docs/commands/', '/docs/concepts/registry/', '/docs/safety/', '/docs/clis/'].map(descriptionFor),
+      ...['/', '/privacy/', '/docs/', '/docs/config/', '/docs/commands/', '/docs/concepts/registry/', '/docs/safety/', '/docs/clis/'].map(descriptionFor),
       ...commandNames().map(name => descriptionFor(`/docs/commands/${name}/`))];
     for (const text of own) {
       expect(text.toLowerCase()).not.toContain('vendor');
@@ -116,16 +116,16 @@ describe('the page list', () => {
     expect(commandNames().length).toBe(63);
     expect(html).not.toContain('eleven');
     expect(descriptionFor('/docs/commands/add/')).toBe('Starts one declared seat, or a temporary one beside the team with --temporary --like <seat> --until <result:path|merged:branch>.');
-    expect(descriptionFor('/docs/commands/release/')).toBe('Checks a release on npm and GitHub. When the file has the pairs: Linear milestone, qualifying status update, and the release marker in the public activity file.');
+    expect(descriptionFor('/docs/commands/release/')).toBe('Checks a release on npm and GitHub. When the team has the pairs: Linear milestone, qualifying status update, and the release marker in the public activity file.');
     expect(descriptionFor('/docs/commands/release/').length).toBeLessThanOrEqual(160);
-    expect(descriptionFor('/docs/safety/')).toBe('Why team is safe to run: the owner outside herdr, the live file as the record, grants and delegates the owner alone, and what team never does.');
-    expect(descriptionFor('/docs/file/')).toBe('The team file, section by section: tasks, seats, delivery order, grant, delegates and tempo — then the format by example and its other fields.');
+    expect(descriptionFor('/docs/safety/')).toBe('Why team is safe to run: the owner outside herdr, the live record, grants and delegates the owner alone, and what team never does.');
+    expect(descriptionFor('/docs/config/')).toBe('The team’s registry record, edited with team config: tasks, seats, delivery order, grant, delegates and tempo — then the format by example and its other fields.');
     expect(descriptionFor('/docs/concepts/registry/')).toBe('The agent, team and project records this machine keeps: what each field means, and why an id is the identity.');
-    expect(descriptionFor('/docs/commands/up/')).toBe('Starts the session, a workspace and each seat the file declares, plus the watch; --dry-run prints the plan and the refusals.');
-    expect(descriptionFor('/docs/file/').length).toBeLessThanOrEqual(160);
+    expect(descriptionFor('/docs/commands/up/')).toBe('Starts the session, a workspace and each seat the team declares, plus the watch; --dry-run prints the plan and the refusals.');
+    expect(descriptionFor('/docs/config/').length).toBeLessThanOrEqual(160);
     expect(descriptionFor('/docs/commands/up/').length).toBeLessThanOrEqual(160);
     const home = await (await handleRequest(new Request('http://localhost/'))).text();
-    expect(home).toContain('Six sections of <code>.agents/team.yaml</code>, then the format and the other fields.');
+    expect(home).toContain('edited with <code>team config</code>: six sections, then the format and the other fields.');
     expect(home).not.toContain('Every field of');
   });
 });
@@ -185,7 +185,7 @@ describe('the home page, from the reference', () => {
 
   test('three samples: the file, the plan and the reading, each a whole block of a tested page', () => {
     const samples = homeSamples();
-    expect(samples.map(sample => sample.label)).toEqual(['The file', 'The plan', 'The reading']);
+    expect(samples.map(sample => sample.label)).toEqual(['The team', 'The plan', 'The reading']);
     expect(samples[0]!.fence.lang).toBe('yaml');
     expect(samples[1]!.fence.lang).toBe('console');
     expect(samples[2]!.fence.lang).toBe('console');
@@ -231,8 +231,8 @@ describe('the docs beside the commands', () => {
   const byPath = new Map(pages().map(page => [page.path, page]));
 
   test('the team file hub is the example file section by section, then the format and its other fields', () => {
-    const hub = byPath.get('/docs/file/')!;
-    expect(hub.html).toContain('<h1 id="the-team-file">The team file</h1>');
+    const hub = byPath.get('/docs/config/')!;
+    expect(hub.html).toContain('<h1 id="team-configuration">Team configuration</h1>');
     expect(hub.html).toContain('The sections');
     expect(hub.html).toContain('The format, by example');
     expect(hub.html).toContain('More fields');
@@ -240,18 +240,18 @@ describe('the docs beside the commands', () => {
   });
 
   test('each card of the hub is a page of its own, carrying its section', () => {
-    const hub = byPath.get('/docs/file/')!;
-    const cards = [...hub.html.matchAll(/<a class="doc-entry" href="(\/docs\/file\/[a-z-]+\/)"/g)].map(match => match[1]!);
+    const hub = byPath.get('/docs/config/')!;
+    const cards = [...hub.html.matchAll(/<a class="doc-entry" href="(\/docs\/config\/[a-z-]+\/)"/g)].map(match => match[1]!);
     expect(cards.length).toBe(6);
     for (const path of cards) {
       const page = byPath.get(path);
       expect(page, path).toBeTruthy();
-      expect(page!.html).toContain('Part of <a href="/docs/file/">the team file</a>');
+      expect(page!.html).toContain('Part of <a href="/docs/config/">team configuration</a>');
     }
   });
 
   test('the delivery order page keeps the section\'s fence and its rules, and leaves the nested example out', () => {
-    const page = byPath.get('/docs/file/delivery-order/')!;
+    const page = byPath.get('/docs/config/delivery-order/')!;
     expect(blocks(page.html).length).toBe(1);
     expect(page.html).toContain('read outermost first');
     expect((page.html.match(/<li>/g) ?? []).length).toBe(3);

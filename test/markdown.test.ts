@@ -135,8 +135,8 @@ describe('localHref', () => {
   });
 
   test('a team-file section the site splits into its own page', () => {
-    expect(localHref('../team-file.md#delivery_order')).toBe('/docs/file/delivery-order/');
-    expect(localHref('../team-file.md#seats')).toBe('/docs/file/seats/');
+    expect(localHref('../team-file.md#delivery_order')).toBe('/docs/config/delivery-order/');
+    expect(localHref('../team-file.md#seats')).toBe('/docs/config/seats/');
   });
 
   test('a reference contract the site does not serve goes to the repository', () => {

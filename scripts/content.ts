@@ -20,8 +20,13 @@ function publishedVersion(): string {
   return version;
 }
 
-const pinned = process.env.TEAM_REF?.trim() ?? '';
-const published = pinned ? '' : publishedVersion();
+// TEAM_REF wins; otherwise the commit `team-ref` names, when the file is there: the docs can
+// take a fix merged after the tag without a release. The version that commit's package.json
+// says must still be the published one, so the eyebrow never names an unreleased version.
+const refFile = resolve(root, 'team-ref');
+const filed = existsSync(refFile) ? (await Bun.file(refFile).text()).split('\n').map(line => line.trim()).find(line => line && !line.startsWith('#')) ?? '' : '';
+const pinned = process.env.TEAM_REF?.trim() || filed;
+const published = process.env.TEAM_REF?.trim() ? '' : publishedVersion();
 const TEAM_REF = pinned || `v${published}`;
 
 if (!existsSync(resolve(TEAM_REPO, '.git'))) {

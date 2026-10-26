@@ -66,7 +66,7 @@ for (const name of commandNames()) {
   }
 }
 yamlSources.push({ where: 'examples/team.yaml', page: 'the example', paragraph: '', yaml: read('examples/team.yaml') });
-// The docs pages beside the command reference: /docs/file/ and its sections show
+// The docs pages beside the command reference: /docs/config/ and its sections show
 // docs/team-file.md's own fences, and the registry page is that page whole.
 sources.set('docs/team-file.md', fences(read('docs/team-file.md')));
 sources.set('docs/concepts/registry.md', fences(read('docs/concepts/registry.md')));
@@ -97,7 +97,7 @@ function notInvented(where: string, shown: string[]) {
   }
 }
 
-/** A run of whole lines of a reference fence, or of the example file: how /docs/file/
+/** A run of whole lines of a reference fence, or of the example file: how /docs/config/
  *  shows the file section by section, and the README shows one part of its format. */
 function partOfFence(block: string): boolean {
   const lines = block.split('\n');
@@ -128,11 +128,11 @@ for (const name of commandNames()) {
   check(all.length === expected.length, `/docs/commands/${name}/: ${all.length} blocks shown across ${set.length} pages, ${expected.length} fenced`);
   for (const fence of new Set(expected)) check(count(all, fence) === count(expected, fence), `/docs/commands/${name}/: a fence is shown ${count(all, fence)} times across its pages, and the reference holds ${count(expected, fence)}`);
 }
-// /docs/file/ shows the example file section by section: every block is whole lines
+// /docs/config/ shows the example file section by section: every block is whole lines
 // of a fence, so a section can be short but never invented.
-const file = pages().find(entry => entry.path === '/docs/file/')!;
-for (const block of blocks(file.html)) check(partOfFence(block), `/docs/file/: a block is not whole lines of a reference fence: ${JSON.stringify(block.slice(0, 60))}…`);
-for (const page of pages().filter(entry => !entry.path.startsWith('/docs/commands/') && entry.path !== '/docs/file/')) notInvented(page.path, blocks(page.html));
+const file = pages().find(entry => entry.path === '/docs/config/')!;
+for (const block of blocks(file.html)) check(partOfFence(block), `/docs/config/: a block is not whole lines of a reference fence: ${JSON.stringify(block.slice(0, 60))}…`);
+for (const page of pages().filter(entry => !entry.path.startsWith('/docs/commands/') && entry.path !== '/docs/config/')) notInvented(page.path, blocks(page.html));
 // The home page shows three whole fences, and the install line — the README's own
 // install command, the same line from the same fence.
 notInvented('/', homeSamples().map(sample => normalise(sample.fence.text)));

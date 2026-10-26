@@ -132,6 +132,11 @@ export async function handleRequest(request: Request): Promise<Response> {
   // A retired per-model URL moves permanently to its lab-page section.
   const movedTo = MODEL_REDIRECTS[path];
   if (movedTo) return new Response(null, { status: 301, headers: { ...commonHeaders, Location: movedTo, 'Cache-Control': 'public, max-age=3600' } });
+  // The team file became the team's registry record in 0.5.5: /docs/file/ and its sections
+  // moved to /docs/config/, and an old link lands on the same page.
+  if (path === '/docs/file/' || path.startsWith('/docs/file/')) {
+    return new Response(null, { status: 301, headers: { ...commonHeaders, Location: `/docs/config/${path.slice('/docs/file/'.length)}${url.search}`, 'Cache-Control': 'public, max-age=3600' } });
+  }
 
   let response: Response;
   if (path === '/') {
