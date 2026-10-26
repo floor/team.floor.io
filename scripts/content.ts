@@ -57,7 +57,7 @@ if (published && version !== published) {
 const date = git('log', '-1', '--format=%cd', '--date=short', sha).stdout.toString().trim();
 // The site shows the docs and the example, and docs:check validates the example's YAML with
 // the ref's own validator, which lives in its src/.
-const paths = ['README.md', 'docs', 'examples', 'src', 'package.json', 'LICENSE'];
+const paths = ['README.md', 'docs', 'examples', 'src', 'packages', 'package.json', 'LICENSE'];
 
 await rm(contentDir, { recursive: true, force: true });
 await mkdir(contentDir, { recursive: true });

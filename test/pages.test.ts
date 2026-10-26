@@ -40,7 +40,7 @@ describe('the page list', () => {
 
   test('one page per command, the docs\' own pages, and the Models and Guide sections beside them', () => {
     for (const name of commandNames()) expect(byPath.has(`/docs/commands/${name}/`), name).toBe(true);
-    for (const path of ['/docs/', '/docs/file/', '/docs/file/tasks/', '/docs/file/seats/', '/docs/file/delivery-order/', '/docs/file/grant/', '/docs/file/delegates/', '/docs/file/tempo/', '/docs/concepts/registry/', '/docs/commands/', '/docs/safety/', '/docs/clis/', '/models/', '/guide/']) {
+    for (const path of ['/docs/', '/docs/file/', '/docs/file/tasks/', '/docs/file/seats/', '/docs/file/delivery-order/', '/docs/file/grant/', '/docs/file/delegates/', '/docs/file/tempo/', '/docs/concepts/registry/', '/docs/commands/', '/docs/whats-new/', '/docs/safety/', '/docs/clis/', '/models/', '/guide/']) {
       expect(byPath.has(path), path).toBe(true);
     }
     for (const lab of LABS) expect(byPath.has(`/models/${lab.slug}/`), lab.slug).toBe(true);
@@ -48,10 +48,10 @@ describe('the page list', () => {
       const lab = LABS.find(entry => entry.vendor === family.vendor)!;
       expect(byPath.has(`/models/${lab.slug}/${family.slug}/`), family.slug).toBe(true);
     }
-    // 12 documentation pages + the Guide index + the Models overview (set-up folded in, so no
+    // 13 documentation pages + the Guide index + the Models overview (set-up folded in, so no
     // page of its own) + one page per lab + one page per family (each family page holds the
     // versions, so there are no per-version pages).
-    expect(list.length).toBe(commandNames().length + 12 + 1 + 1 + LABS.length + FAMILIES.length);
+    expect(list.length).toBe(commandNames().length + 13 + 1 + 1 + LABS.length + FAMILIES.length);
   });
 
   test('every page is reached — its section navigation, or a link from a page — and the reading order is the documentation navigation\'s own', () => {
@@ -113,7 +113,7 @@ describe('the page list', () => {
   test('a missing page counts the commands the site lists', async () => {
     const html = await (await handleRequest(new Request('http://localhost/no-such-page/'))).text();
     expect(html).toContain(`All ${commandNames().length} commands →`);
-    expect(commandNames().length).toBe(41);
+    expect(commandNames().length).toBe(63);
     expect(html).not.toContain('eleven');
     expect(descriptionFor('/docs/commands/add/')).toBe('Starts one declared seat, or a temporary one beside the team with --temporary --like <seat> --until <result:path|merged:branch>.');
     expect(descriptionFor('/docs/commands/release/')).toBe('Checks a release on npm and GitHub. When the file has the pairs: Linear milestone, qualifying status update, and the release marker in the public activity file.');
@@ -223,7 +223,7 @@ describe('the command pages, one per reference page', () => {
     const index = byPath.get('/docs/commands/')!;
     expect([...index.html.matchAll(/class="doc-entry__name"><code>team ([a-z-]+)<\/code>/g)].map(match => match[1])).toEqual(commandNames());
     expect([...index.html.matchAll(/class="doc-entry__who">/g)].length).toBe(commandNames().length);
-    expect(index.html).toContain('<span class="doc-entry__who">the owner</span>');
+    expect(index.html).toContain('<span class="doc-entry__who">the owner; ');
   });
 });
 
@@ -266,7 +266,7 @@ describe('the docs beside the commands', () => {
   test('getting started installs the package and walks the first run', () => {
     const page = byPath.get('/docs/')!;
     expect(page.html).toContain('<h1 id="getting-started">Getting started</h1>');
-    expect(page.html).toContain('The file is private to each clone');
+    expect(page.html).toContain('The few ideas');
     expect(page.html).toContain('Your first team in five minutes');
   });
 
@@ -282,11 +282,12 @@ describe('the safety page, from the reference', () => {
 
   test('the who-may-run-what table gives each command its own rule', () => {
     const row = (name: string) => new RegExp(`<td><code>team ${name}</code></td><td>([\\s\\S]*?)</td>`).exec(safety.html)?.[1] ?? '';
-    expect(row('up')).toContain("the owner or the team's lead seat, or a delegate entry naming <code>up</code>");
-    expect(row('up')).toContain("a verified grant admits the orchestrator's seat");
-    expect(row('down')).toBe("the owner or the team's lead seat, or a delegate entry");
+    // Each cell is the callers the command page's own "Who may run it" table admits.
+    expect(row('up')).toStartWith('the owner; ');
+    expect(row('down')).toContain('the approved delegate');
+    expect(row('up')).not.toContain('no terminal');
     expect(row('up')).not.toBe(row('down'));
-    expect([...safety.html.matchAll(/<td><code>team [a-z-]+<\/code><\/td><td>/g)].length).toBe(commandTable().length);
+    expect([...safety.html.matchAll(/<td><code>team [a-z-]+<\/code><\/td><td>/g)].length).toBe(commandNames().length);
   });
 
   test('the grants and the delegates are the owner\'s alone, in the reference\'s words', () => {

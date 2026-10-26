@@ -68,23 +68,16 @@ describe('named pieces of a reference page', () => {
 });
 
 describe('the commands table', () => {
-  test('a row that spells who per command gives each command its own rule', () => {
+  test('the README\'s table names each command once, with its row\'s summary', () => {
+    // From 0.5.3 the README keeps "The commands you'll use": command and summary, no who
+    // column; a row naming two commands (`team up` / `team down`) gives both the summary.
     const up = commandTable().find(row => row.name === 'up');
     const down = commandTable().find(row => row.name === 'down');
     expect(up?.summary).toContain('starts');
     expect(down?.summary).toBe(up?.summary);
-    // The README's cell is "`up`: the owner …; a verified grant admits …; `down`: the
-    // owner …": each row shows its own part, the unlabelled part joining the one before
-    // it, never the pair.
-    expect(up?.who).toBe("the owner or the team's lead seat, or a delegate entry naming `up`; a verified grant admits the orchestrator's seat where the map's row does not");
-    expect(down?.who).toBe("the owner or the team's lead seat, or a delegate entry");
-  });
-
-  test('a cell that is one rule for the row is shown whole, on every row it names', () => {
-    // "anyone; read only" is a sentence, not a label per command: it stays whole.
-    expect(commandTable().find(row => row.name === 'commits')?.who).toBe('anyone; read only');
-    // `team worktree new` / `remove` are two commands in one row with one rule.
-    expect(commandTable().find(row => row.name === 'worktree')?.who).toBe('the owner, the coordinator or the operator');
+    expect(up?.who).toBe('');
+    const names = commandTable().map(row => row.name);
+    expect(new Set(names).size).toBe(names.length);
   });
 
   test('the reference\'s own pages are the command pages, and each one is read', () => {

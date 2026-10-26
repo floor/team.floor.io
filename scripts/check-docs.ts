@@ -184,12 +184,12 @@ for (const path of ['/', '/privacy/', ...pages().map(page => page.path)]) {
 // `down`: the owner, the coordinator or the operator seat" — which is its own shorthand
 // for two rules. Shown whole, the row for `team up` hands its reader who may run
 // `team down`; a label that reached a page means a cell was shown unresolved.
-const WHO_CELL = /<td><code>team [a-z]+<\/code><\/td><td>([\s\S]*?)<\/td>|<span class="doc-entry__who">([\s\S]*?)<\/span>/g;
+const WHO_CELL = /<td><code>team [a-z-]+<\/code><\/td><td>([\s\S]*?)<\/td>|<span class="doc-entry__who">([\s\S]*?)<\/span>/g;
 for (const path of ['/docs/safety/', '/docs/commands/']) {
   const page = pages().find(entry => entry.path === path)!;
   const cells = [...page.html.matchAll(WHO_CELL)].map(match => text(match[1] ?? match[2] ?? ''));
   // A page that stopped showing them would take this rule with it.
-  check(cells.length === (path === '/docs/safety/' ? commandTable().length : commandNames().length), `${path}: ${cells.length} who cells for ${path === '/docs/safety/' ? commandTable().length : commandNames().length} commands`);
+  check(cells.length === commandNames().length, `${path}: ${cells.length} who cells for ${commandNames().length} commands`);
   for (const cell of cells) {
     check(!/^[a-z][a-z-]*: /.test(cell), `${path}: a who cell reads ${JSON.stringify(cell.slice(0, 60))}: a rule labelled for another command reached the page`);
   }

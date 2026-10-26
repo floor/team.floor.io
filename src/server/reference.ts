@@ -118,11 +118,14 @@ export interface CommandRow { name: string; summary: string; who: string }
  * each gets its own entry, with the row's summary and its own who.
  */
 export function commandTable(): CommandRow[] {
-  const rows = section(README, 'Commands').split('\n').filter(line => line.startsWith('|')).slice(2);
+  // Up to 0.5.0 the README held the whole table with a who column; from 0.5.3 it keeps
+  // "The commands you'll use" (command and summary) and each page says who may run it.
+  const table = README.split('\n').some(line => line === '## Commands') ? section(README, 'Commands') : section(README, 'The commands you\'ll use');
+  const rows = table.split('\n').filter(line => line.startsWith('|')).slice(2);
   const commands: CommandRow[] = [];
   for (const line of rows) {
     const [command = '', summary = '', who = ''] = line.split('|').slice(1, -1).map(cell => cell.trim());
-    const names = [...new Set([...command.matchAll(/`team ([a-z]+)/g)].map(match => match[1]!))];
+    const names = [...new Set([...command.matchAll(/`team ([a-z-]+)/g)].map(match => match[1]!))];
     const parts = whoPerCommand(who, names);
     for (const name of names) {
       if (!commands.some(row => row.name === name)) commands.push({ name, summary, who: parts?.get(name) ?? who });
